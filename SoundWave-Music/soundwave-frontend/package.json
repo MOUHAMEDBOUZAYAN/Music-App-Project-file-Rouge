@@ -1,0 +1,14 @@
+{
+  "devDependencies": {
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.4",
+    "tailwindcss": "^3.4.17"
+  },
+  "dependencies": {
+    "axios": "^1.9.0",
+    "framer-motion": "^12.15.0",
+    "lucide-react": "^0.511.0",
+    "react-hook-form": "^7.56.4",
+    "react-router-dom": "^7.6.1"
+  }
+}
