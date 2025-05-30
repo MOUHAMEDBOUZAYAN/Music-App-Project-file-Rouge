@@ -1,0 +1,1 @@
+// AlbumCard component will be implemented here 

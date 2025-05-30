@@ -1,0 +1,1 @@
+// SearchBar component will be implemented here 
