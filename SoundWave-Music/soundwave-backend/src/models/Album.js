@@ -1,1 +1,35 @@
-// Album model will be implemented here 
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
+
+const albumSchema = new Schema({
+  title: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  artist: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  releaseDate: {
+    type: Date,
+    required: true
+  },
+  coverImage: {
+    type: String, // URL from Cloudinary or similar
+    required: true
+  },
+  songs: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Song'
+  }],
+  genre: {
+    type: String,
+    trim: true
+  }
+}, {
+  timestamps: true
+});
+
+module.exports = mongoose.model('Album', albumSchema); 
