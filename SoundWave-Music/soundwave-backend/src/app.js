@@ -18,6 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/auth/spotify', require('./routes/spotify.routes'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/songs', require('./routes/songs'));
 app.use('/api/playlists', require('./routes/playlists'));
