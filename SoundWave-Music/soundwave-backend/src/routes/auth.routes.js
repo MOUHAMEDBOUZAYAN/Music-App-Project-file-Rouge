@@ -4,15 +4,34 @@ const router = express.Router();
 // Importer les contrôleurs d'authentification
 const { register, login } = require('../controllers/auth.controller.js');
 
+// Importer les middlewares
+const { 
+  validateRegister, 
+  validateLogin, 
+  authLimiter, 
+  registerLimiter,
+  activityLogger 
+} = require('../middleware');
+
 // @route   POST api/auth/register
 // @desc    Enregistrer un nouvel utilisateur
 // @access  Public
-router.post('/register', register);
+router.post('/register', 
+  registerLimiter, 
+  validateRegister, 
+  activityLogger('user_register'), 
+  register
+);
 
 // @route   POST api/auth/login
 // @desc    Connecter un utilisateur et retourner un token
 // @access  Public
-router.post('/login', login);
+router.post('/login', 
+  authLimiter, 
+  validateLogin, 
+  activityLogger('user_login'), 
+  login
+);
 
 // Note: La route de déconnexion est généralement gérée côté client
 // en supprimant le token. Si une logique côté serveur est nécessaire

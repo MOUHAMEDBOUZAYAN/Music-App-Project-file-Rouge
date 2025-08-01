@@ -1,0 +1,61 @@
+{
+  "name": "soundwave-backend",
+  "version": "1.0.0",
+  "description": "Backend API for SoundWave Music Application",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix"
+  },
+  "keywords": [
+    "music",
+    "api",
+    "express",
+    "mongodb",
+    "jwt",
+    "spotify"
+  ],
+  "author": "SoundWave Team",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^7.5.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express-rate-limit": "^6.10.0",
+    "express-validator": "^7.0.1",
+    "helmet": "^7.0.0",
+    "morgan": "^1.10.0",
+    "compression": "^1.7.4",
+    "multer": "^1.4.5-lts.1",
+    "sharp": "^0.32.5",
+    "axios": "^1.5.0",
+    "node-cron": "^3.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "jest": "^29.6.2",
+    "supertest": "^6.3.3",
+    "eslint": "^8.47.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.28.1"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/soundwave-backend.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/soundwave-backend/issues"
+  },
+  "homepage": "https://github.com/your-username/soundwave-backend#readme"
+} 
