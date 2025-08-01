@@ -37,13 +37,15 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Routes
-app.use('/api/auth', require('./routes/auth'));
+app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/auth/spotify', require('./routes/spotify.routes'));
-app.use('/api/users', require('./routes/users'));
-app.use('/api/songs', require('./routes/songs'));
-app.use('/api/playlists', require('./routes/playlists'));
-app.use('/api/search', require('./routes/search'));
-app.use('/api/social', require('./routes/social'));
+app.use('/api/users', require('./routes/user.routes'));
+app.use('/api/songs', require('./routes/song.routes'));
+app.use('/api/playlists', require('./routes/playlist.routes'));
+app.use('/api/albums', require('./routes/album.routes'));
+app.use('/api/admin', require('./routes/admin.routes'));
+app.use('/api/search', require('./routes/search.routes'));
+app.use('/api/social', require('./routes/social.routes'));
 
 // Routes 404 - doit être placé avant le middleware d'erreur
 app.use(notFound);
