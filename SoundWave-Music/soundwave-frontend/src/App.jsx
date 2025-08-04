@@ -1,17 +1,29 @@
-import { useState } from 'react'
-import './App.css'
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Layout from './components/common/Layout';
+import Home from './pages/Home';
+import Search from './pages/Search';
+import Library from './pages/Library';
+import Playlist from './pages/Playlist';
+import Artist from './pages/Artist';
+import Settings from './pages/Settings';
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-          <h1 className='text-3xl font-bold  bg-red-500'> welckom to my projet </h1>
-      </div>
-      
-    </>
-  )
+    <Router>
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Home />} />
+          <Route path="search" element={<Search />} />
+          <Route path="library" element={<Library />} />
+          <Route path="playlist" element={<Playlist />} />
+          <Route path="liked" element={<div>Liked Songs Page</div>} />
+          <Route path="artist" element={<Artist />} />
+          <Route path="settings" element={<Settings />} />
+        </Route>
+      </Routes>
+    </Router>
+  );
 }
 
-export default App
+export default App;
