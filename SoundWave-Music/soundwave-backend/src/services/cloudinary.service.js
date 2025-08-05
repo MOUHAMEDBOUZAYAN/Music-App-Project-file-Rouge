@@ -1,65 +1,68 @@
-const cloudinary = require('cloudinary').v2;
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 
-// Configuration Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-});
+// Créer le dossier uploads s'il n'existe pas
+const uploadsDir = path.join(__dirname, '../../uploads');
+const imagesDir = path.join(uploadsDir, 'images');
+const audioDir = path.join(uploadsDir, 'audio');
+
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
+if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir);
+if (!fs.existsSync(audioDir)) fs.mkdirSync(audioDir);
 
 /**
- * Upload un fichier vers Cloudinary
+ * Upload un fichier vers le stockage local
  * @param {Object} file - Le fichier à uploader
  * @param {string} folder - Le dossier de destination
  * @returns {Promise<Object>} - Résultat de l'upload
  */
-const uploadToCloudinary = async (file, folder = 'soundwave') => {
+const uploadToLocal = async (file, folder = 'uploads') => {
   try {
-    const result = await cloudinary.uploader.upload(file.path, {
-      folder: folder,
-      resource_type: 'auto',
-      allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'mp3', 'wav', 'flac', 'aac'],
-      transformation: [
-        { quality: 'auto' },
-        { fetch_format: 'auto' }
-      ]
-    });
+    const fileName = Date.now() + '-' + file.originalname;
+    const filePath = path.join(__dirname, '../../', folder, fileName);
     
-    return result;
+    // Copier le fichier
+    fs.copyFileSync(file.path, filePath);
+    
+    return {
+      url: `/uploads/${fileName}`,
+      public_id: fileName,
+      secure_url: `/uploads/${fileName}`
+    };
   } catch (error) {
-    throw new Error(`Erreur lors de l'upload vers Cloudinary: ${error.message}`);
+    throw new Error(`Erreur lors de l'upload local: ${error.message}`);
   }
 };
 
 /**
- * Supprimer un fichier de Cloudinary
- * @param {string} publicId - L'ID public du fichier
+ * Supprimer un fichier local
+ * @param {string} fileName - Le nom du fichier
  * @returns {Promise<Object>} - Résultat de la suppression
  */
-const deleteFromCloudinary = async (publicId) => {
+const deleteFromLocal = async (fileName) => {
   try {
-    const result = await cloudinary.uploader.destroy(publicId);
-    return result;
+    const filePath = path.join(__dirname, '../../uploads', fileName);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+    return { result: 'ok' };
   } catch (error) {
-    throw new Error(`Erreur lors de la suppression de Cloudinary: ${error.message}`);
+    throw new Error(`Erreur lors de la suppression locale: ${error.message}`);
   }
 };
 
 /**
- * Configuration du stockage Cloudinary pour Multer
+ * Configuration du stockage local pour Multer
  */
-const createCloudinaryStorage = (folder) => {
-  return new CloudinaryStorage({
-    cloudinary: cloudinary,
-    params: {
-      folder: folder,
-      allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'mp3', 'wav', 'flac', 'aac'],
-      transformation: [
-        { quality: 'auto' },
-        { fetch_format: 'auto' }
-      ]
+const createLocalStorage = (folder) => {
+  return multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, path.join(__dirname, '../../uploads', folder));
+    },
+    filename: (req, file, cb) => {
+      const fileName = Date.now() + '-' + file.originalname;
+      cb(null, fileName);
     }
   });
 };
@@ -68,7 +71,7 @@ const createCloudinaryStorage = (folder) => {
  * Middleware Multer pour l'upload d'images
  */
 const uploadImage = multer({
-  storage: createCloudinaryStorage('soundwave/images'),
+  storage: createLocalStorage('images'),
   limits: {
     fileSize: 5 * 1024 * 1024 // 5MB
   },
@@ -85,7 +88,7 @@ const uploadImage = multer({
  * Middleware Multer pour l'upload d'audio
  */
 const uploadAudio = multer({
-  storage: createCloudinaryStorage('soundwave/audio'),
+  storage: createLocalStorage('audio'),
   limits: {
     fileSize: 50 * 1024 * 1024 // 50MB
   },
@@ -99,51 +102,45 @@ const uploadAudio = multer({
 });
 
 /**
- * Optimiser une image
- * @param {string} publicId - L'ID public de l'image
+ * Optimiser une image (simulation)
+ * @param {string} fileName - Le nom du fichier
  * @param {Object} options - Options d'optimisation
- * @returns {string} - URL de l'image optimisée
+ * @returns {string} - URL de l'image
  */
-const optimizeImage = (publicId, options = {}) => {
-  const defaultOptions = {
-    width: 800,
-    height: 600,
-    crop: 'fill',
-    quality: 'auto',
-    format: 'auto'
-  };
-  
-  const finalOptions = { ...defaultOptions, ...options };
-  
-  return cloudinary.url(publicId, finalOptions);
+const optimizeImage = (fileName, options = {}) => {
+  return `/uploads/images/${fileName}`;
 };
 
 /**
- * Créer une miniature d'image
- * @param {string} publicId - L'ID public de l'image
+ * Créer une miniature d'image (simulation)
+ * @param {string} fileName - Le nom du fichier
  * @param {number} width - Largeur de la miniature
  * @param {number} height - Hauteur de la miniature
  * @returns {string} - URL de la miniature
  */
-const createThumbnail = (publicId, width = 300, height = 300) => {
-  return cloudinary.url(publicId, {
-    width,
-    height,
-    crop: 'fill',
-    quality: 'auto',
-    format: 'auto'
-  });
+const createThumbnail = (fileName, width = 300, height = 300) => {
+  return `/uploads/images/${fileName}`;
 };
 
 /**
  * Obtenir les informations d'un fichier
- * @param {string} publicId - L'ID public du fichier
+ * @param {string} fileName - Le nom du fichier
  * @returns {Promise<Object>} - Informations du fichier
  */
-const getFileInfo = async (publicId) => {
+const getFileInfo = async (fileName) => {
   try {
-    const result = await cloudinary.api.resource(publicId);
-    return result;
+    const filePath = path.join(__dirname, '../../uploads', fileName);
+    if (fs.existsSync(filePath)) {
+      const stats = fs.statSync(filePath);
+      return {
+        public_id: fileName,
+        url: `/uploads/${fileName}`,
+        secure_url: `/uploads/${fileName}`,
+        bytes: stats.size,
+        created_at: stats.birthtime
+      };
+    }
+    throw new Error('Fichier non trouvé');
   } catch (error) {
     throw new Error(`Erreur lors de la récupération des informations: ${error.message}`);
   }
@@ -157,22 +154,27 @@ const getFileInfo = async (publicId) => {
  */
 const listFiles = async (folder, options = {}) => {
   try {
-    const result = await cloudinary.api.resources({
-      type: 'upload',
-      prefix: folder,
-      max_results: options.maxResults || 100,
-      next_cursor: options.nextCursor
-    });
+    const folderPath = path.join(__dirname, '../../uploads', folder);
+    if (!fs.existsSync(folderPath)) {
+      return { resources: [] };
+    }
     
-    return result;
+    const files = fs.readdirSync(folderPath);
+    const resources = files.map(file => ({
+      public_id: file,
+      url: `/uploads/${folder}/${file}`,
+      secure_url: `/uploads/${folder}/${file}`
+    }));
+    
+    return { resources };
   } catch (error) {
     throw new Error(`Erreur lors de la liste des fichiers: ${error.message}`);
   }
 };
 
 module.exports = {
-  uploadToCloudinary,
-  deleteFromCloudinary,
+  uploadToLocal,
+  deleteFromLocal,
   uploadImage,
   uploadAudio,
   optimizeImage,

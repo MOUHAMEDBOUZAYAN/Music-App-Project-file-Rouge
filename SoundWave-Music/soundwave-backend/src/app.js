@@ -53,8 +53,16 @@ app.use(notFound);
 // Error handling middleware
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:5173';
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log('\n🚀 SoundWave Music Server Status:');
+  console.log('✅ Server is running on PORT', PORT);
+  console.log('📡 API available at http://localhost:' + PORT);
+  console.log('🔗 CORS enabled for:', CORS_ORIGIN);
+  console.log('🌍 Environment:', NODE_ENV);
+  console.log('⏰ Started at:', new Date().toLocaleString());
+  console.log('🎵 SoundWave Music API Ready!\n');
 }); 
