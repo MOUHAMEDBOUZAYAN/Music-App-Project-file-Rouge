@@ -3,7 +3,7 @@
  */
 
 // Middleware d'authentification
-const { protect, admin, owner } = require('./auth.middleware');
+const { protect, admin, artist, owner, canModify } = require('./auth.middleware');
 
 // Middleware de gestion d'erreurs
 const { 
@@ -66,7 +66,9 @@ module.exports = {
   // Authentification
   protect,
   admin,
+  artist,
   owner,
+  canModify,
   
   // Gestion d'erreurs
   AppError,

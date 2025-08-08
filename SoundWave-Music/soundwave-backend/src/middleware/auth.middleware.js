@@ -37,9 +37,7 @@ const protect = async (req, res, next) => {
         message: 'Token invalide'
       });
     }
-  }
-
-  if (!token) {
+  } else {
     return res.status(401).json({
       success: false,
       message: 'Accès refusé - token manquant'
@@ -62,6 +60,20 @@ const admin = (req, res, next) => {
 };
 
 /**
+ * Middleware pour vérifier si l'utilisateur est artiste ou admin
+ */
+const artist = (req, res, next) => {
+  if (req.user && (req.user.role === 'artist' || req.user.role === 'admin')) {
+    next();
+  } else {
+    return res.status(403).json({
+      success: false,
+      message: 'Accès refusé - seuls les artistes peuvent effectuer cette action'
+    });
+  }
+};
+
+/**
  * Middleware pour vérifier si l'utilisateur est le propriétaire de la ressource
  */
 const owner = (req, res, next) => {
@@ -75,8 +87,25 @@ const owner = (req, res, next) => {
   }
 };
 
+/**
+ * Middleware pour vérifier si l'utilisateur peut modifier une ressource
+ * (propriétaire ou admin)
+ */
+const canModify = (req, res, next) => {
+  if (req.user && (req.user.role === 'admin' || req.user._id.toString() === req.params.userId)) {
+    next();
+  } else {
+    return res.status(403).json({
+      success: false,
+      message: 'Accès refusé - vous n\'êtes pas autorisé à modifier cette ressource'
+    });
+  }
+};
+
 module.exports = {
   protect,
   admin,
-  owner
+  artist,
+  owner,
+  canModify
 }; 

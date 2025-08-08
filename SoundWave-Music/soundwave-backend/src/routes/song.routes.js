@@ -5,6 +5,7 @@ const router = express.Router();
 const songController = require('../controllers/song.controller');
 const { 
   protect, 
+  artist,
   owner,
   validateSong,
   validateObjectId,
@@ -42,6 +43,7 @@ router.get('/:id',
 // @access  Private (Artistes seulement)
 router.post('/', 
   protect, 
+  artist,
   uploadLimiter, 
   validateSong, 
   activityLogger('upload_song'), 
@@ -53,6 +55,7 @@ router.post('/',
 // @access  Private (Artiste propriétaire seulement)
 router.put('/:id', 
   protect, 
+  artist,
   owner, 
   validateSong, 
   activityLogger('update_song'), 
@@ -64,6 +67,7 @@ router.put('/:id',
 // @access  Private (Artiste propriétaire seulement)
 router.delete('/:id', 
   protect, 
+  artist,
   owner, 
   activityLogger('delete_song'), 
   songController.deleteSong

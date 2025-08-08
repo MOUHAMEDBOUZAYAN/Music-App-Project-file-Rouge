@@ -2,162 +2,10 @@
 import { apiClient, endpoints } from './api.js';
 
 export const songService = {
-  // Récupérer tous les morceaux avec pagination
-  getAllSongs: async (page = 1, limit = 20, filters = {}) => {
+  // Rechercher des chansons
+  searchSongs: async (params = {}) => {
     try {
-      const params = {
-        page,
-        limit,
-        ...filters
-      };
-      
-      const response = await apiClient.get(endpoints.songs.getAll, { params });
-      
-      return {
-        success: true,
-        data: response.data
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message || 'Erreur lors de la récupération des morceaux'
-      };
-    }
-  },
-
-  // Récupérer un morceau par ID
-  getSongById: async (songId) => {
-    try {
-      const response = await apiClient.get(endpoints.songs.getById(songId));
-      
-      return {
-        success: true,
-        data: response.data
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message || 'Morceau non trouvé'
-      };
-    }
-  },
-
-  // Créer un nouveau morceau
-  createSong: async (songData) => {
-    try {
-      const response = await apiClient.post(endpoints.songs.create, songData);
-      
-      return {
-        success: true,
-        data: response.data
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message || 'Erreur lors de la création du morceau'
-      };
-    }
-  },
-
-  // Mettre à jour un morceau
-  updateSong: async (songId, songData) => {
-    try {
-      const response = await apiClient.put(endpoints.songs.update(songId), songData);
-      
-      return {
-        success: true,
-        data: response.data
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message || 'Erreur lors de la mise à jour'
-      };
-    }
-  },
-
-  // Supprimer un morceau
-  deleteSong: async (songId) => {
-    try {
-      await apiClient.delete(endpoints.songs.delete(songId));
-      
-      return {
-        success: true,
-        message: 'Morceau supprimé avec succès'
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message || 'Erreur lors de la suppression'
-      };
-    }
-  },
-
-  // Upload d'un fichier audio
-  uploadSong: async (formData, onUploadProgress = null) => {
-    try {
-      const response = await apiClient.upload(
-        endpoints.songs.upload,
-        formData,
-        onUploadProgress
-      );
-      
-      return {
-        success: true,
-        data: response.data
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message || 'Erreur lors de l\'upload'
-      };
-    }
-  },
-
-  // Liker un morceau
-  likeSong: async (songId) => {
-    try {
-      const response = await apiClient.post(endpoints.songs.like(songId));
-      
-      return {
-        success: true,
-        data: response.data
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message || 'Erreur lors du like'
-      };
-    }
-  },
-
-  // Unliker un morceau
-  unlikeSong: async (songId) => {
-    try {
-      const response = await apiClient.delete(endpoints.songs.unlike(songId));
-      
-      return {
-        success: true,
-        data: response.data
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message || 'Erreur lors du unlike'
-      };
-    }
-  },
-
-  // Rechercher des morceaux
-  searchSongs: async (query, filters = {}) => {
-    try {
-      const params = {
-        q: query,
-        ...filters
-      };
-      
       const response = await apiClient.get(endpoints.songs.search, { params });
-      
       return {
         success: true,
         data: response.data
@@ -165,16 +13,64 @@ export const songService = {
     } catch (error) {
       return {
         success: false,
-        error: error.message || 'Erreur lors de la recherche'
+        error: error.response?.data?.message || 'Erreur lors de la recherche'
       };
     }
   },
 
-  // Récupérer les morceaux tendances
-  getTrendingSongs: async (limit = 10) => {
+  // Obtenir une chanson par ID
+  getSongById: async (id) => {
     try {
-      const response = await apiClient.get(endpoints.songs.trending, {
-        params: { limit }
+      const response = await apiClient.get(`${endpoints.songs.base}/${id}`);
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Erreur lors de la récupération de la chanson'
+      };
+    }
+  },
+
+  // Uploader une nouvelle chanson
+  uploadSong: async (songData, audioFile, coverFile = null) => {
+    try {
+      const formData = new FormData();
+      
+      // Ajouter les données de la chanson
+      Object.keys(songData).forEach(key => {
+        if (songData[key] !== null && songData[key] !== undefined) {
+          if (key === 'tags' && Array.isArray(songData[key])) {
+            formData.append(key, JSON.stringify(songData[key]));
+          } else {
+            formData.append(key, songData[key]);
+          }
+        }
+      });
+      
+      // Ajouter le fichier audio
+      if (audioFile) {
+        formData.append('audio', audioFile);
+      }
+      
+      // Ajouter la cover si présente
+      if (coverFile) {
+        formData.append('cover', coverFile);
+      }
+      
+      const response = await apiClient.post(endpoints.songs.upload, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
+          // Ici vous pouvez émettre un événement pour mettre à jour la progression
+          console.log('Upload progress:', percentCompleted);
+        },
       });
       
       return {
@@ -184,19 +80,15 @@ export const songService = {
     } catch (error) {
       return {
         success: false,
-        error: error.message || 'Erreur lors de la récupération des tendances'
+        error: error.response?.data?.message || 'Erreur lors de l\'upload de la chanson'
       };
     }
   },
 
-  // Récupérer les recommandations
-  getRecommendations: async (userId = null, limit = 20) => {
+  // Mettre à jour une chanson
+  updateSong: async (id, songData) => {
     try {
-      const params = { limit };
-      if (userId) params.userId = userId;
-      
-      const response = await apiClient.get(endpoints.songs.recommendations, { params });
-      
+      const response = await apiClient.put(`${endpoints.songs.base}/${id}`, songData);
       return {
         success: true,
         data: response.data
@@ -204,22 +96,31 @@ export const songService = {
     } catch (error) {
       return {
         success: false,
-        error: error.message || 'Erreur lors de la récupération des recommandations'
+        error: error.response?.data?.message || 'Erreur lors de la mise à jour'
       };
     }
   },
 
-  // Récupérer les morceaux par genre
-  getSongsByGenre: async (genre, page = 1, limit = 20) => {
+  // Supprimer une chanson
+  deleteSong: async (id) => {
     try {
-      const params = {
-        genre,
-        page,
-        limit
+      await apiClient.delete(`${endpoints.songs.base}/${id}`);
+      return {
+        success: true,
+        message: 'Chanson supprimée avec succès'
       };
-      
-      const response = await apiClient.get(endpoints.songs.getAll, { params });
-      
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Erreur lors de la suppression'
+      };
+    }
+  },
+
+  // Aimer/ne plus aimer une chanson
+  likeSong: async (id) => {
+    try {
+      const response = await apiClient.post(`${endpoints.songs.base}/${id}/like`);
       return {
         success: true,
         data: response.data
@@ -227,123 +128,73 @@ export const songService = {
     } catch (error) {
       return {
         success: false,
-        error: error.message || 'Erreur lors de la récupération des morceaux'
+        error: error.response?.data?.message || 'Erreur lors de l\'action like'
       };
     }
   },
 
-  // Récupérer les morceaux d'un artiste
-  getSongsByArtist: async (artistId, page = 1, limit = 20) => {
+  // Ajouter un commentaire
+  addComment: async (id, comment) => {
     try {
-      const params = {
-        artist: artistId,
-        page,
-        limit
-      };
-      
-      const response = await apiClient.get(endpoints.songs.getAll, { params });
-      
-      return {
-        success: true,
-        data: response.data
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message || 'Erreur lors de la récupération des morceaux'
-      };
-    }
-  },
-
-  // Marquer un morceau comme écouté (pour les statistiques)
-  markAsPlayed: async (songId) => {
-    try {
-      const response = await apiClient.post(`/songs/${songId}/play`);
-      
-      return {
-        success: true,
-        data: response.data
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message || 'Erreur lors de l\'enregistrement de la lecture'
-      };
-    }
-  },
-
-  // Récupérer l'historique d'écoute
-  getListeningHistory: async (page = 1, limit = 50) => {
-    try {
-      const params = { page, limit };
-      
-      const response = await apiClient.get('/songs/history', { params });
-      
-      return {
-        success: true,
-        data: response.data
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message || 'Erreur lors de la récupération de l\'historique'
-      };
-    }
-  },
-
-  // Récupérer les morceaux likés
-  getLikedSongs: async (page = 1, limit = 50) => {
-    try {
-      const params = { page, limit };
-      
-      const response = await apiClient.get('/songs/liked', { params });
-      
-      return {
-        success: true,
-        data: response.data
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message || 'Erreur lors de la récupération des morceaux likés'
-      };
-    }
-  },
-
-  // Signaler un morceau
-  reportSong: async (songId, reason) => {
-    try {
-      const response = await apiClient.post(`/songs/${songId}/report`, {
-        reason
+      const response = await apiClient.post(`${endpoints.songs.base}/${id}/comment`, {
+        content: comment
       });
-      
       return {
         success: true,
-        message: 'Signalement envoyé avec succès'
+        data: response.data
       };
     } catch (error) {
       return {
         success: false,
-        error: error.message || 'Erreur lors du signalement'
+        error: error.response?.data?.message || 'Erreur lors de l\'ajout du commentaire'
       };
     }
   },
 
-  // Télécharger un morceau (si autorisé)
-  downloadSong: async (songId) => {
+  // Obtenir les chansons tendance
+  getTrendingSongs: async (params = {}) => {
     try {
-      const response = await apiClient.get(`/songs/${songId}/download`, {
-        responseType: 'blob'
-      });
-      
+      const response = await apiClient.get(endpoints.songs.trending, { params });
       return {
         success: true,
-        data: response
+        data: response.data
       };
     } catch (error) {
       return {
         success: false,
-        error: error.message || 'Erreur lors du téléchargement'
+        error: error.response?.data?.message || 'Erreur lors de la récupération des tendances'
+      };
+    }
+  },
+
+  // Obtenir les chansons d'un artiste
+  getArtistSongs: async (artistId, params = {}) => {
+    try {
+      const response = await apiClient.get(`${endpoints.songs.base}/artist/${artistId}`, { params });
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Erreur lors de la récupération des chansons de l\'artiste'
+      };
+    }
+  },
+
+  // Obtenir les chansons likées par l'utilisateur
+  getLikedSongs: async (params = {}) => {
+    try {
+      const response = await apiClient.get(endpoints.songs.liked, { params });
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Erreur lors de la récupération des chansons likées'
       };
     }
   }

@@ -102,10 +102,7 @@ const uploadSong = async (req, res, next) => {
     const { title, artist, album, genre, duration, spotifyId, description } = req.body;
     const uploaderId = req.user._id;
     
-    // Vérifier si l'utilisateur est un artiste
-    if (req.user.role !== 'artist' && req.user.role !== 'admin') {
-      return next(new AppError('Seuls les artistes peuvent uploader des chansons', 403));
-    }
+    // Le middleware 'artist' s'assure déjà que l'utilisateur est un artiste ou admin
     
     // Upload du fichier audio si présent
     let audioUrl = null;

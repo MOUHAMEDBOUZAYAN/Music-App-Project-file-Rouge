@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Upload, 
   Music, 
@@ -10,16 +10,23 @@ import {
   Save,
   X,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Lock
 } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
+import { songService } from '../../services/songService';
+import { useNavigate } from 'react-router-dom';
 
 const UploadSong = () => {
+  const { isAuthenticated, user, canUploadMusic } = useAuth();
+  const navigate = useNavigate();
+  
   const [uploadStep, setUploadStep] = useState(1);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [formData, setFormData] = useState({
     title: '',
-    artist: '',
+    artist: user?.username || '',
     album: '',
     genre: '',
     releaseDate: '',
@@ -35,6 +42,7 @@ const UploadSong = () => {
     cover: null
   });
   const [errors, setErrors] = useState({});
+  const [uploadError, setUploadError] = useState('');
   
   const audioRef = useRef(null);
   const coverRef = useRef(null);
@@ -44,20 +52,58 @@ const UploadSong = () => {
     'Country', 'Folk', 'Reggae', 'Blues', 'Metal', 'Punk', 'Indie'
   ];
 
+  // Vérifier l'authentification et les permissions
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login', { 
+        state: { 
+          message: 'Vous devez être connecté pour uploader une chanson',
+          redirectTo: '/upload'
+        }
+      });
+      return;
+    }
+
+    if (!canUploadMusic()) {
+      navigate('/profile', { 
+        state: { 
+          message: 'Seuls les artistes peuvent uploader des chansons. Mettez à jour votre profil pour devenir artiste.',
+          type: 'warning'
+        }
+      });
+      return;
+    }
+
+    // Pré-remplir le nom d'artiste avec le nom d'utilisateur
+    if (user?.username && !formData.artist) {
+      setFormData(prev => ({ ...prev, artist: user.username }));
+    }
+  }, [isAuthenticated, canUploadMusic, user, navigate]);
+
   const handleFileSelect = (type, file) => {
     if (type === 'audio') {
       if (file && file.type.startsWith('audio/')) {
+        // Vérifier la taille du fichier (max 50MB)
+        if (file.size > 50 * 1024 * 1024) {
+          setErrors(prev => ({ ...prev, audio: 'Le fichier audio ne doit pas dépasser 50MB' }));
+          return;
+        }
         setFiles(prev => ({ ...prev, audio: file }));
         setErrors(prev => ({ ...prev, audio: '' }));
       } else {
-        setErrors(prev => ({ ...prev, audio: 'Please select a valid audio file' }));
+        setErrors(prev => ({ ...prev, audio: 'Veuillez sélectionner un fichier audio valide' }));
       }
     } else if (type === 'cover') {
       if (file && file.type.startsWith('image/')) {
+        // Vérifier la taille du fichier (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          setErrors(prev => ({ ...prev, cover: 'L\'image ne doit pas dépasser 5MB' }));
+          return;
+        }
         setFiles(prev => ({ ...prev, cover: file }));
         setErrors(prev => ({ ...prev, cover: '' }));
       } else {
-        setErrors(prev => ({ ...prev, cover: 'Please select a valid image file' }));
+        setErrors(prev => ({ ...prev, cover: 'Veuillez sélectionner une image valide' }));
       }
     }
   };
@@ -94,19 +140,19 @@ const UploadSong = () => {
     const newErrors = {};
 
     if (!formData.title.trim()) {
-      newErrors.title = 'Title is required';
+      newErrors.title = 'Le titre est requis';
     }
 
     if (!formData.artist.trim()) {
-      newErrors.artist = 'Artist name is required';
+      newErrors.artist = 'Le nom d\'artiste est requis';
     }
 
     if (!formData.genre) {
-      newErrors.genre = 'Genre is required';
+      newErrors.genre = 'Le genre est requis';
     }
 
     if (!files.audio) {
-      newErrors.audio = 'Audio file is required';
+      newErrors.audio = 'Le fichier audio est requis';
     }
 
     setErrors(newErrors);
@@ -123,24 +169,75 @@ const UploadSong = () => {
     setUploadStep(prev => prev - 1);
   };
 
-  const simulateUpload = async () => {
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
     setIsUploading(true);
     setUploadProgress(0);
+    setUploadError('');
 
-    for (let i = 0; i <= 100; i += 10) {
-      await new Promise(resolve => setTimeout(resolve, 200));
-      setUploadProgress(i);
+    try {
+      // Préparer les données pour l'upload
+      const songData = {
+        title: formData.title,
+        artist: formData.artist,
+        album: formData.album || undefined,
+        genre: formData.genre,
+        description: formData.description || undefined,
+        duration: 0, // Sera calculé côté serveur
+        isPublic: formData.isPublic,
+        tags: formData.tags
+      };
+
+      // Simuler la progression d'upload
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 200);
+
+      // Appeler le service d'upload
+      const result = await songService.uploadSong(songData, files.audio, files.cover);
+
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+
+      if (result.success) {
+        setTimeout(() => {
+          setUploadStep(4);
+          setIsUploading(false);
+        }, 500);
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      setUploadError(error.message || 'Erreur lors de l\'upload de la chanson');
+      setIsUploading(false);
+      setUploadProgress(0);
     }
-
-    setIsUploading(false);
-    setUploadStep(4); // Success step
   };
 
-  const handleSubmit = async () => {
-    if (validateForm()) {
-      await simulateUpload();
-    }
-  };
+  // Si l'utilisateur n'est pas authentifié ou n'a pas les permissions, afficher un message
+  if (!isAuthenticated || !canUploadMusic()) {
+    return (
+      <div className="max-w-4xl mx-auto text-center py-12">
+        <Lock className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+        <h2 className="text-2xl font-bold text-white mb-2">Accès restreint</h2>
+        <p className="text-gray-400">
+          {!isAuthenticated 
+            ? 'Vous devez être connecté pour uploader une chanson'
+            : 'Seuls les artistes peuvent uploader des chansons'
+          }
+        </p>
+      </div>
+    );
+  }
 
   const renderStep = () => {
     switch (uploadStep) {
@@ -148,15 +245,15 @@ const UploadSong = () => {
         return (
           <div className="space-y-6">
             <div>
-              <h3 className="text-xl font-semibold text-white mb-4">Upload Audio File</h3>
-              <p className="text-gray-400 mb-6">Select the audio file you want to upload</p>
+              <h3 className="text-xl font-semibold text-white mb-4">Upload du fichier audio</h3>
+              <p className="text-gray-400 mb-6">Sélectionnez le fichier audio que vous souhaitez uploader</p>
             </div>
 
             <div className="space-y-4">
               {/* Audio File Upload */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Audio File *
+                  Fichier audio *
                 </label>
                 <div
                   onClick={() => audioRef.current?.click()}
@@ -173,9 +270,9 @@ const UploadSong = () => {
                   ) : (
                     <div className="space-y-2">
                       <Upload className="h-12 w-12 text-gray-400 mx-auto" />
-                      <p className="text-white font-medium">Click to select audio file</p>
+                      <p className="text-white font-medium">Cliquez pour sélectionner un fichier audio</p>
                       <p className="text-gray-400 text-sm">
-                        Supports MP3, WAV, FLAC (Max 50MB)
+                        Formats supportés : MP3, WAV, FLAC (Max 50MB)
                       </p>
                     </div>
                   )}
@@ -195,7 +292,7 @@ const UploadSong = () => {
               {/* Cover Art Upload */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Cover Art (Optional)
+                  Pochette (Optionnel)
                 </label>
                 <div
                   onClick={() => coverRef.current?.click()}
@@ -205,7 +302,7 @@ const UploadSong = () => {
                     <div className="space-y-2">
                       <img
                         src={URL.createObjectURL(files.cover)}
-                        alt="Cover preview"
+                        alt="Aperçu de la pochette"
                         className="w-20 h-20 mx-auto rounded object-cover"
                       />
                       <p className="text-white text-sm">{files.cover.name}</p>
@@ -213,9 +310,9 @@ const UploadSong = () => {
                   ) : (
                     <div className="space-y-2">
                       <Image className="h-8 w-8 text-gray-400 mx-auto" />
-                      <p className="text-white text-sm">Click to select cover art</p>
+                      <p className="text-white text-sm">Cliquez pour sélectionner une pochette</p>
                       <p className="text-gray-400 text-xs">
-                        Supports JPG, PNG (Max 5MB)
+                        Formats supportés : JPG, PNG (Max 5MB)
                       </p>
                     </div>
                   )}
@@ -239,20 +336,20 @@ const UploadSong = () => {
         return (
           <div className="space-y-6">
             <div>
-              <h3 className="text-xl font-semibold text-white mb-4">Song Information</h3>
-              <p className="text-gray-400 mb-6">Provide details about your song</p>
+              <h3 className="text-xl font-semibold text-white mb-4">Informations de la chanson</h3>
+              <p className="text-gray-400 mb-6">Fournissez les détails de votre chanson</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Song Title *
+                  Titre de la chanson *
                 </label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => handleInputChange('title', e.target.value)}
-                  placeholder="Enter song title"
+                  placeholder="Entrez le titre de la chanson"
                   className="w-full bg-gray-800 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 {errors.title && (
@@ -262,13 +359,13 @@ const UploadSong = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Artist Name *
+                  Nom d'artiste *
                 </label>
                 <input
                   type="text"
                   value={formData.artist}
                   onChange={(e) => handleInputChange('artist', e.target.value)}
-                  placeholder="Enter artist name"
+                  placeholder="Entrez le nom d'artiste"
                   className="w-full bg-gray-800 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 {errors.artist && (
@@ -278,13 +375,13 @@ const UploadSong = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Album (Optional)
+                  Album (Optionnel)
                 </label>
                 <input
                   type="text"
                   value={formData.album}
                   onChange={(e) => handleInputChange('album', e.target.value)}
-                  placeholder="Enter album name"
+                  placeholder="Entrez le nom de l'album"
                   className="w-full bg-gray-800 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -298,7 +395,7 @@ const UploadSong = () => {
                   onChange={(e) => handleInputChange('genre', e.target.value)}
                   className="w-full bg-gray-800 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="">Select genre</option>
+                  <option value="">Sélectionnez un genre</option>
                   {genres.map(genre => (
                     <option key={genre} value={genre}>{genre}</option>
                   ))}
@@ -310,7 +407,7 @@ const UploadSong = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Release Date
+                  Date de sortie
                 </label>
                 <input
                   type="date"
@@ -322,7 +419,7 @@ const UploadSong = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Price (USD)
+                  Prix (USD)
                 </label>
                 <input
                   type="number"
@@ -343,7 +440,7 @@ const UploadSong = () => {
               <textarea
                 value={formData.description}
                 onChange={(e) => handleInputChange('description', e.target.value)}
-                placeholder="Tell us about your song..."
+                placeholder="Parlez-nous de votre chanson..."
                 rows="3"
                 className="w-full bg-gray-800 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               />
@@ -355,7 +452,7 @@ const UploadSong = () => {
               </label>
               <input
                 type="text"
-                placeholder="Press Enter to add tags"
+                placeholder="Appuyez sur Entrée pour ajouter des tags"
                 onKeyPress={handleTagInput}
                 className="w-full bg-gray-800 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
@@ -387,7 +484,7 @@ const UploadSong = () => {
                   onChange={(e) => handleInputChange('isExplicit', e.target.checked)}
                   className="rounded bg-gray-800 border-gray-600 text-blue-500 focus:ring-blue-500"
                 />
-                <span className="text-gray-300">Contains explicit content</span>
+                <span className="text-gray-300">Contient du contenu explicite</span>
               </label>
 
               <label className="flex items-center space-x-3">
@@ -397,7 +494,7 @@ const UploadSong = () => {
                   onChange={(e) => handleInputChange('isPublic', e.target.checked)}
                   className="rounded bg-gray-800 border-gray-600 text-blue-500 focus:ring-blue-500"
                 />
-                <span className="text-gray-300">Make this song public</span>
+                <span className="text-gray-300">Rendre cette chanson publique</span>
               </label>
             </div>
           </div>
@@ -407,8 +504,8 @@ const UploadSong = () => {
         return (
           <div className="space-y-6">
             <div>
-              <h3 className="text-xl font-semibold text-white mb-4">Review & Publish</h3>
-              <p className="text-gray-400 mb-6">Review your song details before publishing</p>
+              <h3 className="text-xl font-semibold text-white mb-4">Vérification et publication</h3>
+              <p className="text-gray-400 mb-6">Vérifiez les détails de votre chanson avant la publication</p>
             </div>
 
             <div className="bg-gray-800 rounded-lg p-6 space-y-4">
@@ -416,7 +513,7 @@ const UploadSong = () => {
                 {files.cover ? (
                   <img
                     src={URL.createObjectURL(files.cover)}
-                    alt="Cover preview"
+                    alt="Aperçu de la pochette"
                     className="w-20 h-20 rounded object-cover"
                   />
                 ) : (
@@ -439,16 +536,16 @@ const UploadSong = () => {
                   <span className="text-white ml-2">{formData.genre}</span>
                 </div>
                 <div>
-                  <span className="text-gray-400">Release Date:</span>
-                  <span className="text-white ml-2">{formData.releaseDate || 'Not set'}</span>
+                  <span className="text-gray-400">Date de sortie:</span>
+                  <span className="text-white ml-2">{formData.releaseDate || 'Non définie'}</span>
                 </div>
                 <div>
-                  <span className="text-gray-400">Price:</span>
+                  <span className="text-gray-400">Prix:</span>
                   <span className="text-white ml-2">${formData.price.toFixed(2)}</span>
                 </div>
                 <div>
-                  <span className="text-gray-400">Visibility:</span>
-                  <span className="text-white ml-2">{formData.isPublic ? 'Public' : 'Private'}</span>
+                  <span className="text-gray-400">Visibilité:</span>
+                  <span className="text-white ml-2">{formData.isPublic ? 'Publique' : 'Privée'}</span>
                 </div>
               </div>
 
@@ -480,22 +577,25 @@ const UploadSong = () => {
           <div className="text-center space-y-6">
             <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
             <div>
-              <h3 className="text-xl font-semibold text-white mb-2">Upload Successful!</h3>
+              <h3 className="text-xl font-semibold text-white mb-2">Upload réussi !</h3>
               <p className="text-gray-400">
-                Your song "{formData.title}" has been uploaded and is now available on SoundWave.
+                Votre chanson "{formData.title}" a été uploadée et est maintenant disponible sur SoundWave.
               </p>
             </div>
             
             <div className="space-y-4">
-              <button className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
-                View Song Page
+              <button 
+                onClick={() => navigate(`/song/${formData.title.toLowerCase().replace(/\s+/g, '-')}`)}
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Voir la page de la chanson
               </button>
               <button 
                 onClick={() => {
                   setUploadStep(1);
                   setFormData({
                     title: '',
-                    artist: '',
+                    artist: user?.username || '',
                     album: '',
                     genre: '',
                     releaseDate: '',
@@ -510,7 +610,7 @@ const UploadSong = () => {
                 }}
                 className="block mx-auto text-gray-400 hover:text-white transition-colors"
               >
-                Upload Another Song
+                Uploader une autre chanson
               </button>
             </div>
           </div>
@@ -525,8 +625,8 @@ const UploadSong = () => {
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-white mb-2">Upload Song</h1>
-        <p className="text-gray-300">Share your music with the world</p>
+        <h1 className="text-3xl font-bold text-white mb-2">Upload de chanson</h1>
+        <p className="text-gray-300">Partagez votre musique avec le monde</p>
       </div>
 
       {/* Progress Steps */}
@@ -556,7 +656,7 @@ const UploadSong = () => {
         <div className="bg-gray-800 rounded-lg p-6">
           <div className="flex items-center space-x-4 mb-4">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-            <span className="text-white">Uploading your song...</span>
+            <span className="text-white">Upload de votre chanson en cours...</span>
           </div>
           <div className="w-full bg-gray-700 rounded-full h-2">
             <div
@@ -564,7 +664,17 @@ const UploadSong = () => {
               style={{ width: `${uploadProgress}%` }}
             />
           </div>
-          <p className="text-gray-400 text-sm mt-2">{uploadProgress}% complete</p>
+          <p className="text-gray-400 text-sm mt-2">{uploadProgress}% terminé</p>
+        </div>
+      )}
+
+      {/* Error Message */}
+      {uploadError && (
+        <div className="bg-red-900/20 border border-red-500 rounded-lg p-4">
+          <div className="flex items-center space-x-2">
+            <AlertCircle className="h-5 w-5 text-red-400" />
+            <span className="text-red-400">{uploadError}</span>
+          </div>
         </div>
       )}
 
@@ -581,7 +691,7 @@ const UploadSong = () => {
             disabled={uploadStep === 1}
             className="px-6 py-3 text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            Back
+            Retour
           </button>
 
           <div className="flex items-center space-x-4">
@@ -591,14 +701,14 @@ const UploadSong = () => {
                 className="flex items-center space-x-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
               >
                 <Save className="h-4 w-4" />
-                <span>Publish Song</span>
+                <span>Publier la chanson</span>
               </button>
             ) : (
               <button
                 onClick={handleNext}
                 className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
               >
-                Next
+                Suivant
               </button>
             )}
           </div>

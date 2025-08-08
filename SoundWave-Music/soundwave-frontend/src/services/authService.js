@@ -11,6 +11,12 @@ export const authService = {
         password: credentials.password
       });
       
+      // Si la connexion réussit, sauvegarder les données
+      if (response.data.success) {
+        secureStorage.set('authToken', response.data.token);
+        secureStorage.set('user', JSON.stringify(response.data.user));
+      }
+      
       return {
         success: true,
         data: response.data
@@ -26,23 +32,34 @@ export const authService = {
   // Inscription utilisateur
   register: async (userData) => {
     try {
+      console.log('Envoi des données d\'inscription:', userData);
+      
       const response = await apiClient.post(endpoints.auth.register, {
+        firstName: userData.firstName,
+        lastName: userData.lastName,
         email: userData.email,
         password: userData.password,
-        username: userData.username,
-        role: userData.role || 'listener',
-        firstName: userData.firstName,
-        lastName: userData.lastName
+        confirmPassword: userData.confirmPassword,
+        userType: userData.userType || 'listener'
       });
+      
+      console.log('Réponse du serveur:', response.data);
+      
+      // Si l'inscription réussit, sauvegarder les données
+      if (response.data.success) {
+        secureStorage.set('authToken', response.data.token);
+        secureStorage.set('user', JSON.stringify(response.data.user));
+      }
       
       return {
         success: true,
         data: response.data
       };
     } catch (error) {
+      console.error('Erreur lors de l\'inscription:', error);
       return {
         success: false,
-        error: error.message || 'Erreur lors de l\'inscription'
+        error: error.response?.data?.message || error.message || 'Erreur lors de l\'inscription'
       };
     }
   },
@@ -100,103 +117,49 @@ export const authService = {
     }
   },
 
-  // Mot de passe oublié
-  forgotPassword: async (email) => {
-    try {
-      const response = await apiClient.post(endpoints.auth.forgotPassword, {
-        email
-      });
-      
-      return {
-        success: true,
-        message: response.message || 'Email de récupération envoyé'
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message || 'Erreur lors de l\'envoi de l\'email'
-      };
-    }
+  // Vérification de l'authentification
+  isAuthenticated: () => {
+    const token = secureStorage.get('authToken');
+    const user = secureStorage.get('user');
+    return !!(token && user);
   },
 
-  // Réinitialisation du mot de passe
-  resetPassword: async (token, newPassword) => {
-    try {
-      const response = await apiClient.post(endpoints.auth.resetPassword, {
-        token,
-        password: newPassword
-      });
-      
-      return {
-        success: true,
-        message: response.message || 'Mot de passe réinitialisé avec succès'
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message || 'Erreur lors de la réinitialisation'
-      };
-    }
+  // Récupération des données utilisateur
+  getCurrentUser: () => {
+    const user = secureStorage.get('user');
+    return user ? JSON.parse(user) : null;
   },
 
-  // Vérification d'email
-  verifyEmail: async (token) => {
+  // Mise à jour du profil utilisateur
+  updateProfile: async (profileData) => {
     try {
-      const response = await apiClient.post(endpoints.auth.verifyEmail, {
-        token
-      });
+      const response = await apiClient.put(endpoints.users.update, profileData);
       
-      return {
-        success: true,
-        message: response.message || 'Email vérifié avec succès'
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message || 'Erreur lors de la vérification'
-      };
-    }
-  },
-
-  // Vérification de la validité du token
-  validateToken: async () => {
-    try {
-      const token = secureStorage.get('authToken');
-      
-      if (!token) {
-        return { success: false, error: 'Aucun token trouvé' };
+      // Mettre à jour les données utilisateur en local
+      if (response.data.success) {
+        secureStorage.set('user', JSON.stringify(response.data.user));
       }
-      
-      // Vérification avec le serveur
-      const response = await apiClient.get(endpoints.users.profile);
       
       return {
         success: true,
         data: response.data
       };
     } catch (error) {
-      // Token invalide ou expiré
-      secureStorage.remove('authToken');
-      secureStorage.remove('user');
-      
       return {
         success: false,
-        error: 'Token invalide ou expiré'
+        error: error.message || 'Erreur lors de la mise à jour du profil'
       };
     }
   },
 
-  // Changement de mot de passe (utilisateur connecté)
-  changePassword: async (currentPassword, newPassword) => {
+  // Changement de mot de passe
+  changePassword: async (passwordData) => {
     try {
-      const response = await apiClient.post('/auth/change-password', {
-        currentPassword,
-        newPassword
-      });
+      const response = await apiClient.put(endpoints.auth.changePassword, passwordData);
       
       return {
         success: true,
-        message: response.message || 'Mot de passe modifié avec succès'
+        data: response.data
       };
     } catch (error) {
       return {
@@ -206,36 +169,53 @@ export const authService = {
     }
   },
 
-  // Vérification de la disponibilité d'un nom d'utilisateur
-  checkUsernameAvailability: async (username) => {
+  // Demande de réinitialisation de mot de passe
+  forgotPassword: async (email) => {
     try {
-      const response = await apiClient.get(`/auth/check-username/${username}`);
+      const response = await apiClient.post(endpoints.auth.forgotPassword, { email });
       
       return {
         success: true,
-        available: response.available
+        data: response.data
       };
     } catch (error) {
       return {
         success: false,
-        error: error.message || 'Erreur lors de la vérification'
+        error: error.message || 'Erreur lors de la demande de réinitialisation'
       };
     }
   },
 
-  // Vérification de la disponibilité d'un email
-  checkEmailAvailability: async (email) => {
+  // Réinitialisation de mot de passe
+  resetPassword: async (resetData) => {
     try {
-      const response = await apiClient.get(`/auth/check-email/${email}`);
+      const response = await apiClient.post(endpoints.auth.resetPassword, resetData);
       
       return {
         success: true,
-        available: response.available
+        data: response.data
       };
     } catch (error) {
       return {
         success: false,
-        error: error.message || 'Erreur lors de la vérification'
+        error: error.message || 'Erreur lors de la réinitialisation du mot de passe'
+      };
+    }
+  },
+
+  // Vérification d'email
+  verifyEmail: async (token) => {
+    try {
+      const response = await apiClient.post(endpoints.auth.verifyEmail, { token });
+      
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message || 'Erreur lors de la vérification de l\'email'
       };
     }
   }

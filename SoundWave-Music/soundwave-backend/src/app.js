@@ -16,8 +16,12 @@ const {
 // Load environment variables
 dotenv.config();
 
-// Connect to database
-connectDB();
+// Connect to database (optional for now)
+try {
+  connectDB();
+} catch (error) {
+  console.log('⚠️  Database connection failed, continuing without database...');
+}
 
 const app = express();
 
@@ -36,6 +40,16 @@ app.use(performanceLogger);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Test route
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    message: 'SoundWave API is running',
+    timestamp: new Date().toISOString(),
+    version: '1.0.0'
+  });
+});
+
 // Routes
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/auth/spotify', require('./routes/spotify.routes'));
@@ -53,9 +67,9 @@ app.use(notFound);
 // Error handling middleware
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
-const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:5173';
+const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:3000';
 
 app.listen(PORT, () => {
   console.log('\n🚀 SoundWave Music Server Status:');

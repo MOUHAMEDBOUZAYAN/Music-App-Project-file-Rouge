@@ -677,7 +677,6 @@ export const useApp = () => {
 
 // Export everything
 export {
-  APP_ACTIONS,
   initialState,
   appReducer
 };
