@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Mail, Lock, User, Music, CheckCircle, AlertCircle } from 'lucide-react';
 import { authService } from '../../services/authService';
+import toast from 'react-hot-toast';
 
 const RegisterForm = ({ onRegister, onSwitchToLogin }) => {
   const [formData, setFormData] = useState({
@@ -71,7 +72,7 @@ const RegisterForm = ({ onRegister, onSwitchToLogin }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-    const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!validateForm()) {
@@ -90,8 +91,11 @@ const RegisterForm = ({ onRegister, onSwitchToLogin }) => {
       if (result.success) {
         console.log('Inscription réussie:', result.data);
         
-        // Afficher un message de succès
-        setErrors({ success: result.data.message || 'Compte créé avec succès !' });
+        // Afficher un toast de succès
+        toast.success(result.data.message || 'Compte créé avec succès ! 🎉', {
+          duration: 4000,
+          icon: '🎵',
+        });
         
         // Rediriger vers la page d'accueil après 2 secondes
         setTimeout(() => {
@@ -104,10 +108,27 @@ const RegisterForm = ({ onRegister, onSwitchToLogin }) => {
         }
       } else {
         console.error('Erreur d\'inscription:', result.error);
-        setErrors({ general: result.error || 'L\'inscription a échoué. Veuillez réessayer.' });
+        
+        // Afficher un toast d'erreur
+        toast.error(result.error || 'L\'inscription a échoué. Veuillez réessayer.', {
+          duration: 5000,
+        });
+        
+        // Afficher les erreurs spécifiques si disponibles
+        if (result.details) {
+          setErrors(result.details);
+        } else {
+          setErrors({ general: result.error });
+        }
       }
     } catch (error) {
       console.error('Erreur lors de l\'inscription:', error);
+      
+      // Afficher un toast d'erreur
+      toast.error('Erreur de connexion. Vérifiez votre connexion internet.', {
+        duration: 5000,
+      });
+      
       setErrors({ general: 'L\'inscription a échoué. Veuillez réessayer.' });
     } finally {
       setIsLoading(false);
@@ -148,13 +169,6 @@ const RegisterForm = ({ onRegister, onSwitchToLogin }) => {
               <div className="bg-red-500/20 border border-red-500/30 text-red-300 px-4 py-3 rounded-xl flex items-center space-x-2">
                 <AlertCircle className="h-5 w-5" />
                 <span>{errors.general}</span>
-              </div>
-            )}
-            
-            {errors.success && (
-              <div className="bg-green-500/20 border border-green-500/30 text-green-300 px-4 py-3 rounded-xl flex items-center space-x-2">
-                <CheckCircle className="h-5 w-5" />
-                <span>{errors.success}</span>
               </div>
             )}
 

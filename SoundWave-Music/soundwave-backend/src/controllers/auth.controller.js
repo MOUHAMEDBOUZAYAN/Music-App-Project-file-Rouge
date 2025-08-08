@@ -13,12 +13,16 @@ const generateToken = (id) => {
 // @route   POST /api/auth/register
 // @access  Public
 const register = async (req, res) => {
+  console.log('📝 Données reçues pour l\'inscription:', req.body);
+  
   const { firstName, lastName, email, password, confirmPassword, userType } = req.body;
 
   try {
     // Validation des données
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
+      console.log('❌ Validation échouée - champs manquants');
       return res.status(400).json({ 
+        success: false,
         message: 'Tous les champs sont requis',
         errors: {
           firstName: !firstName ? 'Le prénom est requis' : null,
@@ -31,7 +35,9 @@ const register = async (req, res) => {
     }
 
     if (password !== confirmPassword) {
+      console.log('❌ Validation échouée - mots de passe différents');
       return res.status(400).json({ 
+        success: false,
         message: 'Les mots de passe ne correspondent pas',
         errors: {
           confirmPassword: 'Les mots de passe ne correspondent pas'
@@ -40,7 +46,9 @@ const register = async (req, res) => {
     }
 
     if (password.length < 6) {
+      console.log('❌ Validation échouée - mot de passe trop court');
       return res.status(400).json({ 
+        success: false,
         message: 'Le mot de passe doit contenir au moins 6 caractères',
         errors: {
           password: 'Le mot de passe doit contenir au moins 6 caractères'
@@ -54,8 +62,13 @@ const register = async (req, res) => {
     // Déterminer le rôle basé sur userType
     const role = userType === 'artist' ? 'artist' : 'listener';
 
+    console.log('✅ Validation réussie, création de l\'utilisateur...');
+    console.log('📋 Données utilisateur:', { username, email, role });
+
     // Vérifier si la base de données est disponible
     if (!User || !User.findOne) {
+      console.log('⚠️  Mode simulation - base de données non disponible');
+      
       // Mode simulation - créer un utilisateur temporaire
       const mockUser = {
         _id: Date.now().toString(),
@@ -66,10 +79,12 @@ const register = async (req, res) => {
       };
 
       // Générer un token temporaire
-      const token = jwt.sign({ id: mockUser._id }, 'temp-secret-key', {
-        expiresIn: '7d'
+      const token = jwt.sign({ id: mockUser._id }, jwtConfig.secret, {
+        expiresIn: jwtConfig.expiresIn
       });
 
+      console.log('✅ Utilisateur simulé créé avec succès');
+      
       return res.status(201).json({
         success: true,
         message: 'Compte créé avec succès !',
@@ -83,26 +98,52 @@ const register = async (req, res) => {
       });
     }
 
+    console.log('🗄️  Mode base de données - vérification de l\'existence...');
+    
     // Mode normal avec base de données
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ 
+      $or: [
+        { email: email.toLowerCase() },
+        { username: username }
+      ]
+    });
 
     if (userExists) {
-      return res.status(400).json({ 
-        message: 'Un utilisateur avec cet email existe déjà',
-        errors: {
-          email: 'Cet email est déjà utilisé'
-        }
-      });
+      console.log('❌ Utilisateur existe déjà');
+      
+      // Déterminer quel champ est en conflit
+      if (userExists.email === email.toLowerCase()) {
+        return res.status(400).json({ 
+          success: false,
+          message: 'Un utilisateur avec cet email existe déjà',
+          errors: {
+            email: 'Cet email est déjà utilisé'
+          }
+        });
+      } else {
+        return res.status(400).json({ 
+          success: false,
+          message: 'Un utilisateur avec ce nom existe déjà',
+          errors: {
+            firstName: 'Ce nom d\'utilisateur est déjà pris',
+            lastName: 'Ce nom d\'utilisateur est déjà pris'
+          }
+        });
+      }
     }
 
+    console.log('✅ Création de l\'utilisateur dans la base de données...');
+    
     const user = await User.create({
       username,
-      email,
+      email: email.toLowerCase(),
       password,
       role
     });
 
     if (user) {
+      console.log('✅ Utilisateur créé avec succès dans la base de données');
+      
       res.status(201).json({
         success: true,
         message: 'Compte créé avec succès !',
@@ -115,7 +156,10 @@ const register = async (req, res) => {
         token: generateToken(user._id)
       });
     } else {
+      console.log('❌ Échec de la création de l\'utilisateur');
+      
       res.status(400).json({ 
+        success: false,
         message: 'Données utilisateur invalides',
         errors: {
           general: 'Impossible de créer le compte'
@@ -123,8 +167,36 @@ const register = async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Erreur lors de l\'inscription:', error);
+    console.error('💥 Erreur lors de l\'inscription:', error);
+    
+    // Gestion spécifique des erreurs MongoDB
+    if (error.code === 11000) {
+      // Erreur de clé dupliquée
+      const field = Object.keys(error.keyPattern)[0];
+      const value = error.keyValue[field];
+      
+      if (field === 'email') {
+        return res.status(400).json({
+          success: false,
+          message: 'Un utilisateur avec cet email existe déjà',
+          errors: {
+            email: 'Cet email est déjà utilisé'
+          }
+        });
+      } else if (field === 'username') {
+        return res.status(400).json({
+          success: false,
+          message: 'Un utilisateur avec ce nom existe déjà',
+          errors: {
+            firstName: 'Ce nom d\'utilisateur est déjà pris',
+            lastName: 'Ce nom d\'utilisateur est déjà pris'
+          }
+        });
+      }
+    }
+    
     res.status(500).json({ 
+      success: false,
       message: 'Erreur serveur lors de l\'inscription',
       error: error.message 
     });
@@ -135,12 +207,16 @@ const register = async (req, res) => {
 // @route   POST /api/auth/login
 // @access  Public
 const login = async (req, res) => {
+  console.log('🔐 Tentative de connexion:', req.body);
+  
   const { email, password } = req.body;
 
   try {
     // Validation des données
     if (!email || !password) {
+      console.log('❌ Validation échouée - email ou mot de passe manquant');
       return res.status(400).json({ 
+        success: false,
         message: 'Email et mot de passe requis',
         errors: {
           email: !email ? 'L\'email est requis' : null,
@@ -151,6 +227,8 @@ const login = async (req, res) => {
 
     // Vérifier si la base de données est disponible
     if (!User || !User.findOne) {
+      console.log('⚠️  Mode simulation - base de données non disponible');
+      
       // Mode simulation - vérification simple
       if (email === 'mohammedbouzi177@gmail.com' && password === 'Mouhamed12@') {
         const mockUser = {
@@ -160,10 +238,12 @@ const login = async (req, res) => {
           role: 'listener'
         };
 
-        const token = jwt.sign({ id: mockUser._id }, 'temp-secret-key', {
-          expiresIn: '7d'
+        const token = jwt.sign({ id: mockUser._id }, jwtConfig.secret, {
+          expiresIn: jwtConfig.expiresIn
         });
 
+        console.log('✅ Connexion simulée réussie');
+        
         return res.json({
           success: true,
           message: 'Connexion réussie !',
@@ -171,7 +251,10 @@ const login = async (req, res) => {
           token
         });
       } else {
+        console.log('❌ Connexion simulée échouée - identifiants incorrects');
+        
         return res.status(401).json({ 
+          success: false,
           message: 'Email ou mot de passe incorrect',
           errors: {
             general: 'Email ou mot de passe incorrect'
@@ -180,10 +263,14 @@ const login = async (req, res) => {
       }
     }
 
+    console.log('🗄️  Mode base de données - recherche de l\'utilisateur...');
+    
     // Mode normal avec base de données
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email.toLowerCase() });
 
     if (user && (await user.matchPassword(password))) {
+      console.log('✅ Connexion réussie');
+      
       res.json({
         success: true,
         message: 'Connexion réussie !',
@@ -196,7 +283,10 @@ const login = async (req, res) => {
         token: generateToken(user._id)
       });
     } else {
+      console.log('❌ Connexion échouée - identifiants incorrects');
+      
       res.status(401).json({ 
+        success: false,
         message: 'Email ou mot de passe incorrect',
         errors: {
           general: 'Email ou mot de passe incorrect'
@@ -204,8 +294,10 @@ const login = async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Erreur lors de la connexion:', error);
+    console.error('💥 Erreur lors de la connexion:', error);
+    
     res.status(500).json({ 
+      success: false,
       message: 'Erreur serveur lors de la connexion',
       error: error.message 
     });

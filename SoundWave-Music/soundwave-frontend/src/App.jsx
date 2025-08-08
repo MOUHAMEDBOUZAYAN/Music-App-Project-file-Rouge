@@ -1,20 +1,27 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './store/AuthContext';
 import { AppProvider } from './store/index.jsx';
-import Layout from './components/common/Layout';
+import ProtectedRoute from './components/common/ProtectedRoute';
+
+// Pages
 import Home from './pages/Home';
 import Search from './pages/Search';
 import Library from './pages/Library';
 import Playlist from './pages/Playlist';
-import LikedSongs from './pages/LikedSongs';
 import Artist from './pages/Artist';
 import Settings from './pages/Settings';
+import LikedSongs from './pages/LikedSongs';
+
+// Components
+import Layout from './components/common/Layout';
 import LoginForm from './components/auth/LoginForm';
 import RegisterForm from './components/auth/RegisterForm';
 import ResetPassword from './components/auth/ResetPassword';
 import UploadSong from './components/artist/UploadSong';
-import ProtectedRoute from './components/common/ProtectedRoute';
+import Dashboard from './components/artist/Dashboard';
+import Analytics from './components/artist/Analytics';
 
 function App() {
   return (
@@ -22,80 +29,115 @@ function App() {
       <AppProvider>
         <Router>
           <div className="App">
+            {/* React Hot Toast Configuration */}
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                duration: 4000,
+                style: {
+                  background: '#363636',
+                  color: '#fff',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                },
+                success: {
+                  iconTheme: {
+                    primary: '#10B981',
+                    secondary: '#fff',
+                  },
+                  style: {
+                    background: '#065F46',
+                    color: '#fff',
+                    border: '1px solid #10B981',
+                  },
+                },
+                error: {
+                  iconTheme: {
+                    primary: '#EF4444',
+                    secondary: '#fff',
+                  },
+                  style: {
+                    background: '#7F1D1D',
+                    color: '#fff',
+                    border: '1px solid #EF4444',
+                  },
+                },
+              }}
+            />
+            
             <Routes>
-              {/* Routes publiques */}
+              {/* Public Routes */}
+              <Route path="/" element={<Home />} />
+              <Route path="/search" element={<Search />} />
               <Route path="/login" element={<LoginForm />} />
               <Route path="/register" element={<RegisterForm />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               
-              {/* Routes protégées avec Layout */}
-              <Route path="/" element={<Layout />}>
-                <Route index element={<Home />} />
-                <Route path="search" element={<Search />} />
-                
-                {/* Routes nécessitant une authentification */}
-                <Route path="library" element={
-                  <ProtectedRoute requireAuth={true}>
+              {/* Protected Routes */}
+              <Route path="/library" element={
+                <ProtectedRoute>
+                  <Layout>
                     <Library />
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="playlist" element={
-                  <ProtectedRoute requireAuth={true}>
-                    <Playlist />
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="liked" element={
-                  <ProtectedRoute requireAuth={true}>
-                    <LikedSongs />
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="artist" element={<Artist />} />
-                
-                <Route path="settings" element={
-                  <ProtectedRoute requireAuth={true}>
-                    <Settings />
-                  </ProtectedRoute>
-                } />
-                
-                {/* Routes nécessitant le rôle d'artiste */}
-                <Route path="upload" element={
-                  <ProtectedRoute requireAuth={true} requireArtist={true}>
-                    <UploadSong />
-                  </ProtectedRoute>
-                } />
-                
-                {/* Routes pour les artistes (dashboard, analytics, etc.) */}
-                <Route path="dashboard" element={
-                  <ProtectedRoute requireAuth={true} requireArtist={true}>
-                    <div>Dashboard Artiste</div>
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="analytics" element={
-                  <ProtectedRoute requireAuth={true} requireArtist={true}>
-                    <div>Analytics</div>
-                  </ProtectedRoute>
-                } />
-                
-                {/* Routes administrateur */}
-                <Route path="admin" element={
-                  <ProtectedRoute requireAuth={true} requireAdmin={true}>
-                    <div>Panel Administrateur</div>
-                  </ProtectedRoute>
-                } />
-              </Route>
+                  </Layout>
+                </ProtectedRoute>
+              } />
               
-              {/* Route 404 */}
-              <Route path="*" element={
-                <div className="min-h-screen flex items-center justify-center bg-gray-900">
-                  <div className="text-center">
-                    <h1 className="text-4xl font-bold text-white mb-4">404</h1>
-                    <p className="text-gray-400">Page non trouvée</p>
-                  </div>
-                </div>
+              <Route path="/playlist/:id" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Playlist />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/liked" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <LikedSongs />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/settings" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Settings />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/upload" element={
+                <ProtectedRoute requireArtist>
+                  <Layout>
+                    <UploadSong />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/dashboard" element={
+                <ProtectedRoute requireArtist>
+                  <Layout>
+                    <Dashboard />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/analytics" element={
+                <ProtectedRoute requireArtist>
+                  <Layout>
+                    <Analytics />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/admin" element={
+                <ProtectedRoute requireAdmin>
+                  <Layout>
+                    <div>Admin Panel</div>
+                  </Layout>
+                </ProtectedRoute>
               } />
             </Routes>
           </div>

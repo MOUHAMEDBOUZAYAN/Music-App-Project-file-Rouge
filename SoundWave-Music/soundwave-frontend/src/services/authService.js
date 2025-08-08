@@ -12,7 +12,7 @@ export const authService = {
       });
       
       // Si la connexion réussit, sauvegarder les données
-      if (response.data.success) {
+      if (response.data && response.data.success) {
         secureStorage.set('authToken', response.data.token);
         secureStorage.set('user', JSON.stringify(response.data.user));
       }
@@ -46,7 +46,7 @@ export const authService = {
       console.log('Réponse du serveur:', response.data);
       
       // Si l'inscription réussit, sauvegarder les données
-      if (response.data.success) {
+      if (response.data && response.data.success) {
         secureStorage.set('authToken', response.data.token);
         secureStorage.set('user', JSON.stringify(response.data.user));
       }
@@ -57,9 +57,19 @@ export const authService = {
       };
     } catch (error) {
       console.error('Erreur lors de l\'inscription:', error);
+      
+      // Gérer les erreurs de validation du backend
+      if (error.response && error.response.data) {
+        return {
+          success: false,
+          error: error.response.data.message || 'Erreur lors de l\'inscription',
+          details: error.response.data.errors || null
+        };
+      }
+      
       return {
         success: false,
-        error: error.response?.data?.message || error.message || 'Erreur lors de l\'inscription'
+        error: error.message || 'Erreur lors de l\'inscription'
       };
     }
   },
@@ -136,7 +146,7 @@ export const authService = {
       const response = await apiClient.put(endpoints.users.update, profileData);
       
       // Mettre à jour les données utilisateur en local
-      if (response.data.success) {
+      if (response.data && response.data.success) {
         secureStorage.set('user', JSON.stringify(response.data.user));
       }
       

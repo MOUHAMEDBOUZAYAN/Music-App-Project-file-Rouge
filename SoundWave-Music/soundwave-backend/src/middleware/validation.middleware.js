@@ -6,8 +6,10 @@ const { body, param, query, validationResult } = require('express-validator');
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    console.log('❌ Erreurs de validation:', errors.array());
     return res.status(400).json({
       success: false,
+      message: 'Erreur de validation',
       errors: errors.array().map(error => ({
         field: error.param,
         message: error.msg,
@@ -22,12 +24,19 @@ const handleValidationErrors = (req, res, next) => {
  * Règles de validation pour l'authentification
  */
 const validateRegister = [
-  body('username')
+  body('firstName')
     .trim()
-    .isLength({ min: 3, max: 30 })
-    .withMessage('Le nom d\'utilisateur doit contenir entre 3 et 30 caractères')
-    .matches(/^[a-zA-Z0-9_]+$/)
-    .withMessage('Le nom d\'utilisateur ne peut contenir que des lettres, chiffres et underscores'),
+    .isLength({ min: 2, max: 50 })
+    .withMessage('Le prénom doit contenir entre 2 et 50 caractères')
+    .matches(/^[a-zA-ZÀ-ÿ\s'.-]+$/)
+    .withMessage('Le prénom ne peut contenir que des lettres, espaces, tirets, apostrophes et points'),
+  
+  body('lastName')
+    .trim()
+    .isLength({ min: 2, max: 50 })
+    .withMessage('Le nom doit contenir entre 2 et 50 caractères')
+    .matches(/^[a-zA-ZÀ-ÿ\s'.-]+$/)
+    .withMessage('Le nom ne peut contenir que des lettres, espaces, tirets, apostrophes et points'),
   
   body('email')
     .isEmail()
@@ -39,6 +48,19 @@ const validateRegister = [
     .withMessage('Le mot de passe doit contenir au moins 6 caractères')
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
     .withMessage('Le mot de passe doit contenir au moins une minuscule, une majuscule et un chiffre'),
+  
+  body('confirmPassword')
+    .custom((value, { req }) => {
+      if (value !== req.body.password) {
+        throw new Error('Les mots de passe ne correspondent pas');
+      }
+      return true;
+    }),
+  
+  body('userType')
+    .optional()
+    .isIn(['listener', 'artist'])
+    .withMessage('Le type d\'utilisateur doit être "listener" ou "artist"'),
   
   handleValidationErrors
 ];
@@ -102,22 +124,15 @@ const validateSong = [
     .isLength({ max: 100 })
     .withMessage('Le nom de l\'album ne peut pas dépasser 100 caractères'),
   
-  body('duration')
-    .optional()
-    .isInt({ min: 1 })
-    .withMessage('La durée doit être un nombre entier positif'),
-  
   body('genre')
     .optional()
-    .trim()
-    .isLength({ max: 50 })
-    .withMessage('Le genre ne peut pas dépasser 50 caractères'),
+    .isIn(['Pop', 'Rock', 'Hip-Hop', 'R&B', 'Jazz', 'Classical', 'Electronic', 'Country', 'Reggae', 'Blues', 'Folk', 'Alternative', 'Indie', 'Funk', 'Soul', 'Disco'])
+    .withMessage('Genre musical invalide'),
   
-  body('spotifyId')
+  body('duration')
     .optional()
-    .trim()
-    .isLength({ min: 1 })
-    .withMessage('L\'ID Spotify est requis si fourni'),
+    .isInt({ min: 1, max: 3600 })
+    .withMessage('La durée doit être entre 1 et 3600 secondes'),
   
   handleValidationErrors
 ];
@@ -140,13 +155,13 @@ const validatePlaylist = [
   body('isPublic')
     .optional()
     .isBoolean()
-    .withMessage('isPublic doit être un booléen'),
+    .withMessage('Le statut public doit être un booléen'),
   
   handleValidationErrors
 ];
 
 /**
- * Règles de validation pour les paramètres d'ID
+ * Validation d'ObjectId MongoDB
  */
 const validateObjectId = [
   param('id')
@@ -157,7 +172,7 @@ const validateObjectId = [
 ];
 
 /**
- * Règles de validation pour la pagination
+ * Validation de pagination
  */
 const validatePagination = [
   query('page')
@@ -168,13 +183,13 @@ const validatePagination = [
   query('limit')
     .optional()
     .isInt({ min: 1, max: 100 })
-    .withMessage('La limite doit être un entier entre 1 et 100'),
+    .withMessage('La limite doit être entre 1 et 100'),
   
   handleValidationErrors
 ];
 
 /**
- * Règles de validation pour la recherche
+ * Validation de recherche
  */
 const validateSearch = [
   query('q')
@@ -184,14 +199,14 @@ const validateSearch = [
   
   query('type')
     .optional()
-    .isIn(['song', 'artist', 'album', 'playlist', 'user'])
-    .withMessage('Le type de recherche doit être song, artist, album, playlist ou user'),
+    .isIn(['songs', 'artists', 'albums', 'playlists', 'all'])
+    .withMessage('Type de recherche invalide'),
   
   handleValidationErrors
 ];
 
 /**
- * Règles de validation pour les commentaires
+ * Validation de commentaires
  */
 const validateComment = [
   body('content')

@@ -5,7 +5,7 @@ const rateLimit = require('express-rate-limit');
  */
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limite chaque IP à 100 requêtes par fenêtre
+  max: 1000, // Augmenté pour les tests
   message: {
     success: false,
     message: 'Trop de requêtes depuis cette IP, veuillez réessayer plus tard.'
@@ -26,7 +26,7 @@ const generalLimiter = rateLimit({
  */
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Limite chaque IP à 5 tentatives de connexion par fenêtre
+  max: 50, // Augmenté pour les tests
   message: {
     success: false,
     message: 'Trop de tentatives de connexion, veuillez réessayer plus tard.'
@@ -46,7 +46,7 @@ const authLimiter = rateLimit({
  */
 const registerLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 heure
-  max: 3, // Limite chaque IP à 3 tentatives d'enregistrement par heure
+  max: 20, // Augmenté pour les tests
   message: {
     success: false,
     message: 'Trop de tentatives d\'enregistrement, veuillez réessayer plus tard.'
@@ -65,7 +65,7 @@ const registerLimiter = rateLimit({
  */
 const searchLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
-  max: 30, // Limite chaque IP à 30 recherches par minute
+  max: 100, // Augmenté pour les tests
   message: {
     success: false,
     message: 'Trop de requêtes de recherche, veuillez ralentir.'
@@ -84,7 +84,7 @@ const searchLimiter = rateLimit({
  */
 const uploadLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 heure
-  max: 10, // Limite chaque IP à 10 uploads par heure
+  max: 50, // Augmenté pour les tests
   message: {
     success: false,
     message: 'Trop d\'uploads de fichiers, veuillez réessayer plus tard.'
@@ -103,7 +103,7 @@ const uploadLimiter = rateLimit({
  */
 const commentLimiter = rateLimit({
   windowMs: 5 * 60 * 1000, // 5 minutes
-  max: 10, // Limite chaque IP à 10 commentaires par 5 minutes
+  max: 20, // Augmenté pour les tests
   message: {
     success: false,
     message: 'Trop de commentaires, veuillez ralentir.'
@@ -122,7 +122,7 @@ const commentLimiter = rateLimit({
  */
 const socialActionLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
-  max: 20, // Limite chaque IP à 20 actions sociales par minute
+  max: 30, // Augmenté pour les tests
   message: {
     success: false,
     message: 'Trop d\'actions sociales, veuillez ralentir.'
@@ -137,7 +137,7 @@ const socialActionLimiter = rateLimit({
 });
 
 /**
- * Middleware pour créer un limiteur personnalisé
+ * Fonction pour créer un limiteur de taux personnalisé
  */
 const createCustomLimiter = (windowMs, max, message) => {
   return rateLimit({
@@ -145,12 +145,12 @@ const createCustomLimiter = (windowMs, max, message) => {
     max,
     message: {
       success: false,
-      message: message || 'Trop de requêtes, veuillez réessayer plus tard.'
+      message
     },
     handler: (req, res) => {
       res.status(429).json({
         success: false,
-        message: message || 'Trop de requêtes, veuillez réessayer plus tard.',
+        message,
         retryAfter: Math.ceil(req.rateLimit.resetTime / 1000)
       });
     }
