@@ -5,7 +5,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/authService';
 import toast from 'react-hot-toast';
 
-const LoginForm = ({ onSwitchToRegister }) => {
+const LoginForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
@@ -96,6 +96,10 @@ const LoginForm = ({ onSwitchToRegister }) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSwitchToRegister = () => {
+    navigate('/register');
   };
 
   return (
@@ -207,7 +211,7 @@ const LoginForm = ({ onSwitchToRegister }) => {
                 Vous n'avez pas de compte ?{' '}
                 <button
                   type="button"
-                  onClick={onSwitchToRegister}
+                  onClick={handleSwitchToRegister}
                   className="text-blue-400 hover:text-blue-300 font-semibold transition-colors hover:underline"
                 >
                   S'inscrire

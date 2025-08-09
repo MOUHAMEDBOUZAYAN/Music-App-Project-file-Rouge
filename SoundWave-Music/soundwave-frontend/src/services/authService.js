@@ -45,16 +45,28 @@ export const authService = {
       
       console.log('Réponse du serveur:', response.data);
       
-      // Si l'inscription réussit, sauvegarder les données
+      // Vérifier que la réponse contient les données attendues
       if (response.data && response.data.success) {
-        secureStorage.set('authToken', response.data.token);
-        secureStorage.set('user', JSON.stringify(response.data.user));
+        // Si l'inscription réussit, sauvegarder les données
+        if (response.data.token) {
+          secureStorage.set('authToken', response.data.token);
+        }
+        if (response.data.user) {
+          secureStorage.set('user', JSON.stringify(response.data.user));
+        }
+        
+        return {
+          success: true,
+          data: response.data
+        };
+      } else {
+        // Si la réponse n'est pas dans le format attendu
+        console.warn('Réponse inattendue du serveur:', response.data);
+        return {
+          success: false,
+          error: 'Format de réponse inattendu du serveur'
+        };
       }
-      
-      return {
-        success: true,
-        data: response.data
-      };
     } catch (error) {
       console.error('Erreur lors de l\'inscription:', error);
       

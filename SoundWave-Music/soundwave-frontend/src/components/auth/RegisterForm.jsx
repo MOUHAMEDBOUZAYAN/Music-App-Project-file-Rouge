@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Mail, Lock, User, Music, CheckCircle, AlertCircle } from 'lucide-react';
 import { authService } from '../../services/authService';
+import { useAuth } from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
-const RegisterForm = ({ onRegister, onSwitchToLogin }) => {
+const RegisterForm = ({ onRegister }) => {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -17,6 +19,8 @@ const RegisterForm = ({ onRegister, onSwitchToLogin }) => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -92,18 +96,24 @@ const RegisterForm = ({ onRegister, onSwitchToLogin }) => {
         console.log('Inscription réussie:', result.data);
         
         // Afficher un toast de succès
-        toast.success(result.data.message || 'Compte créé avec succès ! 🎉', {
+        const successMessage = result.data?.message || 'Compte créé avec succès ! 🎉';
+        toast.success(successMessage, {
           duration: 4000,
           icon: '🎵',
         });
         
+        // Mettre à jour le contexte d'authentification si les données sont disponibles
+        if (result.data.user && result.data.token) {
+          login(result.data.user, result.data.token);
+        }
+        
         // Rediriger vers la page d'accueil après 2 secondes
         setTimeout(() => {
-          window.location.href = '/';
+          navigate('/', { replace: true });
         }, 2000);
         
         // Appeler le callback si fourni
-        if (onRegister) {
+        if (onRegister && result.data) {
           onRegister(result.data);
         }
       } else {
@@ -465,7 +475,7 @@ const RegisterForm = ({ onRegister, onSwitchToLogin }) => {
                 Vous avez déjà un compte ?{' '}
                 <button
                   type="button"
-                  onClick={onSwitchToLogin}
+                  onClick={() => navigate('/login')}
                   className="text-blue-400 hover:text-blue-300 font-semibold transition-colors hover:underline"
                 >
                   Se connecter
