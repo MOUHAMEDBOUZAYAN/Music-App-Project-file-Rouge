@@ -1,459 +1,365 @@
-// MusicContext will be implemented here 
-import React, { createContext, useContext, useReducer, useRef, useEffect } from 'react';
-import { PLAYER_STATES, AUDIO_CONFIG } from '../utils/constants.js';
-import { shuffleArray } from '../utils/helpers.js';
+import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { toast } from 'react-hot-toast';
+
+// Types d'actions
+const ACTIONS = {
+  SET_CURRENT_TRACK: 'SET_CURRENT_TRACK',
+  SET_IS_PLAYING: 'SET_IS_PLAYING',
+  SET_QUEUE: 'SET_QUEUE',
+  ADD_TO_QUEUE: 'ADD_TO_QUEUE',
+  REMOVE_FROM_QUEUE: 'REMOVE_FROM_QUEUE',
+  CLEAR_QUEUE: 'CLEAR_QUEUE',
+  SET_SHUFFLE: 'SET_SHUFFLE',
+  SET_REPEAT: 'SET_REPEAT',
+  SET_VOLUME: 'SET_VOLUME',
+  SET_CURRENT_TIME: 'SET_CURRENT_TIME',
+  SET_DURATION: 'SET_DURATION',
+  PLAY_NEXT: 'PLAY_NEXT',
+  PLAY_PREVIOUS: 'PLAY_PREVIOUS',
+  TOGGLE_LIKE: 'TOGGLE_LIKE',
+  SET_PLAYLIST: 'SET_PLAYLIST',
+  ADD_TO_HISTORY: 'ADD_TO_HISTORY'
+};
 
 // État initial
 const initialState = {
-  // Lecture en cours
-  currentSong: null,
+  currentTrack: null,
   isPlaying: false,
-  playerState: PLAYER_STATES.STOPPED,
-  
-  // Progression
+  queue: [],
+  currentQueueIndex: 0,
+  shuffle: false,
+  repeat: 'none', // 'none', 'one', 'all'
+  volume: 0.7,
   currentTime: 0,
   duration: 0,
-  buffered: 0,
-  
-  // Volume et paramètres
-  volume: AUDIO_CONFIG.DEFAULT_VOLUME,
-  isMuted: false,
-  previousVolume: AUDIO_CONFIG.DEFAULT_VOLUME,
-  
-  // Queue et playlists
-  queue: [],
-  currentIndex: 0,
-  originalQueue: [],
-  
-  // Modes de lecture
-  isShuffled: false,
-  repeatMode: 'none', // 'none', 'all', 'one'
-  
-  // États
-  isLoading: false,
-  error: null
+  likedTracks: [],
+  currentPlaylist: null,
+  playHistory: []
 };
 
-// Types d'actions
-const MusicActionTypes = {
-  SET_CURRENT_SONG: 'SET_CURRENT_SONG',
-  SET_PLAYING: 'SET_PLAYING',
-  SET_PLAYER_STATE: 'SET_PLAYER_STATE',
-  SET_CURRENT_TIME: 'SET_CURRENT_TIME',
-  SET_DURATION: 'SET_DURATION',
-  SET_BUFFERED: 'SET_BUFFERED',
-  SET_VOLUME: 'SET_VOLUME',
-  TOGGLE_MUTE: 'TOGGLE_MUTE',
-  SET_QUEUE: 'SET_QUEUE',
-  SET_CURRENT_INDEX: 'SET_CURRENT_INDEX',
-  TOGGLE_SHUFFLE: 'TOGGLE_SHUFFLE',
-  SET_REPEAT_MODE: 'SET_REPEAT_MODE',
-  SET_LOADING: 'SET_LOADING',
-  SET_ERROR: 'SET_ERROR',
-  CLEAR_ERROR: 'CLEAR_ERROR'
-};
-
-// Reducer pour la gestion des états
-const musicReducer = (state, action) => {
+// Reducer
+function musicReducer(state, action) {
   switch (action.type) {
-    case MusicActionTypes.SET_CURRENT_SONG:
+    case ACTIONS.SET_CURRENT_TRACK:
       return {
         ...state,
-        currentSong: action.payload,
+        currentTrack: action.payload,
         currentTime: 0,
         duration: 0
       };
-      
-    case MusicActionTypes.SET_PLAYING:
+
+    case ACTIONS.SET_IS_PLAYING:
       return {
         ...state,
-        isPlaying: action.payload,
-        playerState: action.payload ? PLAYER_STATES.PLAYING : PLAYER_STATES.PAUSED
+        isPlaying: action.payload
       };
-      
-    case MusicActionTypes.SET_PLAYER_STATE:
+
+    case ACTIONS.SET_QUEUE:
       return {
         ...state,
-        playerState: action.payload,
-        isPlaying: action.payload === PLAYER_STATES.PLAYING
+        queue: action.payload,
+        currentQueueIndex: 0
       };
+
+    case ACTIONS.ADD_TO_QUEUE:
+      return {
+        ...state,
+        queue: [...state.queue, action.payload]
+      };
+
+    case ACTIONS.REMOVE_FROM_QUEUE:
+      const newQueue = state.queue.filter((_, index) => index !== action.payload);
+      const newIndex = state.currentQueueIndex >= action.payload 
+        ? Math.max(0, state.currentQueueIndex - 1) 
+        : state.currentQueueIndex;
       
-    case MusicActionTypes.SET_CURRENT_TIME:
+      return {
+        ...state,
+        queue: newQueue,
+        currentQueueIndex: newIndex
+      };
+
+    case ACTIONS.CLEAR_QUEUE:
+      return {
+        ...state,
+        queue: [],
+        currentQueueIndex: 0
+      };
+
+    case ACTIONS.SET_SHUFFLE:
+      return {
+        ...state,
+        shuffle: action.payload
+      };
+
+    case ACTIONS.SET_REPEAT:
+      return {
+        ...state,
+        repeat: action.payload
+      };
+
+    case ACTIONS.SET_VOLUME:
+      return {
+        ...state,
+        volume: action.payload
+      };
+
+    case ACTIONS.SET_CURRENT_TIME:
       return {
         ...state,
         currentTime: action.payload
       };
-      
-    case MusicActionTypes.SET_DURATION:
+
+    case ACTIONS.SET_DURATION:
       return {
         ...state,
         duration: action.payload
       };
+
+    case ACTIONS.PLAY_NEXT:
+      let nextIndex = state.currentQueueIndex + 1;
       
-    case MusicActionTypes.SET_BUFFERED:
-      return {
-        ...state,
-        buffered: action.payload
-      };
-      
-    case MusicActionTypes.SET_VOLUME:
-      return {
-        ...state,
-        volume: action.payload,
-        isMuted: action.payload === 0
-      };
-      
-    case MusicActionTypes.TOGGLE_MUTE:
-      return {
-        ...state,
-        isMuted: !state.isMuted,
-        volume: !state.isMuted ? 0 : state.previousVolume,
-        previousVolume: !state.isMuted ? state.volume : state.previousVolume
-      };
-      
-    case MusicActionTypes.SET_QUEUE:
-      return {
-        ...state,
-        queue: action.payload.queue,
-        originalQueue: action.payload.originalQueue || action.payload.queue,
-        currentIndex: action.payload.index || 0
-      };
-      
-    case MusicActionTypes.SET_CURRENT_INDEX:
-      return {
-        ...state,
-        currentIndex: action.payload
-      };
-      
-    case MusicActionTypes.TOGGLE_SHUFFLE:
-      const newIsShuffled = !state.isShuffled;
-      let newQueue = [...state.queue];
-      let newIndex = state.currentIndex;
-      
-      if (newIsShuffled) {
-        // Activer le shuffle
-        const currentSong = state.queue[state.currentIndex];
-        const otherSongs = state.queue.filter((_, index) => index !== state.currentIndex);
-        const shuffledOthers = shuffleArray(otherSongs);
-        newQueue = [currentSong, ...shuffledOthers];
-        newIndex = 0;
-      } else {
-        // Désactiver le shuffle
-        newQueue = [...state.originalQueue];
-        const currentSong = state.queue[state.currentIndex];
-        newIndex = state.originalQueue.findIndex(song => song.id === currentSong.id);
+      if (nextIndex >= state.queue.length) {
+        if (state.repeat === 'all') {
+          nextIndex = 0;
+        } else {
+          return state; // Fin de la file d'attente
+        }
       }
       
       return {
         ...state,
-        isShuffled: newIsShuffled,
-        queue: newQueue,
-        currentIndex: newIndex
+        currentQueueIndex: nextIndex,
+        currentTrack: state.queue[nextIndex] || null,
+        currentTime: 0
       };
+
+    case ACTIONS.PLAY_PREVIOUS:
+      let prevIndex = state.currentQueueIndex - 1;
       
-    case MusicActionTypes.SET_REPEAT_MODE:
+      if (prevIndex < 0) {
+        if (state.repeat === 'all') {
+          prevIndex = state.queue.length - 1;
+        } else {
+          return state; // Début de la file d'attente
+        }
+      }
+      
       return {
         ...state,
-        repeatMode: action.payload
+        currentQueueIndex: prevIndex,
+        currentTrack: state.queue[prevIndex] || null,
+        currentTime: 0
       };
+
+    case ACTIONS.TOGGLE_LIKE:
+      const trackId = action.payload;
+      const isLiked = state.likedTracks.includes(trackId);
       
-    case MusicActionTypes.SET_LOADING:
       return {
         ...state,
-        isLoading: action.payload
+        likedTracks: isLiked
+          ? state.likedTracks.filter(id => id !== trackId)
+          : [...state.likedTracks, trackId]
       };
-      
-    case MusicActionTypes.SET_ERROR:
+
+    case ACTIONS.SET_PLAYLIST:
       return {
         ...state,
-        error: action.payload,
-        isLoading: false
+        currentPlaylist: action.payload
       };
-      
-    case MusicActionTypes.CLEAR_ERROR:
+
+    case ACTIONS.ADD_TO_HISTORY:
+      const newHistory = [action.payload, ...state.playHistory.filter(track => track.id !== action.payload.id)];
       return {
         ...state,
-        error: null
+        playHistory: newHistory.slice(0, 50) // Garder seulement les 50 dernières
       };
-      
+
     default:
       return state;
   }
-};
+}
 
-// Création du contexte
+// Créer le contexte
 const MusicContext = createContext();
-
-// Provider du contexte
-export const MusicProvider = ({ children }) => {
-  const [state, dispatch] = useReducer(musicReducer, initialState);
-  const audioRef = useRef(null);
-  const progressUpdateRef = useRef(null);
-
-  // Initialisation de l'élément audio
-  useEffect(() => {
-    audioRef.current = new Audio();
-    audioRef.current.preload = 'metadata';
-    
-    // Événements audio
-    const audio = audioRef.current;
-    
-    const handleLoadStart = () => {
-      dispatch({ type: MusicActionTypes.SET_LOADING, payload: true });
-    };
-    
-    const handleCanPlay = () => {
-      dispatch({ type: MusicActionTypes.SET_LOADING, payload: false });
-      dispatch({ type: MusicActionTypes.SET_DURATION, payload: audio.duration || 0 });
-    };
-    
-    const handleTimeUpdate = () => {
-      dispatch({ type: MusicActionTypes.SET_CURRENT_TIME, payload: audio.currentTime });
-    };
-    
-    const handleEnded = () => {
-      handleNext();
-    };
-    
-    const handleError = (e) => {
-      dispatch({
-        type: MusicActionTypes.SET_ERROR,
-        payload: 'Erreur lors de la lecture du fichier audio'
-      });
-    };
-    
-    const handleProgress = () => {
-      if (audio.buffered.length > 0) {
-        const buffered = audio.buffered.end(audio.buffered.length - 1);
-        dispatch({ type: MusicActionTypes.SET_BUFFERED, payload: buffered });
-      }
-    };
-    
-    // Ajout des événements
-    audio.addEventListener('loadstart', handleLoadStart);
-    audio.addEventListener('canplay', handleCanPlay);
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('ended', handleEnded);
-    audio.addEventListener('error', handleError);
-    audio.addEventListener('progress', handleProgress);
-    
-    // Nettoyage
-    return () => {
-      audio.removeEventListener('loadstart', handleLoadStart);
-      audio.removeEventListener('canplay', handleCanPlay);
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('ended', handleEnded);
-      audio.removeEventListener('error', handleError);
-      audio.removeEventListener('progress', handleProgress);
-      audio.pause();
-    };
-  }, []);
-
-  // Actions principales
-  const playSong = async (song, queue = null, index = 0) => {
-    try {
-      dispatch({ type: MusicActionTypes.SET_LOADING, payload: true });
-      
-      if (queue) {
-        dispatch({
-          type: MusicActionTypes.SET_QUEUE,
-          payload: { queue, index }
-        });
-      }
-      
-      dispatch({ type: MusicActionTypes.SET_CURRENT_SONG, payload: song });
-      
-      if (audioRef.current) {
-        audioRef.current.src = song.audioUrl;
-        audioRef.current.volume = state.volume;
-        await audioRef.current.play();
-        dispatch({ type: MusicActionTypes.SET_PLAYING, payload: true });
-      }
-    } catch (error) {
-      dispatch({
-        type: MusicActionTypes.SET_ERROR,
-        payload: 'Impossible de lire ce morceau'
-      });
-    }
-  };
-
-  const togglePlay = async () => {
-    if (!state.currentSong || !audioRef.current) return;
-    
-    try {
-      if (state.isPlaying) {
-        audioRef.current.pause();
-        dispatch({ type: MusicActionTypes.SET_PLAYING, payload: false });
-      } else {
-        await audioRef.current.play();
-        dispatch({ type: MusicActionTypes.SET_PLAYING, payload: true });
-      }
-    } catch (error) {
-      dispatch({
-        type: MusicActionTypes.SET_ERROR,
-        payload: 'Erreur lors de la lecture'
-      });
-    }
-  };
-
-  const handleNext = () => {
-    if (state.queue.length === 0) return;
-    
-    let nextIndex;
-    
-    if (state.repeatMode === 'one') {
-      // Répéter le morceau actuel
-      nextIndex = state.currentIndex;
-    } else if (state.currentIndex === state.queue.length - 1) {
-      // Dernier morceau
-      if (state.repeatMode === 'all') {
-        nextIndex = 0;
-      } else {
-        // Arrêter la lecture
-        dispatch({ type: MusicActionTypes.SET_PLAYING, payload: false });
-        return;
-      }
-    } else {
-      nextIndex = state.currentIndex + 1;
-    }
-    
-    dispatch({ type: MusicActionTypes.SET_CURRENT_INDEX, payload: nextIndex });
-    playSong(state.queue[nextIndex], null, nextIndex);
-  };
-
-  const handlePrevious = () => {
-    if (state.queue.length === 0) return;
-    
-    // Si on est au début du morceau (< 3 secondes), passer au précédent
-    // Sinon, revenir au début du morceau actuel
-    if (state.currentTime < 3) {
-      let prevIndex;
-      
-      if (state.currentIndex === 0) {
-        prevIndex = state.repeatMode === 'all' ? state.queue.length - 1 : 0;
-      } else {
-        prevIndex = state.currentIndex - 1;
-      }
-      
-      dispatch({ type: MusicActionTypes.SET_CURRENT_INDEX, payload: prevIndex });
-      playSong(state.queue[prevIndex], null, prevIndex);
-    } else {
-      seekTo(0);
-    }
-  };
-
-  const seekTo = (time) => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = time;
-      dispatch({ type: MusicActionTypes.SET_CURRENT_TIME, payload: time });
-    }
-  };
-
-  const setVolume = (volume) => {
-    const newVolume = Math.max(0, Math.min(1, volume));
-    
-    if (audioRef.current) {
-      audioRef.current.volume = newVolume;
-    }
-    
-    dispatch({ type: MusicActionTypes.SET_VOLUME, payload: newVolume });
-  };
-
-  const toggleMute = () => {
-    dispatch({ type: MusicActionTypes.TOGGLE_MUTE });
-    
-    if (audioRef.current) {
-      audioRef.current.volume = state.isMuted ? state.previousVolume : 0;
-    }
-  };
-
-  const toggleShuffle = () => {
-    dispatch({ type: MusicActionTypes.TOGGLE_SHUFFLE });
-  };
-
-  const cycleRepeatMode = () => {
-    const modes = ['none', 'all', 'one'];
-    const currentModeIndex = modes.indexOf(state.repeatMode);
-    const nextMode = modes[(currentModeIndex + 1) % modes.length];
-    
-    dispatch({ type: MusicActionTypes.SET_REPEAT_MODE, payload: nextMode });
-  };
-
-  const addToQueue = (songs) => {
-    const newQueue = [...state.queue, ...songs];
-    dispatch({
-      type: MusicActionTypes.SET_QUEUE,
-      payload: { queue: newQueue, originalQueue: newQueue }
-    });
-  };
-
-  const removeFromQueue = (index) => {
-    const newQueue = state.queue.filter((_, i) => i !== index);
-    let newIndex = state.currentIndex;
-    
-    if (index < state.currentIndex) {
-      newIndex = state.currentIndex - 1;
-    } else if (index === state.currentIndex && index === newQueue.length) {
-      newIndex = Math.max(0, newQueue.length - 1);
-    }
-    
-    dispatch({
-      type: MusicActionTypes.SET_QUEUE,
-      payload: { queue: newQueue, originalQueue: newQueue, index: newIndex }
-    });
-  };
-
-  const clearQueue = () => {
-    dispatch({
-      type: MusicActionTypes.SET_QUEUE,
-      payload: { queue: [], originalQueue: [], index: 0 }
-    });
-  };
-
-  const clearError = () => {
-    dispatch({ type: MusicActionTypes.CLEAR_ERROR });
-  };
-
-  // Valeur du contexte
-  const contextValue = {
-    // État
-    ...state,
-    
-    // Actions
-    playSong,
-    togglePlay,
-    handleNext,
-    handlePrevious,
-    seekTo,
-    setVolume,
-    toggleMute,
-    toggleShuffle,
-    cycleRepeatMode,
-    addToQueue,
-    removeFromQueue,
-    clearQueue,
-    clearError,
-    
-    // Utilitaires
-    audioRef
-  };
-
-  return (
-    <MusicContext.Provider value={contextValue}>
-      {children}
-    </MusicContext.Provider>
-  );
-};
 
 // Hook personnalisé pour utiliser le contexte
 export const useMusic = () => {
   const context = useContext(MusicContext);
-  
   if (!context) {
     throw new Error('useMusic doit être utilisé dans un MusicProvider');
   }
-  
   return context;
+};
+
+// Provider du contexte
+export const MusicProvider = ({ children }) => {
+  const [state, dispatch] = useReducer(musicReducer, initialState);
+
+  // Actions
+  const actions = {
+    // Lecture
+    playTrack: (track) => {
+      dispatch({ type: ACTIONS.SET_CURRENT_TRACK, payload: track });
+      dispatch({ type: ACTIONS.SET_IS_PLAYING, payload: true });
+      dispatch({ type: ACTIONS.ADD_TO_HISTORY, payload: track });
+    },
+
+    playPause: () => {
+      dispatch({ type: ACTIONS.SET_IS_PLAYING, payload: !state.isPlaying });
+    },
+
+    playNext: () => {
+      if (state.queue.length > 0) {
+        dispatch({ type: ACTIONS.PLAY_NEXT });
+      }
+    },
+
+    playPrevious: () => {
+      if (state.queue.length > 0) {
+        dispatch({ type: ACTIONS.PLAY_PREVIOUS });
+      }
+    },
+
+    // File d'attente
+    setQueue: (tracks) => {
+      dispatch({ type: ACTIONS.SET_QUEUE, payload: tracks });
+    },
+
+    addToQueue: (track) => {
+      dispatch({ type: ACTIONS.ADD_TO_QUEUE, payload: track });
+      toast.success('Ajouté à la file d\'attente');
+    },
+
+    removeFromQueue: (index) => {
+      dispatch({ type: ACTIONS.REMOVE_FROM_QUEUE, payload: index });
+    },
+
+    clearQueue: () => {
+      dispatch({ type: ACTIONS.CLEAR_QUEUE });
+    },
+
+    // Contrôles
+    setShuffle: (shuffle) => {
+      dispatch({ type: ACTIONS.SET_SHUFFLE, payload: shuffle });
+    },
+
+    setRepeat: (repeat) => {
+      dispatch({ type: ACTIONS.SET_REPEAT, payload: repeat });
+    },
+
+    setVolume: (volume) => {
+      dispatch({ type: ACTIONS.SET_VOLUME, payload: volume });
+    },
+
+    setCurrentTime: (time) => {
+      dispatch({ type: ACTIONS.SET_CURRENT_TIME, payload: time });
+    },
+
+    setDuration: (duration) => {
+      dispatch({ type: ACTIONS.SET_DURATION, payload: duration });
+    },
+
+    // Favoris
+    toggleLike: (trackId) => {
+      dispatch({ type: ACTIONS.TOGGLE_LIKE, payload: trackId });
+    },
+
+    // Playlist
+    setCurrentPlaylist: (playlist) => {
+      dispatch({ type: ACTIONS.SET_PLAYLIST, payload: playlist });
+    },
+
+    // Lecture d'album/playlist
+    playAlbum: (album) => {
+      if (album.tracks && album.tracks.length > 0) {
+        const tracks = album.tracks.map(track => ({
+          ...track,
+          album: album.name,
+          coverUrl: album.coverUrl
+        }));
+        
+        dispatch({ type: ACTIONS.SET_QUEUE, payload: tracks });
+        dispatch({ type: ACTIONS.SET_CURRENT_TRACK, payload: tracks[0] });
+        dispatch({ type: ACTIONS.SET_IS_PLAYING, payload: true });
+        dispatch({ type: ACTIONS.SET_CURRENT_PLAYLIST, payload: album });
+        
+        toast.success(`Lecture de l'album ${album.name}`);
+      }
+    },
+
+    playPlaylist: (playlist) => {
+      if (playlist.tracks && playlist.tracks.length > 0) {
+        const tracks = playlist.tracks.map(track => ({
+          ...track,
+          playlist: playlist.name,
+          coverUrl: playlist.coverUrl
+        }));
+        
+        dispatch({ type: ACTIONS.SET_QUEUE, payload: tracks });
+        dispatch({ type: ACTIONS.SET_CURRENT_TRACK, payload: tracks[0] });
+        dispatch({ type: ACTIONS.SET_IS_PLAYING, payload: true });
+        dispatch({ type: ACTIONS.SET_CURRENT_PLAYLIST, payload: playlist });
+        
+        toast.success(`Lecture de la playlist ${playlist.name}`);
+      }
+    },
+
+    // Recherche et lecture
+    searchAndPlay: async (query) => {
+      try {
+        // Ici vous pouvez implémenter la logique de recherche
+        // Pour l'instant, on simule
+        toast.success(`Recherche de "${query}"`);
+      } catch (error) {
+        toast.error('Erreur lors de la recherche');
+      }
+    }
+  };
+
+  // Sauvegarder l'état dans le localStorage
+  useEffect(() => {
+    localStorage.setItem('musicState', JSON.stringify({
+      volume: state.volume,
+      likedTracks: state.likedTracks,
+      playHistory: state.playHistory
+    }));
+  }, [state.volume, state.likedTracks, state.playHistory]);
+
+  // Charger l'état depuis le localStorage
+  useEffect(() => {
+    const savedState = localStorage.getItem('musicState');
+    if (savedState) {
+      try {
+        const parsed = JSON.parse(savedState);
+        if (parsed.volume !== undefined) {
+          actions.setVolume(parsed.volume);
+        }
+        if (parsed.likedTracks) {
+          // Restaurer les favoris
+          parsed.likedTracks.forEach(trackId => {
+            if (!state.likedTracks.includes(trackId)) {
+              actions.toggleLike(trackId);
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement de l\'état:', error);
+      }
+    }
+  }, []);
+
+  const value = {
+    ...state,
+    ...actions
+  };
+
+  return (
+    <MusicContext.Provider value={value}>
+      {children}
+    </MusicContext.Provider>
+  );
 };
 
 export default MusicContext;

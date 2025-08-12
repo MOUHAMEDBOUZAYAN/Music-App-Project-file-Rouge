@@ -30,6 +30,14 @@ router.get('/',
   songController.searchSongs
 );
 
+// @route   GET api/songs/trending
+// @desc    Obtenir les chansons tendance
+// @access  Public
+router.get('/trending', 
+  validatePagination, 
+  songController.getTrendingSongs
+);
+
 // @route   GET api/songs/:id
 // @desc    Obtenir les détails d'une chanson
 // @access  Public
