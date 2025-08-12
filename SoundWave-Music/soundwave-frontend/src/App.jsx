@@ -1,85 +1,87 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './store/AuthContext';
-import { AppProvider } from './store/index.jsx';
-import ProtectedRoute from './components/common/ProtectedRoute';
-
-// Pages
+import { MusicProvider } from './store/MusicContext';
+import Layout from './components/common/Layout';
 import Home from './pages/Home';
 import Search from './pages/Search';
 import Library from './pages/Library';
+import LikedSongs from './pages/LikedSongs';
 import Playlist from './pages/Playlist';
 import Artist from './pages/Artist';
+import Album from './pages/Album';
+import Profile from './pages/Profile';
 import Settings from './pages/Settings';
-import LikedSongs from './pages/LikedSongs';
-
-// Components
-import Layout from './components/common/Layout';
 import LoginForm from './components/auth/LoginForm';
 import RegisterForm from './components/auth/RegisterForm';
-import ResetPassword from './components/auth/ResetPassword';
-import UploadSong from './components/artist/UploadSong';
-import Dashboard from './components/artist/Dashboard';
-import Analytics from './components/artist/Analytics';
+import ProtectedRoute from './components/common/ProtectedRoute';
+import './App.css';
 
 function App() {
   return (
-    <AuthProvider>
-      <AppProvider>
-        <Router>
+    <Router>
+      <AuthProvider>
+        <MusicProvider>
           <div className="App">
-            {/* React Hot Toast Configuration */}
-            <Toaster
+            <Toaster 
               position="top-right"
               toastOptions={{
                 duration: 4000,
                 style: {
-                  background: '#363636',
+                  background: '#1f2937',
                   color: '#fff',
-                  borderRadius: '12px',
-                  padding: '16px',
-                  fontSize: '14px',
-                  fontWeight: '500',
+                  border: '1px solid #374151'
                 },
                 success: {
                   iconTheme: {
-                    primary: '#10B981',
-                    secondary: '#fff',
-                  },
-                  style: {
-                    background: '#065F46',
-                    color: '#fff',
-                    border: '1px solid #10B981',
-                  },
+                    primary: '#10b981',
+                    secondary: '#fff'
+                  }
                 },
                 error: {
                   iconTheme: {
-                    primary: '#EF4444',
-                    secondary: '#fff',
-                  },
-                  style: {
-                    background: '#7F1D1D',
-                    color: '#fff',
-                    border: '1px solid #EF4444',
-                  },
-                },
+                    primary: '#ef4444',
+                    secondary: '#fff'
+                  }
+                }
               }}
             />
             
             <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<Home />} />
-              <Route path="/search" element={<Search />} />
+              {/* Routes publiques */}
               <Route path="/login" element={<LoginForm />} />
               <Route path="/register" element={<RegisterForm />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
               
-              {/* Protected Routes */}
+              {/* Routes protégées avec layout Spotify */}
+              <Route path="/" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Home />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/search" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Search />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
               <Route path="/library" element={
                 <ProtectedRoute>
                   <Layout>
                     <Library />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/liked-songs" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <LikedSongs />
                   </Layout>
                 </ProtectedRoute>
               } />
@@ -92,10 +94,26 @@ function App() {
                 </ProtectedRoute>
               } />
               
-              <Route path="/liked" element={
+              <Route path="/artist/:id" element={
                 <ProtectedRoute>
                   <Layout>
-                    <LikedSongs />
+                    <Artist />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/album/:id" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Album />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/profile" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Profile />
                   </Layout>
                 </ProtectedRoute>
               } />
@@ -108,42 +126,13 @@ function App() {
                 </ProtectedRoute>
               } />
               
-              <Route path="/upload" element={
-                <ProtectedRoute requireArtist>
-                  <Layout>
-                    <UploadSong />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              
-              <Route path="/dashboard" element={
-                <ProtectedRoute requireArtist>
-                  <Layout>
-                    <Dashboard />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              
-              <Route path="/analytics" element={
-                <ProtectedRoute requireArtist>
-                  <Layout>
-                    <Analytics />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              
-              <Route path="/admin" element={
-                <ProtectedRoute requireAdmin>
-                  <Layout>
-                    <div>Admin Panel</div>
-                  </Layout>
-                </ProtectedRoute>
-              } />
+              {/* Redirection par défaut */}
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </div>
-        </Router>
-      </AppProvider>
-    </AuthProvider>
+        </MusicProvider>
+      </AuthProvider>
+    </Router>
   );
 }
 

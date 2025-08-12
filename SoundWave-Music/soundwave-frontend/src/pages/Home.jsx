@@ -1,6 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Play, Heart, MoreHorizontal, Shuffle, SkipBack, SkipForward, Repeat, Volume2, List, Monitor, Maximize2 } from 'lucide-react';
+import { 
+  Search, 
+  Play, 
+  Heart, 
+  MoreHorizontal, 
+  Shuffle, 
+  SkipBack, 
+  SkipForward, 
+  Repeat, 
+  Volume2, 
+  List, 
+  Monitor, 
+  Maximize2,
+  Clock,
+  Plus,
+  ArrowRight
+} from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { useMusic } from '../store/MusicContext';
 import { songService } from '../services/songService';
 import { artistService } from '../services/artistService';
 import { playlistService } from '../services/playlistService';
@@ -8,11 +25,23 @@ import toast from 'react-hot-toast';
 
 const Home = () => {
   const { user } = useAuth();
+  const { 
+    currentTrack, 
+    isPlaying, 
+    playTrack, 
+    addToQueue, 
+    toggleLike, 
+    likedTracks,
+    playPlaylist,
+    playAlbum,
+    playArtist
+  } = useMusic();
+  
   const [currentFilter, setCurrentFilter] = useState('Tout');
-  const [isPlaying, setIsPlaying] = useState(false);
   const [trendingSongs, setTrendingSongs] = useState([]);
   const [popularArtists, setPopularArtists] = useState([]);
   const [playlists, setPlaylists] = useState([]);
+  const [recentAlbums, setRecentAlbums] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Charger les données au montage du composant
@@ -24,30 +53,60 @@ const Home = () => {
     setIsLoading(true);
     try {
       // Charger les chansons tendance
-      const trendingResult = await songService.getTrendingSongs({ limit: 6 });
+      const trendingResult = await songService.getTrendingSongs({ limit: 20 });
       if (trendingResult.success) {
         setTrendingSongs(trendingResult.data.songs || []);
       }
 
       // Charger les artistes populaires depuis l'API
-      const artistsResult = await artistService.getPopularArtists({ limit: 5 });
+      const artistsResult = await artistService.getPopularArtists({ limit: 10 });
       if (artistsResult.success) {
         setPopularArtists(artistsResult.data.artists || []);
       } else {
-        // Fallback si l'API n'est pas disponible
         console.warn('Impossible de charger les artistes depuis l\'API:', artistsResult.error);
         setPopularArtists([]);
       }
 
       // Charger les playlists recommandées depuis l'API
-      const playlistsResult = await playlistService.getRecommendedPlaylists({ limit: 6 });
+      const playlistsResult = await playlistService.getRecommendedPlaylists({ limit: 10 });
       if (playlistsResult.success) {
         setPlaylists(playlistsResult.data.playlists || []);
       } else {
-        // Fallback si l'API n'est pas disponible
         console.warn('Impossible de charger les playlists depuis l\'API:', playlistsResult.error);
         setPlaylists([]);
       }
+
+      // Simuler des albums récents (à remplacer par l'API)
+      setRecentAlbums([
+        {
+          id: 1,
+          name: 'SALGOAT',
+          artist: 'LFERDA',
+          coverUrl: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop',
+          tracks: []
+        },
+        {
+          id: 2,
+          name: 'BLEDARD (Deluxe)',
+          artist: 'Draganov',
+          coverUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop',
+          tracks: []
+        },
+        {
+          id: 3,
+          name: 'SYMPHONY K',
+          artist: 'ElGrandeToto',
+          coverUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&h=300&fit=crop',
+          tracks: []
+        },
+        {
+          id: 4,
+          name: 'ICEBERG',
+          artist: 'Mons',
+          coverUrl: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300&h=300&fit=crop',
+          tracks: []
+        }
+      ]);
 
     } catch (error) {
       console.error('Erreur lors du chargement des données:', error);
@@ -57,106 +116,38 @@ const Home = () => {
     }
   };
 
-  // Données simulées pour les radios populaires (en attendant l'API)
-  const popularRadios = [
-    {
-      id: 1,
-      name: 'Cheb Hasni',
-      description: 'Rai, Pop',
-      color: 'from-green-400 to-green-600',
-      image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=150&h=150&fit=crop&crop=face'
-    },
-    {
-      id: 2,
-      name: 'Cheba Warda',
-      description: 'Rai, Traditionnel',
-      color: 'from-yellow-400 to-yellow-600',
-      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face'
-    },
-    {
-      id: 3,
-      name: 'Draganov',
-      description: 'Rap, Hip-Hop',
-      color: 'from-pink-400 to-pink-600',
-      image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'
-    },
-    {
-      id: 4,
-      name: 'Bilel Tacchini',
-      description: 'Pop, Rock',
-      color: 'from-purple-400 to-purple-600',
-      image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face'
-    },
-    {
-      id: 5,
-      name: 'Manal',
-      description: 'R&B, Soul',
-      color: 'from-orange-400 to-orange-600',
-      image: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face'
-    },
-    {
-      id: 6,
-      name: 'LFERDA',
-      description: 'Rap, Trap',
-      color: 'from-blue-400 to-blue-600',
-      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face'
-    }
-  ];
-
   const handlePlaySong = (song) => {
-    // Ici vous pouvez implémenter la logique de lecture
-    console.log('Lecture de la chanson:', song);
+    playTrack(song);
     toast.success(`Lecture de ${song.title || song.name}`);
   };
 
-  const handleLikeSong = async (songId) => {
-    try {
-      const result = await songService.likeSong(songId);
-      if (result.success) {
-        toast.success('Chanson ajoutée aux favoris');
-        // Recharger les données si nécessaire
-        loadHomeData();
-      } else {
-        toast.error(result.error);
-      }
-    } catch (error) {
-      toast.error('Erreur lors de l\'ajout aux favoris');
-    }
+  const handlePlayPlaylist = (playlist) => {
+    playPlaylist(playlist);
+    toast.success(`Lecture de la playlist ${playlist.name}`);
   };
 
-  const handleFollowArtist = async (artistId) => {
-    try {
-      const result = await artistService.followArtist(artistId);
-      if (result.success) {
-        toast.success('Artiste ajouté à vos suivis');
-        // Recharger les données pour mettre à jour l'état
-        loadHomeData();
-      } else {
-        toast.error(result.error);
-      }
-    } catch (error) {
-      toast.error('Erreur lors du suivi de l\'artiste');
-    }
+  const handlePlayAlbum = (album) => {
+    playAlbum(album);
+    toast.success(`Lecture de l'album ${album.name}`);
   };
 
-  const handleFollowPlaylist = async (playlistId) => {
-    try {
-      const result = await playlistService.followPlaylist(playlistId);
-      if (result.success) {
-        toast.success('Playlist ajoutée à vos suivis');
-        // Recharger les données pour mettre à jour l'état
-        loadHomeData();
-      } else {
-        toast.error(result.error);
-      }
-    } catch (error) {
-      toast.error('Erreur lors du suivi de la playlist');
-    }
+  const handlePlayArtist = (artist) => {
+    playArtist(artist);
+    toast.success(`Lecture des meilleurs titres de ${artist.username || artist.name}`);
+  };
+
+  const handleAddToQueue = (song) => {
+    addToQueue(song);
+    toast.success('Ajouté à la file d\'attente');
+  };
+
+  const handleToggleLike = (songId) => {
+    toggleLike(songId);
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-white">Chargement de votre musique...</p>
@@ -166,9 +157,9 @@ const Home = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-black text-white overflow-x-hidden">
       {/* Header avec recherche */}
-      <div className="sticky top-0 z-10 bg-gray-900/95 backdrop-blur-sm border-b border-gray-800">
+      <div className="sticky top-0 z-10 bg-black/95 backdrop-blur-sm border-b border-gray-800">
         <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -224,40 +215,11 @@ const Home = () => {
 
       {/* Contenu principal */}
       <div className="px-6 py-8 space-y-8 pb-24">
-        {/* Section Radio populaire */}
+        {/* Section Bienvenue */}
         <section>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold">Radio populaire</h2>
-            <button className="text-sm text-gray-400 hover:text-white transition-colors">
-              Tout afficher
-            </button>
-          </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {popularRadios.map((radio) => (
-              <div
-                key={radio.id}
-                className={`group relative bg-gradient-to-br ${radio.color} p-4 rounded-lg cursor-pointer hover:scale-105 transition-transform duration-200`}
-                onClick={() => handlePlaySong(radio)}
-              >
-                <div className="aspect-square mb-4">
-                  <img
-                    src={radio.image}
-                    alt={radio.name}
-                    className="w-full h-full object-cover rounded-full"
-                  />
-                </div>
-                <div className="text-center">
-                  <div className="text-xs font-bold text-white/80 mb-1">RADIO</div>
-                  <h3 className="font-bold text-white mb-1">{radio.name}</h3>
-                  <p className="text-xs text-white/70">{radio.description}</p>
-                </div>
-                <button className="absolute bottom-2 right-2 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Play className="h-5 w-5 text-black ml-1" />
-                </button>
-              </div>
-            ))}
-          </div>
+          <h1 className="text-3xl font-bold mb-6">
+            Bonjour, {user?.username || 'Utilisateur'}
+          </h1>
         </section>
 
         {/* Section Chansons tendance */}
@@ -265,32 +227,67 @@ const Home = () => {
           <section>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold">Chansons tendance</h2>
-              <button className="text-sm text-gray-400 hover:text-white transition-colors">
-                Tout afficher
+              <button className="text-sm text-gray-400 hover:text-white transition-colors flex items-center">
+                Tout afficher <ArrowRight className="h-4 w-4 ml-1" />
               </button>
             </div>
             
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-              {trendingSongs.map((song) => (
-                <div key={song._id} className="group bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors cursor-pointer">
-                  <div className="aspect-square mb-4 relative">
-                    <img
-                      src={song.cover || `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=200&h=200&fit=crop`}
-                      alt={song.title}
-                      className="w-full h-full object-cover rounded-lg"
-                    />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+              {trendingSongs.slice(0, 10).map((song, index) => (
+                <div key={song._id} className="group bg-gray-900 p-4 rounded-lg hover:bg-gray-800 transition-all duration-200 cursor-pointer">
+                  <div className="relative mb-4">
+                    <div className="aspect-square bg-gray-800 rounded-lg overflow-hidden">
+                      <img
+                        src={song.cover || `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop`}
+                        alt={song.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                      />
+                    </div>
+                    
+                    {/* Bouton play qui apparaît au survol */}
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
                         handlePlaySong(song);
                       }}
-                      className="absolute bottom-2 right-2 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute bottom-2 right-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 hover:bg-green-400 shadow-lg"
                     >
-                      <Play className="h-5 w-5 text-black ml-1" />
+                      <Play className="h-6 w-6 text-black ml-1" />
+                    </button>
+
+                    {/* Bouton like */}
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleLike(song._id);
+                      }}
+                      className={`absolute top-2 right-2 p-2 rounded-full transition-all duration-200 ${
+                        likedTracks.includes(song._id) 
+                          ? 'text-green-500 bg-black/50' 
+                          : 'text-gray-400 bg-black/50 hover:text-white'
+                      }`}
+                    >
+                      <Heart className="h-4 w-4" fill={likedTracks.includes(song._id) ? 'currentColor' : 'none'} />
+                    </button>
+
+                    {/* Bouton plus d'options */}
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddToQueue(song);
+                      }}
+                      className="absolute top-2 left-2 p-2 rounded-full text-gray-400 bg-black/50 hover:text-white transition-all duration-200"
+                    >
+                      <Plus className="h-4 w-4" />
                     </button>
                   </div>
-                  <h3 className="font-medium text-sm mb-1 truncate">{song.title}</h3>
-                  <p className="text-xs text-gray-400 truncate">{song.artist}</p>
+                  
+                  <h3 className="font-semibold text-sm mb-1 truncate group-hover:text-green-400 transition-colors">
+                    {song.title}
+                  </h3>
+                  <p className="text-xs text-gray-400 truncate">
+                    {song.artist}
+                  </p>
                 </div>
               ))}
             </div>
@@ -301,41 +298,36 @@ const Home = () => {
         <section>
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold">Artistes populaires</h2>
-            <button className="text-sm text-gray-400 hover:text-white transition-colors">
-              Tout afficher
+            <button className="text-sm text-gray-400 hover:text-white transition-colors flex items-center">
+              Tout afficher <ArrowRight className="h-4 w-4 ml-1" />
             </button>
           </div>
           
           {popularArtists.length > 0 ? (
-            <div className="flex space-x-6 overflow-x-auto pb-4">
+            <div className="flex space-x-6 overflow-x-auto pb-4 scrollbar-hide">
               {popularArtists.map((artist) => (
                 <div key={artist._id || artist.id} className="flex-shrink-0 text-center group">
                   <div className="relative mb-3">
-                    <img
-                      src={artist.avatar || artist.image || `https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face`}
-                      alt={artist.username || artist.name}
-                      className="w-24 h-24 rounded-full object-cover"
-                    />
-                    <div className="absolute bottom-0 right-0 flex space-x-1">
-                      <button 
-                        onClick={() => handlePlaySong(artist)}
-                        className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <Play className="h-4 w-4 text-black ml-0.5" />
-                      </button>
-                      <button 
-                        onClick={() => handleFollowArtist(artist._id || artist.id)}
-                        className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                        title="Suivre l'artiste"
-                      >
-                        <Heart className="h-4 w-4 text-white" />
-                      </button>
+                    <div className="w-32 h-32 bg-gray-800 rounded-full overflow-hidden cursor-pointer hover:scale-105 transition-transform duration-200">
+                      <img
+                        src={artist.avatar || artist.image || `https://images.unsplash.com/photo-1494790108755-2616b612b786?w=128&h=128&fit=crop&crop=face`}
+                        alt={artist.username || artist.name}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
+                    
+                    {/* Bouton play */}
+                    <button 
+                      onClick={() => handlePlayArtist(artist)}
+                      className="absolute bottom-0 right-0 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 shadow-lg"
+                    >
+                      <Play className="h-5 w-5 text-black ml-1" />
+                    </button>
                   </div>
-                  <h3 className="font-medium text-sm">{artist.username || artist.name}</h3>
-                  {artist.followersCount && (
-                    <p className="text-xs text-gray-400">{artist.followersCount} abonnés</p>
-                  )}
+                  <h3 className="font-semibold text-sm group-hover:text-green-400 transition-colors">
+                    {artist.username || artist.name}
+                  </h3>
+                  <p className="text-xs text-gray-400">Artiste</p>
                 </div>
               ))}
             </div>
@@ -346,45 +338,88 @@ const Home = () => {
           )}
         </section>
 
+        {/* Section Albums récents */}
+        <section>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold">Albums et singles populaires</h2>
+            <button className="text-sm text-gray-400 hover:text-white transition-colors flex items-center">
+              Tout afficher <ArrowRight className="h-4 w-4 ml-1" />
+            </button>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+            {recentAlbums.map((album) => (
+              <div key={album.id} className="group cursor-pointer">
+                <div className="relative mb-3">
+                  <div className="aspect-square bg-gray-800 rounded-lg overflow-hidden">
+                    <img
+                      src={album.coverUrl}
+                      alt={album.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                    />
+                  </div>
+                  
+                  {/* Bouton play */}
+                  <button 
+                    onClick={() => handlePlayAlbum(album)}
+                    className="absolute bottom-2 right-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 hover:bg-green-400 shadow-lg"
+                  >
+                    <Play className="h-6 w-6 text-black ml-1" />
+                  </button>
+                </div>
+                
+                <h3 className="font-semibold text-sm mb-1 truncate group-hover:text-green-400 transition-colors">
+                  {album.name}
+                </h3>
+                <p className="text-xs text-gray-400 truncate">
+                  {album.artist}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {/* Section Playlists recommandées */}
         <section>
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold">Playlists recommandées</h2>
-            <button className="text-sm text-gray-400 hover:text-white transition-colors">
-              Tout afficher
+            <button className="text-sm text-gray-400 hover:text-white transition-colors flex items-center">
+              Tout afficher <ArrowRight className="h-4 w-4 ml-1" />
             </button>
           </div>
           
           {playlists.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
               {playlists.map((playlist) => (
-                <div key={playlist._id || playlist.id} className="group bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors cursor-pointer">
-                  <div className="aspect-square mb-4 relative">
-                    <img
-                      src={playlist.coverUrl || playlist.cover || `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=200&h=200&fit=crop`}
-                      alt={playlist.name}
-                      className="w-full h-full object-cover rounded-lg"
-                    />
-                    <div className="absolute bottom-2 right-2 flex space-x-1">
-                      <button 
-                        onClick={() => handlePlaySong(playlist)}
-                        className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <Play className="h-5 w-5 text-black ml-1" />
-                      </button>
-                      <button 
-                        onClick={() => handleFollowPlaylist(playlist._id || playlist.id)}
-                        className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                        title="Suivre la playlist"
-                      >
-                        <Heart className="h-5 w-5 text-white" />
-                      </button>
+                <div key={playlist._id || playlist.id} className="group cursor-pointer">
+                  <div className="relative mb-3">
+                    <div className="aspect-square bg-gray-800 rounded-lg overflow-hidden">
+                      <img
+                        src={playlist.coverUrl || playlist.cover || `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop`}
+                        alt={playlist.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                      />
                     </div>
+                    
+                    {/* Bouton play */}
+                    <button 
+                      onClick={() => handlePlayPlaylist(playlist)}
+                      className="absolute bottom-2 right-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 hover:bg-green-400 shadow-lg"
+                    >
+                      <Play className="h-6 w-6 text-black ml-1" />
+                    </button>
                   </div>
-                  <h3 className="font-medium text-sm mb-1">{playlist.name}</h3>
-                  <p className="text-xs text-gray-400">{playlist.description}</p>
+                  
+                  <h3 className="font-semibold text-sm mb-1 truncate group-hover:text-green-400 transition-colors">
+                    {playlist.name}
+                  </h3>
+                  <p className="text-xs text-gray-400 truncate">
+                    {playlist.description || 'Playlist personnalisée'}
+                  </p>
                   {playlist.songCount && (
-                    <p className="text-xs text-gray-500 mt-1">{playlist.songCount} chansons</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {playlist.songCount} chansons
+                    </p>
                   )}
                 </div>
               ))}
@@ -395,79 +430,52 @@ const Home = () => {
             </div>
           )}
         </section>
-      </div>
 
-      {/* Barre de lecture (fixe en bas) */}
-      <div className="fixed bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-700 px-4 py-3">
-        <div className="flex items-center justify-between">
-          {/* Informations de la chanson */}
-          <div className="flex items-center space-x-4 flex-1">
-            <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded"></div>
-            <div>
-              <div className="text-sm font-medium">Nom de la chanson</div>
-              <div className="text-xs text-gray-400">Nom de l'artiste</div>
-            </div>
-            <button className="text-gray-400 hover:text-white">
-              <Heart className="h-4 w-4" />
+        {/* Section Summer Season */}
+        <section>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold">Summer season</h2>
+            <button className="text-sm text-gray-400 hover:text-white transition-colors flex items-center">
+              Tout afficher <ArrowRight className="h-4 w-4 ml-1" />
             </button>
           </div>
-
-          {/* Contrôles de lecture */}
-          <div className="flex flex-col items-center space-y-2 flex-1">
-            <div className="flex items-center space-x-4">
-              <button className="text-gray-400 hover:text-white">
-                <Shuffle className="h-5 w-5" />
-              </button>
-              <button className="text-gray-400 hover:text-white">
-                <SkipBack className="h-5 w-5" />
-              </button>
-              <button 
-                onClick={() => setIsPlaying(!isPlaying)}
-                className="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:scale-105 transition-transform"
-              >
-                {isPlaying ? (
-                  <div className="w-4 h-4 bg-black"></div>
-                ) : (
-                  <Play className="h-5 w-5 text-black ml-1" />
-                )}
-              </button>
-              <button className="text-gray-400 hover:text-white">
-                <SkipForward className="h-5 w-5" />
-              </button>
-              <button className="text-gray-400 hover:text-white">
-                <Repeat className="h-5 w-5" />
-              </button>
-            </div>
-            
-            {/* Barre de progression */}
-            <div className="flex items-center space-x-2 w-full max-w-md">
-              <span className="text-xs text-gray-400">-:-</span>
-              <div className="flex-1 bg-gray-600 rounded-full h-1">
-                <div className="bg-white h-1 rounded-full w-1/3"></div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+            {recentAlbums.slice(0, 6).map((album, index) => (
+              <div key={`summer-${album.id}`} className="group cursor-pointer">
+                <div className="relative mb-3">
+                  <div className="aspect-square bg-gray-800 rounded-lg overflow-hidden">
+                    <img
+                      src={album.coverUrl}
+                      alt={album.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                    />
+                    {index === 0 && (
+                      <div className="absolute top-2 left-2 bg-orange-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+                        HOT HITS
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Bouton play */}
+                  <button 
+                    onClick={() => handlePlayAlbum(album)}
+                    className="absolute bottom-2 right-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 hover:bg-green-400 shadow-lg"
+                  >
+                    <Play className="h-6 w-6 text-black ml-1" />
+                  </button>
+                </div>
+                
+                <h3 className="font-semibold text-sm mb-1 truncate group-hover:text-green-400 transition-colors">
+                  {album.name}
+                </h3>
+                <p className="text-xs text-gray-400 truncate">
+                  {album.artist}
+                </p>
               </div>
-              <span className="text-xs text-gray-400">-:-</span>
-            </div>
+            ))}
           </div>
-
-          {/* Contrôles supplémentaires */}
-          <div className="flex items-center space-x-4 flex-1 justify-end">
-            <button className="text-gray-400 hover:text-white">
-              <List className="h-4 w-4" />
-            </button>
-            <button className="text-gray-400 hover:text-white">
-              <Monitor className="h-4 w-4" />
-            </button>
-            <div className="flex items-center space-x-2">
-              <Volume2 className="h-4 w-4 text-gray-400" />
-              <div className="w-20 bg-gray-600 rounded-full h-1">
-                <div className="bg-white h-1 rounded-full w-2/3"></div>
-              </div>
-            </div>
-            <button className="text-gray-400 hover:text-white">
-              <Maximize2 className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
+        </section>
       </div>
     </div>
   );
