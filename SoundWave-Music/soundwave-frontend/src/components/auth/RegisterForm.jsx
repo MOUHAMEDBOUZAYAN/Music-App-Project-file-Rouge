@@ -1,9 +1,22 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Search, MoreVertical, Mail, Lock, User, Music, CheckCircle, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Search, MoreVertical, Mail, Lock, User, Music, CheckCircle, AlertCircle, Eye, EyeOff, ArrowLeft as ArrowLeftIcon } from 'lucide-react';
 import { authService } from '../../services/authService';
 import { useAuth } from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { 
+  AnimatedPage, 
+  StaggerContainer, 
+  StaggerItem, 
+  FloatingCard, 
+  AnimatedButton, 
+  AnimatedBackground, 
+  AnimatedMusicNote, 
+  AnimatedIcon,
+  AnimatedInput,
+  AnimatedLabel,
+  AnimatedError
+} from '../common/AnimatedWrapper';
 
 const RegisterForm = ({ onRegister }) => {
   const [formData, setFormData] = useState({
@@ -130,6 +143,10 @@ const RegisterForm = ({ onRegister }) => {
     }
   };
 
+  const handleSwitchToLogin = () => {
+    navigate('/login');
+  };
+
   const getPasswordStrength = (password) => {
     if (!password) return { strength: 0, color: 'gray', text: '' };
     if (password.length < 8) return { strength: 1, color: 'red', text: 'Faible' };
@@ -142,24 +159,65 @@ const RegisterForm = ({ onRegister }) => {
   const passwordStrength = getPasswordStrength(formData.password);
 
   return (
-    <div className="min-h-screen bg-bemusic-primary flex">
+    <AnimatedPage className="min-h-screen bg-bemusic-primary flex relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <AnimatedBackground 
+          className="absolute -top-40 -right-40 w-80 h-80 bg-accent-bemusic/10 rounded-full blur-3xl"
+          delay={0}
+        />
+        <AnimatedBackground 
+          className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl"
+          delay={2}
+        />
+        <AnimatedBackground 
+          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl"
+          delay={4}
+        />
+      </div>
+
       {/* Top Bar */}
       <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-6">
-        <button 
-          onClick={() => navigate(-1)}
-          className="text-bemusic-primary hover:text-accent-bemusic transition-bemusic"
-        >
-          <ArrowLeft className="h-6 w-6" />
-        </button>
+        <AnimatedIcon delay={0}>
+          <button 
+            onClick={() => navigate(-1)}
+            className="text-bemusic-primary hover:text-accent-bemusic transition-bemusic hover:scale-110 hover:rotate-12"
+          >
+            <ArrowLeft className="h-6 w-6" />
+          </button>
+        </AnimatedIcon>
         <div className="flex items-center space-x-4">
-          <button className="text-bemusic-primary hover:text-accent-bemusic transition-bemusic">
-            <Search className="h-5 w-5" />
-          </button>
-          <button className="text-bemusic-primary hover:text-accent-bemusic transition-bemusic">
-            <MoreVertical className="h-5 w-5" />
-          </button>
+          <AnimatedIcon delay={0.5}>
+            <button className="text-bemusic-primary hover:text-accent-bemusic transition-bemusic hover:scale-110">
+              <Search className="h-5 w-5" />
+            </button>
+          </AnimatedIcon>
+          <AnimatedIcon delay={1}>
+            <button className="text-bemusic-primary hover:text-accent-bemusic transition-bemusic hover:scale-110">
+              <MoreVertical className="h-5 w-5" />
+            </button>
+          </AnimatedIcon>
         </div>
       </div>
+
+      {/* Floating Navigation Card */}
+      <FloatingCard 
+        className="absolute top-20 right-6 z-20"
+        delay={0.5}
+      >
+        <div className="bg-bemusic-secondary/90 backdrop-blur-lg rounded-2xl p-4 shadow-2xl border border-bemusic-primary/20">
+          <div className="text-center">
+            <p className="text-bemusic-secondary text-sm mb-2">Déjà un compte ?</p>
+            <AnimatedButton
+              onClick={handleSwitchToLogin}
+              className="bg-gradient-to-r from-blue-600 to-blue-700 text-bemusic-primary px-6 py-2 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg flex items-center space-x-2 mx-auto group"
+            >
+              <ArrowLeftIcon className="h-4 w-4 group-hover:-translate-x-1 transition-transform duration-300" />
+              <span>Se connecter</span>
+            </AnimatedButton>
+          </div>
+        </div>
+      </FloatingCard>
 
       {/* Left Panel - Branding and Visuals */}
       <div className="hidden lg:flex lg:w-2/5 relative">
@@ -172,340 +230,447 @@ const RegisterForm = ({ onRegister }) => {
         
         {/* Logo and Tagline */}
         <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-8">
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold text-bemusic-primary mb-2">
-              SoundWave
-            </h1>
-            <div className="w-16 h-1 bg-accent-bemusic mx-auto rounded-full"></div>
-          </div>
-          <p className="text-bemusic-secondary text-lg max-w-sm leading-relaxed">
-            Découvrez, créez et partagez votre passion pour la musique
-          </p>
+          <StaggerContainer className="mb-8">
+            <StaggerItem>
+              <h1 className="text-4xl font-bold text-bemusic-primary mb-2">
+                SoundWave
+              </h1>
+            </StaggerItem>
+            <StaggerItem>
+              <div className="w-16 h-1 bg-accent-bemusic mx-auto rounded-full"></div>
+            </StaggerItem>
+          </StaggerContainer>
+          <StaggerItem delay={1}>
+            <p className="text-bemusic-secondary text-lg max-w-sm leading-relaxed">
+              Découvrez, créez et partagez votre passion pour la musique
+            </p>
+          </StaggerItem>
+          
+          {/* Floating Music Notes */}
+          <AnimatedMusicNote 
+            className="absolute top-20 left-10"
+            delay={2}
+          >
+            <div className="text-accent-bemusic text-2xl">♪</div>
+          </AnimatedMusicNote>
+          <AnimatedMusicNote 
+            className="absolute bottom-20 right-10"
+            delay={3}
+          >
+            <div className="text-purple-500 text-2xl">♫</div>
+          </AnimatedMusicNote>
+          <AnimatedMusicNote 
+            className="absolute top-1/2 left-5"
+            delay={4}
+          >
+            <div className="text-blue-500 text-xl">♩</div>
+          </AnimatedMusicNote>
         </div>
       </div>
 
       {/* Right Panel - Register Form */}
       <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
-        <div className="w-full max-w-md">
+        <StaggerContainer className="w-full max-w-md">
           {/* Form Header */}
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-bemusic-primary mb-2">
-              Inscription
-            </h2>
-            <p className="text-bemusic-secondary">
-              Créez votre compte et commencez votre voyage musical
-            </p>
-          </div>
+          <StaggerItem>
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-bemusic-primary mb-2">
+                Inscription
+              </h2>
+              <p className="text-bemusic-secondary">
+                Créez votre compte et commencez votre voyage musical
+              </p>
+            </div>
+          </StaggerItem>
 
           {/* Register Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             {errors.general && (
-              <div className="bg-red-500/20 border border-red-500/30 text-red-300 px-4 py-3 rounded-xl flex items-center space-x-2">
+              <AnimatedError className="bg-red-500/20 border border-red-500/30 text-red-300 px-4 py-3 rounded-xl flex items-center space-x-2">
                 <AlertCircle className="h-5 w-5" />
                 <span>{errors.general}</span>
-              </div>
+              </AnimatedError>
             )}
 
             {/* User Type Selection */}
-            <div>
-              <label className="block text-sm font-medium text-bemusic-secondary mb-4">
-                Je veux rejoindre en tant que :
-              </label>
-              <div className="grid grid-cols-2 gap-4">
-                <label className={`relative group cursor-pointer transition-bemusic ${
-                  formData.userType === 'listener' ? 'scale-105' : 'hover:scale-102'
-                }`}>
-                  <input
-                    type="radio"
-                    name="userType"
-                    value="listener"
-                    checked={formData.userType === 'listener'}
-                    onChange={handleChange}
-                    className="sr-only"
-                  />
-                  <div className={`p-4 rounded-xl border-2 transition-bemusic ${
-                    formData.userType === 'listener'
-                      ? 'border-accent-bemusic bg-accent-bemusic/20 shadow-lg shadow-accent-bemusic/25'
-                      : 'border-bemusic-tertiary bg-bemusic-tertiary/20 hover:border-bemusic-secondary hover:bg-bemusic-secondary/20'
+            <StaggerItem>
+              <div>
+                <AnimatedLabel 
+                  className="block text-sm font-medium text-bemusic-secondary mb-4"
+                  isActive={false}
+                >
+                  Je veux rejoindre en tant que :
+                </AnimatedLabel>
+                <div className="grid grid-cols-2 gap-4">
+                  <label className={`relative group cursor-pointer transition-bemusic ${
+                    formData.userType === 'listener' ? 'scale-105' : 'hover:scale-102'
                   }`}>
-                    <div className="flex flex-col items-center space-y-2">
-                      <div className={`p-2 rounded-full ${
-                        formData.userType === 'listener' ? 'bg-accent-bemusic' : 'bg-bemusic-tertiary'
-                      }`}>
-                        <User className="h-5 w-5 text-bemusic-primary" />
+                    <input
+                      type="radio"
+                      name="userType"
+                      value="listener"
+                      checked={formData.userType === 'listener'}
+                      onChange={handleChange}
+                      className="sr-only"
+                    />
+                    <div className={`p-4 rounded-xl border-2 transition-bemusic ${
+                      formData.userType === 'listener'
+                        ? 'border-accent-bemusic bg-accent-bemusic/20 shadow-lg shadow-accent-bemusic/25'
+                        : 'border-bemusic-tertiary bg-bemusic-tertiary/20 hover:border-bemusic-secondary hover:bg-bemusic-secondary/20'
+                    }`}>
+                      <div className="flex flex-col items-center space-y-2">
+                        <div className={`p-2 rounded-full ${
+                          formData.userType === 'listener' ? 'bg-accent-bemusic' : 'bg-bemusic-tertiary'
+                        }`}>
+                          <User className="h-5 w-5 text-bemusic-primary" />
+                        </div>
+                        <span className="text-bemusic-primary font-medium">Auditeur</span>
+                        <span className="text-xs text-bemusic-secondary text-center">Écoutez et découvrez de la musique</span>
                       </div>
-                      <span className="text-bemusic-primary font-medium">Auditeur</span>
-                      <span className="text-xs text-bemusic-secondary text-center">Écoutez et découvrez de la musique</span>
                     </div>
-                  </div>
-                </label>
-                
-                <label className={`relative group cursor-pointer transition-bemusic ${
-                  formData.userType === 'artist' ? 'scale-105' : 'hover:scale-102'
-                }`}>
-                  <input
-                    type="radio"
-                    name="userType"
-                    value="artist"
-                    checked={formData.userType === 'artist'}
-                    onChange={handleChange}
-                    className="sr-only"
-                  />
-                  <div className={`p-4 rounded-xl border-2 transition-bemusic ${
-                    formData.userType === 'artist'
-                      ? 'border-purple-500 bg-purple-500/20 shadow-lg shadow-purple-500/25'
-                      : 'border-bemusic-tertiary bg-bemusic-tertiary/20 hover:border-bemusic-secondary hover:bg-bemusic-secondary/20'
+                  </label>
+                  
+                  <label className={`relative group cursor-pointer transition-bemusic ${
+                    formData.userType === 'artist' ? 'scale-105' : 'hover:scale-102'
                   }`}>
-                    <div className="flex flex-col items-center space-y-2">
-                      <div className={`p-2 rounded-full ${
-                        formData.userType === 'artist' ? 'bg-purple-500' : 'bg-bemusic-tertiary'
-                      }`}>
-                        <Music className="h-5 w-5 text-bemusic-primary" />
+                    <input
+                      type="radio"
+                      name="userType"
+                      value="artist"
+                      checked={formData.userType === 'artist'}
+                      onChange={handleChange}
+                      className="sr-only"
+                    />
+                    <div className={`p-4 rounded-xl border-2 transition-bemusic ${
+                      formData.userType === 'artist'
+                        ? 'border-purple-500 bg-purple-500/20 shadow-lg shadow-purple-500/25'
+                        : 'border-bemusic-tertiary bg-bemusic-tertiary/20 hover:border-bemusic-secondary hover:bg-bemusic-secondary/20'
+                    }`}>
+                      <div className="flex flex-col items-center space-y-2">
+                        <div className={`p-2 rounded-full ${
+                          formData.userType === 'artist' ? 'bg-purple-500' : 'bg-bemusic-tertiary'
+                        }`}>
+                          <Music className="h-5 w-5 text-bemusic-primary" />
+                        </div>
+                        <span className="text-bemusic-primary font-medium">Artiste</span>
+                        <span className="text-xs text-bemusic-secondary text-center">Partagez votre musique</span>
                       </div>
-                      <span className="text-bemusic-primary font-medium">Artiste</span>
-                      <span className="text-xs text-bemusic-secondary text-center">Partagez votre musique</span>
                     </div>
-                  </div>
-                </label>
+                  </label>
+                </div>
               </div>
-            </div>
+            </StaggerItem>
 
             {/* Name Fields */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className={`block text-sm font-medium mb-2 transition-bemusic ${
-                  formData.firstName ? 'text-accent-bemusic' : 'text-bemusic-secondary'
-                }`}>
-                  Prénom
-                </label>
-                <input
-                  type="text"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  placeholder="Votre prénom"
-                  className={`w-full bg-transparent text-bemusic-primary placeholder-bemusic-tertiary py-3 px-0 border-b-2 transition-bemusic focus:outline-none ${
-                    formData.firstName 
-                      ? 'border-accent-bemusic' 
-                      : 'border-bemusic-tertiary focus:border-bemusic-secondary'
-                  }`}
-                />
-                {errors.firstName && (
-                  <p className="text-red-400 text-sm mt-1">{errors.firstName}</p>
-                )}
-              </div>
+            <StaggerItem>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <AnimatedLabel 
+                    className="block text-sm font-medium mb-2 transition-bemusic"
+                    isActive={formData.firstName}
+                  >
+                    Prénom
+                  </AnimatedLabel>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <User className="h-5 w-5 text-bemusic-tertiary group-focus-within:text-accent-bemusic transition-colors duration-200" />
+                    </div>
+                    <AnimatedInput
+                      type="text"
+                      name="firstName"
+                      value={formData.firstName}
+                      onChange={handleChange}
+                      placeholder="Votre prénom"
+                      className={`w-full pl-10 pr-4 py-4 bg-transparent border-b-2 rounded-none text-bemusic-primary placeholder-bemusic-tertiary transition-all duration-300 focus:outline-none ${
+                        formData.firstName 
+                          ? 'border-accent-bemusic' 
+                          : 'border-bemusic-tertiary/30 hover:border-bemusic-secondary/50 focus:border-accent-bemusic'
+                      }`}
+                    />
+                    <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-accent-bemusic transition-all duration-300 group-focus-within:w-full"></div>
+                  </div>
+                  {errors.firstName && (
+                    <p className="text-red-400 text-sm mt-2 flex items-center">
+                      <AlertCircle className="h-4 w-4 mr-2" />
+                      {errors.firstName}
+                    </p>
+                  )}
+                </div>
 
-              <div>
-                <label className={`block text-sm font-medium mb-2 transition-bemusic ${
-                  formData.lastName ? 'text-accent-bemusic' : 'text-bemusic-secondary'
-                }`}>
-                  Nom
-                </label>
-                <input
-                  type="text"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  placeholder="Votre nom"
-                  className={`w-full bg-transparent text-bemusic-primary placeholder-bemusic-tertiary py-3 px-0 border-b-2 transition-bemusic focus:outline-none ${
-                    formData.lastName 
-                      ? 'border-accent-bemusic' 
-                      : 'border-bemusic-tertiary focus:border-bemusic-secondary'
-                  }`}
-                />
-                {errors.lastName && (
-                  <p className="text-red-400 text-sm mt-1">{errors.lastName}</p>
-                )}
+                <div>
+                  <AnimatedLabel 
+                    className="block text-sm font-medium mb-2 transition-bemusic"
+                    isActive={formData.lastName}
+                  >
+                    Nom
+                  </AnimatedLabel>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <User className="h-5 w-5 text-bemusic-tertiary group-focus-within:text-accent-bemusic transition-colors duration-200" />
+                    </div>
+                    <AnimatedInput
+                      type="text"
+                      name="lastName"
+                      value={formData.lastName}
+                      onChange={handleChange}
+                      placeholder="Votre nom"
+                      className={`w-full pl-10 pr-4 py-4 bg-transparent border-b-2 rounded-none text-bemusic-primary placeholder-bemusic-tertiary transition-all duration-300 focus:outline-none ${
+                        formData.lastName 
+                          ? 'border-accent-bemusic' 
+                          : 'border-bemusic-tertiary/30 hover:border-bemusic-secondary/50 focus:border-accent-bemusic'
+                      }`}
+                    />
+                    <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-accent-bemusic transition-all duration-300 group-focus-within:w-full"></div>
+                  </div>
+                  {errors.lastName && (
+                    <p className="text-red-400 text-sm mt-2 flex items-center">
+                      <AlertCircle className="h-4 w-4 mr-2" />
+                      {errors.lastName}
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
+            </StaggerItem>
 
             {/* Email Field */}
-            <div>
-              <label className={`block text-sm font-medium mb-2 transition-bemusic ${
-                formData.email ? 'text-accent-bemusic' : 'text-bemusic-secondary'
-              }`}>
-                Email
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="votre@email.com"
-                className={`w-full bg-transparent text-bemusic-primary placeholder-bemusic-tertiary py-3 px-0 border-b-2 transition-bemusic focus:outline-none ${
-                  formData.email 
-                    ? 'border-accent-bemusic' 
-                    : 'border-bemusic-tertiary focus:border-bemusic-secondary'
-                }`}
-              />
-              {errors.email && (
-                <p className="text-red-400 text-sm mt-1">{errors.email}</p>
-              )}
-            </div>
-
-            {/* Password Field */}
-            <div>
-              <label className="block text-sm font-medium text-bemusic-secondary mb-2">
-                Mot de passe
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="Créez un mot de passe"
-                  className="w-full bg-transparent text-bemusic-primary placeholder-bemusic-tertiary py-3 px-0 border-b-2 border-bemusic-tertiary focus:border-bemusic-secondary focus:outline-none transition-bemusic"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-0 top-1/2 transform -translate-y-1/2 text-bemusic-tertiary hover:text-bemusic-secondary transition-bemusic"
+            <StaggerItem>
+              <div>
+                <AnimatedLabel 
+                  className="block text-sm font-medium mb-2 transition-bemusic"
+                  isActive={formData.email}
                 >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
-              </div>
-              
-              {/* Password Strength Indicator */}
-              {formData.password && (
-                <div className="mt-2">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <div className="flex space-x-1">
-                      {[1, 2, 3].map((level) => (
-                        <div
-                          key={level}
-                          className={`h-1 flex-1 rounded-full transition-bemusic ${
-                            level <= passwordStrength.strength
-                              ? `bg-${passwordStrength.color}-500`
-                              : 'bg-bemusic-tertiary'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    <span className={`text-xs font-medium ${
-                      passwordStrength.color === 'red' ? 'text-red-400' :
-                      passwordStrength.color === 'yellow' ? 'text-yellow-400' :
-                      'text-green-400'
-                    }`}>
-                      {passwordStrength.text}
-                    </span>
+                  Email
+                </AnimatedLabel>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Mail className="h-5 w-5 text-bemusic-tertiary group-focus-within:text-accent-bemusic transition-colors duration-200" />
                   </div>
+                  <AnimatedInput
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="votre@email.com"
+                    className={`w-full pl-10 pr-4 py-4 bg-transparent border-b-2 rounded-none text-bemusic-primary placeholder-bemusic-tertiary transition-all duration-300 focus:outline-none ${
+                      formData.email 
+                        ? 'border-accent-bemusic' 
+                        : 'border-bemusic-tertiary/30 hover:border-bemusic-secondary/50 focus:border-accent-bemusic'
+                    }`}
+                  />
+                  <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-accent-bemusic transition-all duration-300 group-focus-within:w-full"></div>
                 </div>
-              )}
-              
-              {errors.password && (
-                <p className="text-red-400 text-sm mt-1">{errors.password}</p>
-              )}
-            </div>
-
-            {/* Confirm Password Field */}
-            <div>
-              <label className="block text-sm font-medium text-bemusic-secondary mb-2">
-                Confirmer le mot de passe
-              </label>
-              <div className="relative">
-                <input
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  placeholder="Confirmez votre mot de passe"
-                  className="w-full bg-transparent text-bemusic-primary placeholder-bemusic-tertiary py-3 px-0 border-b-2 border-bemusic-tertiary focus:border-bemusic-secondary focus:outline-none transition-bemusic"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-0 top-1/2 transform -translate-y-1/2 text-bemusic-tertiary hover:text-bemusic-secondary transition-bemusic"
-                >
-                  {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
-              </div>
-              {errors.confirmPassword && (
-                <p className="text-red-400 text-sm mt-1">{errors.confirmPassword}</p>
-              )}
-            </div>
-
-            {/* Terms and Conditions */}
-            <div className="flex items-start space-x-3">
-              <button
-                type="button"
-                onClick={() => setAgreedToTerms(!agreedToTerms)}
-                className={`mt-1 p-1 rounded-lg transition-bemusic ${
-                  agreedToTerms 
-                    ? 'bg-accent-bemusic text-bemusic-primary' 
-                    : 'bg-bemusic-tertiary text-bemusic-secondary hover:bg-bemusic-secondary'
-                }`}
-              >
-                {agreedToTerms ? <CheckCircle className="h-4 w-4" /> : <div className="h-4 w-4" />}
-              </button>
-              <div className="flex-1">
-                <p className="text-sm text-bemusic-secondary leading-relaxed">
-                  J'accepte les{' '}
-                  <a href="#" className="text-accent-bemusic hover:text-accent-bemusic/80 font-medium transition-bemusic">
-                    Conditions d'utilisation
-                  </a>
-                  {' '}et la{' '}
-                  <a href="#" className="text-accent-bemusic hover:text-accent-bemusic/80 font-medium transition-bemusic">
-                    Politique de confidentialité
-                  </a>
-                </p>
-                {errors.terms && (
-                  <p className="text-red-400 text-sm mt-1">{errors.terms}</p>
+                {errors.email && (
+                  <p className="text-red-400 text-sm mt-2 flex items-center">
+                    <AlertCircle className="h-4 w-4 mr-2" />
+                    {errors.email}
+                  </p>
                 )}
               </div>
-            </div>
+            </StaggerItem>
+
+            {/* Password Field */}
+            <StaggerItem>
+              <div>
+                <AnimatedLabel 
+                  className="block text-sm font-medium text-bemusic-secondary mb-2"
+                  isActive={false}
+                >
+                  Mot de passe
+                </AnimatedLabel>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Lock className="h-5 w-5 text-bemusic-tertiary group-focus-within:text-accent-bemusic transition-colors duration-200" />
+                  </div>
+                  <AnimatedInput
+                    type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    placeholder="Créez un mot de passe"
+                    className="w-full pl-10 pr-12 py-4 bg-transparent border-b-2 border-bemusic-tertiary/30 rounded-none text-bemusic-primary placeholder-bemusic-tertiary transition-all duration-300 hover:border-bemusic-secondary/50 focus:border-accent-bemusic focus:outline-none"
+                  />
+                  <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-accent-bemusic transition-all duration-300 group-focus-within:w-full"></div>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 text-bemusic-tertiary hover:text-bemusic-secondary hover:bg-bemusic-secondary/10 rounded-lg transition-all duration-200 hover:scale-110"
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+                 
+                {/* Password Strength Indicator */}
+                {formData.password && (
+                  <div className="mt-2">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <div className="flex space-x-1">
+                        {[1, 2, 3].map((level) => (
+                          <div
+                            key={level}
+                            className={`h-1 flex-1 rounded-full transition-bemusic ${
+                              level <= passwordStrength.strength
+                                ? `bg-${passwordStrength.color}-500`
+                                : 'bg-bemusic-tertiary'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <span className={`text-xs font-medium ${
+                        passwordStrength.color === 'red' ? 'text-red-400' :
+                        passwordStrength.color === 'yellow' ? 'text-yellow-400' :
+                        'text-green-400'
+                      }`}>
+                        {passwordStrength.text}
+                      </span>
+                    </div>
+                  </div>
+                )}
+                 
+                {errors.password && (
+                  <p className="text-red-400 text-sm mt-2 flex items-center">
+                    <AlertCircle className="h-4 w-4 mr-2" />
+                    {errors.password}
+                  </p>
+                )}
+              </div>
+            </StaggerItem>
+
+            {/* Confirm Password Field */}
+            <StaggerItem>
+              <div>
+                <AnimatedLabel 
+                  className="block text-sm font-medium text-bemusic-secondary mb-2"
+                  isActive={false}
+                >
+                  Confirmer le mot de passe
+                </AnimatedLabel>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Lock className="h-5 w-5 text-bemusic-tertiary group-focus-within:text-accent-bemusic transition-colors duration-200" />
+                  </div>
+                  <AnimatedInput
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    placeholder="Confirmez votre mot de passe"
+                    className="w-full pl-10 pr-12 py-4 bg-transparent border-b-2 border-bemusic-tertiary/30 rounded-none text-bemusic-primary placeholder-bemusic-tertiary transition-all duration-300 hover:border-bemusic-secondary/50 focus:border-accent-bemusic focus:outline-none"
+                  />
+                  <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-accent-bemusic transition-all duration-300 group-focus-within:w-full"></div>
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 text-bemusic-tertiary hover:text-bemusic-secondary hover:bg-bemusic-secondary/10 rounded-lg transition-all duration-200 hover:scale-110"
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+                {errors.confirmPassword && (
+                  <p className="text-red-400 text-sm mt-2 flex items-center">
+                    <AlertCircle className="h-4 w-4 mr-2" />
+                    {errors.confirmPassword}
+                  </p>
+                )}
+              </div>
+            </StaggerItem>
+
+            {/* Terms and Conditions */}
+            <StaggerItem>
+              <div className="flex items-start space-x-3">
+                <AnimatedIcon delay={0}>
+                  <button
+                    type="button"
+                    onClick={() => setAgreedToTerms(!agreedToTerms)}
+                    className={`mt-1 p-1 rounded-lg transition-bemusic ${
+                      agreedToTerms 
+                        ? 'bg-accent-bemusic text-bemusic-primary' 
+                        : 'bg-bemusic-tertiary text-bemusic-secondary hover:bg-bemusic-secondary'
+                    }`}
+                  >
+                    {agreedToTerms ? <CheckCircle className="h-4 w-4" /> : <div className="h-4 w-4" />}
+                  </button>
+                </AnimatedIcon>
+                <div className="flex-1">
+                  <p className="text-sm text-bemusic-secondary leading-relaxed">
+                    J'accepte les{' '}
+                    <a href="#" className="text-accent-bemusic hover:text-accent-bemusic/80 font-medium transition-bemusic">
+                      Conditions d'utilisation
+                    </a>
+                    {' '}et la{' '}
+                    <a href="#" className="text-accent-bemusic hover:text-accent-bemusic/80 font-medium transition-bemusic">
+                      Politique de confidentialité
+                    </a>
+                  </p>
+                  {errors.terms && (
+                    <p className="text-red-400 text-sm mt-1">{errors.terms}</p>
+                  )}
+                </div>
+              </div>
+            </StaggerItem>
 
             {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-bemusic-primary py-4 rounded-xl font-semibold hover:from-purple-700 hover:to-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-bemusic-primary disabled:opacity-50 disabled:cursor-not-allowed transition-bemusic transform hover:scale-105 active:scale-95 shadow-lg"
-            >
-              {isLoading ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <div className="w-5 h-5 border-2 border-bemusic-primary/30 border-t-bemusic-primary rounded-full animate-spin" />
-                  <span>Création du compte...</span>
-                </div>
-              ) : (
-                'S\'inscrire'
-              )}
-            </button>
+            <StaggerItem>
+              <AnimatedButton
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-bemusic-primary py-4 rounded-xl font-semibold hover:from-purple-700 hover:to-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-bemusic-primary disabled:opacity-50 disabled:cursor-not-allowed transition-bemusic shadow-lg hover:shadow-2xl hover:shadow-purple-500/25"
+              >
+                {isLoading ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="w-5 h-5 border-2 border-bemusic-primary/30 border-t-bemusic-primary rounded-full animate-spin" />
+                    <span>Création du compte...</span>
+                  </div>
+                ) : (
+                  'S\'inscrire'
+                )}
+              </AnimatedButton>
+            </StaggerItem>
 
             {/* Social Login Section */}
-            <div className="text-center">
-              <p className="text-bemusic-tertiary text-sm mb-4">
-                Inscription rapide avec vos réseaux sociaux
-              </p>
-              <div className="flex justify-center space-x-4">
-                <button className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-bemusic-primary hover:bg-blue-600 transition-bemusic">
-                  <span className="font-bold text-sm">f</span>
-                </button>
-                <button className="w-12 h-12 bg-blue-400 rounded-full flex items-center justify-center text-bemusic-primary hover:bg-blue-500 transition-bemusic">
-                  <span className="font-bold text-sm">t</span>
-                </button>
-                <button className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center text-bemusic-primary hover:bg-red-600 transition-bemusic">
-                  <span className="font-bold text-sm">g+</span>
-                </button>
+            <StaggerItem>
+              <div className="text-center">
+                <p className="text-bemusic-tertiary text-sm mb-4">
+                  Inscription rapide avec vos réseaux sociaux
+                </p>
+                <div className="flex justify-center space-x-4">
+                  <AnimatedButton
+                    className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-bemusic-primary hover:bg-blue-600 transition-bemusic shadow-lg hover:shadow-blue-500/50"
+                  >
+                    <span className="font-bold text-sm">f</span>
+                  </AnimatedButton>
+                  <AnimatedButton
+                    className="w-12 h-12 bg-blue-400 rounded-full flex items-center justify-center text-bemusic-primary hover:bg-blue-500 transition-bemusic shadow-lg hover:shadow-blue-400/50"
+                  >
+                    <span className="font-bold text-sm">t</span>
+                  </AnimatedButton>
+                  <AnimatedButton
+                    className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center text-bemusic-primary hover:bg-red-600 transition-bemusic shadow-lg hover:shadow-red-500/50"
+                  >
+                    <span className="font-bold text-sm">g+</span>
+                  </AnimatedButton>
+                </div>
               </div>
-            </div>
+            </StaggerItem>
 
             {/* Sign In Link */}
-            <div className="text-center">
-              <p className="text-bemusic-tertiary text-sm">
-                Si vous avez déjà un compte,{' '}
-                <button
-                  type="button"
-                  onClick={() => navigate('/login')}
-                  className="text-accent-bemusic hover:text-accent-bemusic/80 font-semibold transition-bemusic"
-                >
-                  connectez-vous
-                </button>
-              </p>
-            </div>
+            <StaggerItem>
+              <div className="text-center">
+                <p className="text-bemusic-tertiary text-sm">
+                  Si vous avez déjà un compte,{' '}
+                  <button
+                    type="button"
+                    onClick={handleSwitchToLogin}
+                    className="text-accent-bemusic hover:text-accent-bemusic/80 font-semibold transition-bemusic hover:underline hover:scale-105 inline-block"
+                  >
+                    connectez-vous
+                  </button>
+                </p>
+              </div>
+            </StaggerItem>
           </form>
-        </div>
+        </StaggerContainer>
       </div>
-    </div>
+    </AnimatedPage>
   );
 };
 

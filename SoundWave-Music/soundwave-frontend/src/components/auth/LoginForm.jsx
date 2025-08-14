@@ -4,6 +4,20 @@ import { ArrowLeft, Search, MoreVertical, Mail, Lock, Eye, EyeOff, AlertCircle, 
 import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/authService';
 import toast from 'react-hot-toast';
+import { 
+  AnimatedPage, 
+  StaggerContainer, 
+  StaggerItem, 
+  FloatingCard, 
+  AnimatedButton, 
+  AnimatedBackground, 
+  AnimatedMusicNote, 
+  AnimatedIcon,
+  AnimatedInput,
+  AnimatedLabel,
+  AnimatedError,
+  GentlePulse
+} from '../common/AnimatedWrapper';
 
 const LoginForm = () => {
   const navigate = useNavigate();
@@ -98,47 +112,65 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="min-h-screen bg-bemusic-primary flex relative overflow-hidden">
+    <AnimatedPage className="min-h-screen bg-bemusic-primary flex relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-accent-bemusic/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl animate-pulse" style={{animationDelay: '4s'}}></div>
+        <AnimatedBackground 
+          className="absolute -top-40 -right-40 w-80 h-80 bg-accent-bemusic/10 rounded-full blur-3xl"
+          delay={0}
+        />
+        <AnimatedBackground 
+          className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl"
+          delay={2}
+        />
+        <AnimatedBackground 
+          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl"
+          delay={4}
+        />
       </div>
 
       {/* Top Bar */}
       <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-6">
-        <button 
-          onClick={() => navigate(-1)}
-          className="text-bemusic-primary hover:text-accent-bemusic transition-bemusic hover:scale-110 hover:rotate-12"
-        >
-          <ArrowLeft className="h-6 w-6" />
-        </button>
+        <AnimatedIcon delay={0}>
+          <button 
+            onClick={() => navigate(-1)}
+            className="text-bemusic-primary hover:text-accent-bemusic transition-bemusic hover:scale-110 hover:rotate-12"
+          >
+            <ArrowLeft className="h-6 w-6" />
+          </button>
+        </AnimatedIcon>
         <div className="flex items-center space-x-4">
-          <button className="text-bemusic-primary hover:text-accent-bemusic transition-bemusic hover:scale-110">
-            <Search className="h-5 w-5" />
-          </button>
-          <button className="text-bemusic-primary hover:text-accent-bemusic transition-bemusic hover:scale-110">
-            <MoreVertical className="h-5 w-5" />
-          </button>
+          <AnimatedIcon delay={0.5}>
+            <button className="text-bemusic-primary hover:text-accent-bemusic transition-bemusic hover:scale-110">
+              <Search className="h-5 w-5" />
+            </button>
+          </AnimatedIcon>
+          <AnimatedIcon delay={1}>
+            <button className="text-bemusic-primary hover:text-accent-bemusic transition-bemusic hover:scale-110">
+              <MoreVertical className="h-5 w-5" />
+            </button>
+          </AnimatedIcon>
         </div>
       </div>
 
       {/* Floating Navigation Card */}
-      <div className="absolute top-20 right-6 z-20 animate-bounce">
-        <div className="bg-bemusic-secondary/90 backdrop-blur-lg rounded-2xl p-4 shadow-2xl border border-bemusic-primary/20 hover:scale-105 transition-all duration-300 transform hover:rotate-1">
+      <FloatingCard 
+        className="absolute top-20 right-6 z-20"
+        delay={0.5}
+      >
+        <div className="bg-bemusic-secondary/90 backdrop-blur-lg rounded-2xl p-4 shadow-2xl border border-bemusic-primary/20">
           <div className="text-center">
             <p className="text-bemusic-secondary text-sm mb-2">Nouveau sur SoundWave ?</p>
-            <button
+            <AnimatedButton
               onClick={handleSwitchToRegister}
-              className="bg-gradient-to-r from-accent-bemusic to-purple-600 text-bemusic-primary px-6 py-2 rounded-xl font-semibold hover:from-accent-bemusic/90 hover:to-purple-600/90 transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg flex items-center space-x-2 mx-auto group"
+              className="bg-gradient-to-r from-accent-bemusic to-purple-600 text-bemusic-primary px-6 py-2 rounded-xl font-semibold hover:from-accent-bemusic/90 hover:to-purple-600/90 transition-all duration-300 shadow-lg flex items-center space-x-2 mx-auto group"
             >
               <span>S'inscrire</span>
               <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
-            </button>
+            </AnimatedButton>
           </div>
         </div>
-      </div>
+      </FloatingCard>
 
       {/* Left Panel - Branding and Visuals */}
       <div className="hidden lg:flex lg:w-2/5 relative">
@@ -151,153 +183,206 @@ const LoginForm = () => {
         
         {/* Logo and Tagline */}
         <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-8">
-          <div className="mb-8 animate-pulse">
-            <h1 className="text-4xl font-bold text-bemusic-primary mb-2">
-              SoundWave
-            </h1>
-            <div className="w-16 h-1 bg-accent-bemusic mx-auto rounded-full animate-pulse"></div>
-          </div>
-          <p className="text-bemusic-secondary text-lg max-w-sm leading-relaxed">
-            Découvrez, créez et partagez votre passion pour la musique
-          </p>
+          <StaggerContainer className="mb-8">
+            <StaggerItem>
+              <h1 className="text-4xl font-bold text-bemusic-primary mb-2">
+                SoundWave
+              </h1>
+            </StaggerItem>
+            <StaggerItem>
+              <div className="w-16 h-1 bg-accent-bemusic mx-auto rounded-full"></div>
+            </StaggerItem>
+          </StaggerContainer>
+          <StaggerItem delay={1}>
+            <p className="text-bemusic-secondary text-lg max-w-sm leading-relaxed">
+              Découvrez, créez et partagez votre passion pour la musique
+            </p>
+          </StaggerItem>
           
           {/* Floating Music Notes */}
-          <div className="absolute top-20 left-10 animate-bounce" style={{animationDelay: '1s'}}>
+          <AnimatedMusicNote 
+            className="absolute top-20 left-10"
+            delay={2}
+          >
             <div className="text-accent-bemusic text-2xl">♪</div>
-          </div>
-          <div className="absolute bottom-20 right-10 animate-bounce" style={{animationDelay: '2s'}}>
+          </AnimatedMusicNote>
+          <AnimatedMusicNote 
+            className="absolute bottom-20 right-10"
+            delay={3}
+          >
             <div className="text-purple-500 text-2xl">♫</div>
-          </div>
-          <div className="absolute top-1/2 left-5 animate-bounce" style={{animationDelay: '3s'}}>
+          </AnimatedMusicNote>
+          <AnimatedMusicNote 
+            className="absolute top-1/2 left-5"
+            delay={4}
+          >
             <div className="text-blue-500 text-xl">♩</div>
-          </div>
+          </AnimatedMusicNote>
         </div>
       </div>
 
       {/* Right Panel - Login Form */}
       <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
-        <div className="w-full max-w-md">
+        <StaggerContainer className="w-full max-w-md">
           {/* Form Header */}
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-bemusic-primary mb-2 animate-pulse">
-              Connexion
-            </h2>
-            <p className="text-bemusic-secondary">
-              Accédez à votre bibliothèque musicale
-            </p>
-          </div>
+          <StaggerItem>
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-bemusic-primary mb-2">
+                Connexion
+              </h2>
+              <p className="text-bemusic-secondary">
+                Accédez à votre bibliothèque musicale
+              </p>
+            </div>
+          </StaggerItem>
 
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             {errors.general && (
-              <div className="bg-red-500/20 border border-red-500/30 text-red-300 px-4 py-3 rounded-xl flex items-center space-x-2 animate-pulse">
+              <AnimatedError className="bg-red-500/20 border border-red-500/30 text-red-300 px-4 py-3 rounded-xl flex items-center space-x-2">
                 <AlertCircle className="h-5 w-5" />
                 <span>{errors.general}</span>
-              </div>
+              </AnimatedError>
             )}
 
             {/* Email Field */}
-            <div>
-              <label className={`block text-sm font-medium mb-2 transition-bemusic ${
-                formData.email ? 'text-accent-bemusic' : 'text-bemusic-secondary'
-              }`}>
-                Email
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="votre@email.com"
-                className={`w-full bg-transparent text-bemusic-primary placeholder-bemusic-tertiary py-3 px-0 border-b-2 transition-bemusic focus:outline-none hover:scale-105 ${
-                  formData.email 
-                    ? 'border-accent-bemusic' 
-                    : 'border-bemusic-tertiary focus:border-bemusic-secondary'
-                }`}
-              />
-              {errors.email && (
-                <p className="text-red-400 text-sm mt-1">{errors.email}</p>
-              )}
-            </div>
+            <StaggerItem>
+              <div>
+                <AnimatedLabel 
+                  className="block text-sm font-medium mb-2 transition-bemusic"
+                  isActive={formData.email}
+                >
+                  Email
+                </AnimatedLabel>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Mail className="h-5 w-5 text-bemusic-tertiary group-focus-within:text-accent-bemusic transition-colors duration-200" />
+                  </div>
+                  <AnimatedInput
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="votre@email.com"
+                    className={`w-full pl-10 pr-4 py-4 bg-transparent border-b-2 rounded-none text-bemusic-primary placeholder-bemusic-tertiary transition-all duration-300 focus:outline-none ${
+                      formData.email 
+                        ? 'border-accent-bemusic' 
+                        : 'border-bemusic-tertiary/30 hover:border-bemusic-secondary/50 focus:border-accent-bemusic'
+                    }`}
+                  />
+                  <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-accent-bemusic transition-all duration-300 group-focus-within:w-full"></div>
+                </div>
+                {errors.email && (
+                  <p className="text-red-400 text-sm mt-2 flex items-center">
+                    <AlertCircle className="h-4 w-4 mr-2" />
+                    {errors.email}
+                  </p>
+                )}
+              </div>
+            </StaggerItem>
 
             {/* Password Field */}
-            <div>
-              <label className="block text-sm font-medium text-bemusic-secondary mb-2">
-                Mot de passe
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="Votre mot de passe"
-                  className="w-full bg-transparent text-bemusic-primary placeholder-bemusic-tertiary py-3 px-0 border-b-2 border-bemusic-tertiary focus:border-bemusic-secondary focus:outline-none transition-bemusic hover:scale-105"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-0 top-1/2 transform -translate-y-1/2 text-bemusic-tertiary hover:text-bemusic-secondary transition-bemusic hover:scale-110"
+            <StaggerItem>
+              <div>
+                <AnimatedLabel 
+                  className="block text-sm font-medium text-bemusic-secondary mb-2"
+                  isActive={false}
                 >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
+                  Mot de passe
+                </AnimatedLabel>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Lock className="h-5 w-5 text-bemusic-tertiary group-focus-within:text-accent-bemusic transition-colors duration-200" />
+                  </div>
+                  <AnimatedInput
+                    type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    placeholder="Votre mot de passe"
+                    className="w-full pl-10 pr-12 py-4 bg-transparent border-b-2 border-bemusic-tertiary/30 rounded-none text-bemusic-primary placeholder-bemusic-tertiary transition-all duration-300 hover:border-bemusic-secondary/50 focus:border-accent-bemusic focus:outline-none"
+                  />
+                  <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-accent-bemusic transition-all duration-300 group-focus-within:w-full"></div>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 text-bemusic-tertiary hover:text-bemusic-secondary hover:bg-bemusic-secondary/10 rounded-lg transition-all duration-200 hover:scale-110"
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="text-red-400 text-sm mt-2 flex items-center">
+                    <AlertCircle className="h-4 w-4 mr-2" />
+                    {errors.password}
+                  </p>
+                )}
               </div>
-              {errors.password && (
-                <p className="text-red-400 text-sm mt-1">{errors.password}</p>
-              )}
-            </div>
+            </StaggerItem>
 
             {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-bemusic-primary py-4 rounded-xl font-semibold hover:from-purple-700 hover:to-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-bemusic-primary disabled:opacity-50 disabled:cursor-not-allowed transition-bemusic transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-2xl hover:shadow-purple-500/25"
-            >
-              {isLoading ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <div className="w-5 h-5 border-2 border-bemusic-primary/30 border-t-bemusic-primary rounded-full animate-spin" />
-                  <span>Connexion en cours...</span>
-                </div>
-              ) : (
-                'Se connecter'
-              )}
-            </button>
+            <StaggerItem>
+              <AnimatedButton
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-bemusic-primary py-4 rounded-xl font-semibold hover:from-purple-700 hover:to-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-bemusic-primary disabled:opacity-50 disabled:cursor-not-allowed transition-bemusic shadow-lg hover:shadow-2xl hover:shadow-purple-500/25"
+              >
+                {isLoading ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="w-5 h-5 border-2 border-bemusic-primary/30 border-t-bemusic-primary rounded-full animate-spin" />
+                    <span>Connexion en cours...</span>
+                  </div>
+                ) : (
+                  'Se connecter'
+                )}
+              </AnimatedButton>
+            </StaggerItem>
 
             {/* Social Login Section */}
-            <div className="text-center">
-              <p className="text-bemusic-tertiary text-sm mb-4">
-                Connexion rapide avec vos réseaux sociaux
-              </p>
-              <div className="flex justify-center space-x-4">
-                <button className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-bemusic-primary hover:bg-blue-600 transition-bemusic hover:scale-110 hover:rotate-12 shadow-lg hover:shadow-blue-500/50">
-                  <span className="font-bold text-sm">f</span>
-                </button>
-                <button className="w-12 h-12 bg-blue-400 rounded-full flex items-center justify-center text-bemusic-primary hover:bg-blue-500 transition-bemusic hover:scale-110 hover:rotate-12 shadow-lg hover:shadow-blue-400/50">
-                  <span className="font-bold text-sm">t</span>
-                </button>
-                <button className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center text-bemusic-primary hover:bg-red-600 transition-bemusic hover:scale-110 hover:rotate-12 shadow-lg hover:shadow-red-500/50">
-                  <span className="font-bold text-sm">g+</span>
-                </button>
+            <StaggerItem>
+              <div className="text-center">
+                <p className="text-bemusic-tertiary text-sm mb-4">
+                  Connexion rapide avec vos réseaux sociaux
+                </p>
+                <div className="flex justify-center space-x-4">
+                  <AnimatedButton
+                    className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-bemusic-primary hover:bg-blue-600 transition-bemusic shadow-lg hover:shadow-blue-500/50"
+                  >
+                    <span className="font-bold text-sm">f</span>
+                  </AnimatedButton>
+                  <AnimatedButton
+                    className="w-12 h-12 bg-blue-400 rounded-full flex items-center justify-center text-bemusic-primary hover:bg-blue-500 transition-bemusic shadow-lg hover:shadow-blue-400/50"
+                  >
+                    <span className="font-bold text-sm">t</span>
+                  </AnimatedButton>
+                  <AnimatedButton
+                    className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center text-bemusic-primary hover:bg-red-600 transition-bemusic shadow-lg hover:shadow-red-500/50"
+                  >
+                    <span className="font-bold text-sm">g+</span>
+                  </AnimatedButton>
+                </div>
               </div>
-            </div>
+            </StaggerItem>
 
             {/* Sign Up Link */}
-            <div className="text-center">
-              <p className="text-bemusic-tertiary text-sm">
-                Si vous n'avez pas de compte,{' '}
-                <button
-                  type="button"
-                  onClick={handleSwitchToRegister}
-                  className="text-accent-bemusic hover:text-accent-bemusic/80 font-semibold transition-bemusic hover:underline hover:scale-105 inline-block"
-                >
-                  inscrivez-vous
-                </button>
-              </p>
-            </div>
+            <StaggerItem>
+              <div className="text-center">
+                <p className="text-bemusic-tertiary text-sm">
+                  Si vous n'avez pas de compte,{' '}
+                  <button
+                    type="button"
+                    onClick={handleSwitchToRegister}
+                    className="text-accent-bemusic hover:text-accent-bemusic/80 font-semibold transition-bemusic hover:underline hover:scale-105 inline-block"
+                  >
+                    inscrivez-vous
+                  </button>
+                </p>
+              </div>
+            </StaggerItem>
           </form>
-        </div>
+        </StaggerContainer>
       </div>
-    </div>
+    </AnimatedPage>
   );
 };
 
