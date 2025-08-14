@@ -11,12 +11,17 @@ import LikedSongs from './pages/LikedSongs';
 import Playlist from './pages/Playlist';
 import Artist from './pages/Artist';
 import Album from './pages/Album';
-import Profile from './pages/Profile';
+import Genres from './pages/Genres';
+import PopularAlbums from './pages/PopularAlbums';
+import PopularSongs from './pages/PopularSongs';
+import NewReleases from './pages/NewReleases';
+// import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import LoginForm from './components/auth/LoginForm';
 import RegisterForm from './components/auth/RegisterForm';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import './App.css';
+import './styles/theme.css';
 
 function App() {
   return (
@@ -70,6 +75,38 @@ function App() {
                 </ProtectedRoute>
               } />
               
+              <Route path="/genres" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Genres />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/popular-albums" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <PopularAlbums />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/popular-songs" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <PopularSongs />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/new-releases" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <NewReleases />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
               <Route path="/library" element={
                 <ProtectedRoute>
                   <Layout>
@@ -110,13 +147,13 @@ function App() {
                 </ProtectedRoute>
               } />
               
-              <Route path="/profile" element={
+              {/* <Route path="/profile" element={
                 <ProtectedRoute>
                   <Layout>
                     <Profile />
                   </Layout>
                 </ProtectedRoute>
-              } />
+              } /> */}
               
               <Route path="/settings" element={
                 <ProtectedRoute>

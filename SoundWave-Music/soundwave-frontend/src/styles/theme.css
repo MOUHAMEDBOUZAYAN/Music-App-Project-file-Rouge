@@ -1,0 +1,89 @@
+/* Thème BEMUSIC pour SoundWave */
+
+:root {
+  /* Couleurs principales */
+  --bg-primary: #1a1a1a;        /* Arrière-plan principal très foncé */
+  --bg-secondary: #2a2a2a;      /* Sidebar et éléments secondaires */
+  --bg-tertiary: #333333;       /* Cartes et éléments tertiaires */
+  --bg-hover: #404040;          /* États de survol */
+  
+  /* Couleurs d'accent */
+  --accent-primary: #1DB954;    /* Vert principal (boutons, liens actifs) */
+  --accent-secondary: #1ed760;  /* Vert secondaire (survol) */
+  --accent-tertiary: #169c46;   /* Vert tertiaire (pressed) */
+  
+  /* Couleurs de texte */
+  --text-primary: #ffffff;      /* Texte principal */
+  --text-secondary: #b3b3b3;    /* Texte secondaire */
+  --text-tertiary: #808080;     /* Texte tertiaire */
+  --text-muted: #535353;        /* Texte atténué */
+  
+  /* Couleurs de bordure */
+  --border-primary: #404040;    /* Bordures principales */
+  --border-secondary: #535353;  /* Bordures secondaires */
+  
+  /* Couleurs de genre */
+  --genre-pop: #ff6b6b;
+  --genre-rock: #4ecdc4;
+  --genre-hiphop: #45b7d1;
+  --genre-electronic: #96ceb4;
+  --genre-jazz: #feca57;
+  --genre-classical: #ff9ff3;
+  --genre-blues: #54a0ff;
+  --genre-country: #5f27cd;
+  --genre-folk: #00d2d3;
+  --genre-metal: #ff6348;
+  --genre-reggae: #26de81;
+  --genre-rnb: #fd79a8;
+  
+  /* Ombres */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  
+  /* Transitions */
+  --transition-fast: 150ms ease-in-out;
+  --transition-normal: 250ms ease-in-out;
+  --transition-slow: 350ms ease-in-out;
+  
+  /* Rayons de bordure */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+}
+
+/* Classes utilitaires pour le thème */
+.bg-bemusic-primary { background-color: var(--bg-primary); }
+.bg-bemusic-secondary { background-color: var(--bg-secondary); }
+.bg-bemusic-tertiary { background-color: var(--bg-tertiary); }
+
+.text-bemusic-primary { color: var(--text-primary); }
+.text-bemusic-secondary { color: var(--text-secondary); }
+.text-bemusic-tertiary { color: var(--text-tertiary); }
+
+.border-bemusic-primary { border-color: var(--border-primary); }
+.border-bemusic-secondary { border-color: var(--border-secondary); }
+
+.accent-bemusic { color: var(--accent-primary); }
+.bg-accent-bemusic { background-color: var(--accent-primary); }
+
+/* Effets de survol */
+.hover-bg-bemusic:hover { background-color: var(--bg-hover); }
+.hover-text-accent:hover { color: var(--accent-primary); }
+
+/* Transitions */
+.transition-bemusic { transition: all var(--transition-normal); }
+.transition-fast { transition: all var(--transition-fast); }
+.transition-slow { transition: all var(--transition-slow); }
+
+/* Ombres */
+.shadow-bemusic { box-shadow: var(--shadow-md); }
+.shadow-bemusic-lg { box-shadow: var(--shadow-lg); }
+
+/* Rayons de bordure */
+.rounded-bemusic { border-radius: var(--radius-md); }
+.rounded-bemusic-lg { border-radius: var(--radius-lg); }
+.rounded-bemusic-xl { border-radius: var(--radius-xl); }

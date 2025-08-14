@@ -12,8 +12,7 @@ import {
   List,
   Monitor,
   Maximize2,
-  Mic2,
-  Queue
+  Mic2
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
@@ -240,13 +239,13 @@ const AudioPlayer = ({
 
             {/* Contrôles supplémentaires */}
             <div className="flex items-center space-x-4 flex-1 justify-end">
-              <button 
-                onClick={() => setShowQueue(!showQueue)}
-                className="text-gray-400 hover:text-white transition-colors"
-                title="File d'attente"
-              >
-                <Queue className="h-4 w-4" />
-              </button>
+                             <button 
+                 onClick={() => setShowQueue(!showQueue)}
+                 className="text-gray-400 hover:text-white transition-colors"
+                 title="File d'attente"
+               >
+                 <List className="h-4 w-4" />
+               </button>
               <button className="text-gray-400 hover:text-white transition-colors">
                 <Mic2 className="h-4 w-4" />
               </button>

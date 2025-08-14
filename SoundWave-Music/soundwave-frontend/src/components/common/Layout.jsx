@@ -17,7 +17,7 @@ const Layout = ({ children }) => {
   } = useMusic();
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-bemusic-primary text-bemusic-primary">
       {/* Layout principal avec sidebar */}
       <div className="flex h-screen">
         {/* Sidebar */}
@@ -29,7 +29,7 @@ const Layout = ({ children }) => {
           <Header />
           
           {/* Contenu de la page */}
-          <main className="flex-1 overflow-y-auto">
+          <main className="flex-1 overflow-y-auto bg-bemusic-primary">
             {children}
           </main>
         </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, Mail, Lock, User, Music, CheckCircle, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Search, MoreVertical, Mail, Lock, User, Music, CheckCircle, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { authService } from '../../services/authService';
 import { useAuth } from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
@@ -12,7 +12,7 @@ const RegisterForm = ({ onRegister }) => {
     email: '',
     password: '',
     confirmPassword: '',
-    userType: 'listener' // 'listener' or 'artist'
+    userType: 'listener'
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -28,7 +28,6 @@ const RegisterForm = ({ onRegister }) => {
       ...prev,
       [name]: value
     }));
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -87,44 +86,31 @@ const RegisterForm = ({ onRegister }) => {
     setErrors({});
     
     try {
-      console.log('Registering with:', formData);
-      
-      // Appel à l'API d'inscription
       const result = await authService.register(formData);
       
       if (result.success) {
-        console.log('Inscription réussie:', result.data);
-        
-        // Afficher un toast de succès
         const successMessage = result.data?.message || 'Compte créé avec succès ! 🎉';
         toast.success(successMessage, {
           duration: 4000,
           icon: '🎵',
         });
         
-        // Mettre à jour le contexte d'authentification si les données sont disponibles
         if (result.data.user && result.data.token) {
           login(result.data.user, result.data.token);
         }
         
-        // Rediriger vers la page d'accueil après 2 secondes
         setTimeout(() => {
           navigate('/', { replace: true });
         }, 2000);
         
-        // Appeler le callback si fourni
         if (onRegister && result.data) {
           onRegister(result.data);
         }
       } else {
-        console.error('Erreur d\'inscription:', result.error);
-        
-        // Afficher un toast d'erreur
         toast.error(result.error || 'L\'inscription a échoué. Veuillez réessayer.', {
           duration: 5000,
         });
         
-        // Afficher les erreurs spécifiques si disponibles
         if (result.details) {
           setErrors(result.details);
         } else {
@@ -134,7 +120,6 @@ const RegisterForm = ({ onRegister }) => {
     } catch (error) {
       console.error('Erreur lors de l\'inscription:', error);
       
-      // Afficher un toast d'erreur
       toast.error('Erreur de connexion. Vérifiez votre connexion internet.', {
         duration: 5000,
       });
@@ -157,23 +142,62 @@ const RegisterForm = ({ onRegister }) => {
   const passwordStrength = getPasswordStrength(formData.password);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-4">
-      <div className="w-full max-w-md">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="mb-4">
-            <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Music className="h-8 w-8 text-white" />
-            </div>
-          </div>
-          <h2 className="text-3xl font-bold text-white mb-2 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-            Rejoignez SoundWave
-          </h2>
-          <p className="text-gray-300 text-lg">Commencez votre voyage musical</p>
+    <div className="min-h-screen bg-bemusic-primary flex">
+      {/* Top Bar */}
+      <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-6">
+        <button 
+          onClick={() => navigate(-1)}
+          className="text-bemusic-primary hover:text-accent-bemusic transition-bemusic"
+        >
+          <ArrowLeft className="h-6 w-6" />
+        </button>
+        <div className="flex items-center space-x-4">
+          <button className="text-bemusic-primary hover:text-accent-bemusic transition-bemusic">
+            <Search className="h-5 w-5" />
+          </button>
+          <button className="text-bemusic-primary hover:text-accent-bemusic transition-bemusic">
+            <MoreVertical className="h-5 w-5" />
+          </button>
         </div>
+      </div>
 
-        {/* Form Card */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-white/20">
+      {/* Left Panel - Branding and Visuals */}
+      <div className="hidden lg:flex lg:w-2/5 relative">
+        <div className="absolute inset-0 bg-gradient-to-br from-bemusic-secondary to-bemusic-tertiary">
+          {/* Background Image - Workspace */}
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-800/80 to-gray-900/80">
+            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=600&fit=crop')] bg-cover bg-center opacity-20"></div>
+          </div>
+        </div>
+        
+        {/* Logo and Tagline */}
+        <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-8">
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold text-bemusic-primary mb-2">
+              SoundWave
+            </h1>
+            <div className="w-16 h-1 bg-accent-bemusic mx-auto rounded-full"></div>
+          </div>
+          <p className="text-bemusic-secondary text-lg max-w-sm leading-relaxed">
+            Découvrez, créez et partagez votre passion pour la musique
+          </p>
+        </div>
+      </div>
+
+      {/* Right Panel - Register Form */}
+      <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
+        <div className="w-full max-w-md">
+          {/* Form Header */}
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-bemusic-primary mb-2">
+              Inscription
+            </h2>
+            <p className="text-bemusic-secondary">
+              Créez votre compte et commencez votre voyage musical
+            </p>
+          </div>
+
+          {/* Register Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             {errors.general && (
               <div className="bg-red-500/20 border border-red-500/30 text-red-300 px-4 py-3 rounded-xl flex items-center space-x-2">
@@ -184,14 +208,12 @@ const RegisterForm = ({ onRegister }) => {
 
             {/* User Type Selection */}
             <div>
-              <label className="block text-sm font-semibold text-gray-200 mb-4">
+              <label className="block text-sm font-medium text-bemusic-secondary mb-4">
                 Je veux rejoindre en tant que :
               </label>
               <div className="grid grid-cols-2 gap-4">
-                <label className={`relative group cursor-pointer transition-all duration-300 ${
-                  formData.userType === 'listener'
-                    ? 'scale-105'
-                    : 'hover:scale-102'
+                <label className={`relative group cursor-pointer transition-bemusic ${
+                  formData.userType === 'listener' ? 'scale-105' : 'hover:scale-102'
                 }`}>
                   <input
                     type="radio"
@@ -201,27 +223,25 @@ const RegisterForm = ({ onRegister }) => {
                     onChange={handleChange}
                     className="sr-only"
                   />
-                  <div className={`p-4 rounded-xl border-2 transition-all duration-300 ${
+                  <div className={`p-4 rounded-xl border-2 transition-bemusic ${
                     formData.userType === 'listener'
-                      ? 'border-blue-500 bg-gradient-to-r from-blue-500/20 to-blue-600/20 shadow-lg shadow-blue-500/25'
-                      : 'border-gray-600 bg-gray-800/50 hover:border-gray-500 hover:bg-gray-700/50'
+                      ? 'border-accent-bemusic bg-accent-bemusic/20 shadow-lg shadow-accent-bemusic/25'
+                      : 'border-bemusic-tertiary bg-bemusic-tertiary/20 hover:border-bemusic-secondary hover:bg-bemusic-secondary/20'
                   }`}>
                     <div className="flex flex-col items-center space-y-2">
                       <div className={`p-2 rounded-full ${
-                        formData.userType === 'listener' ? 'bg-blue-500' : 'bg-gray-600'
+                        formData.userType === 'listener' ? 'bg-accent-bemusic' : 'bg-bemusic-tertiary'
                       }`}>
-                        <User className="h-5 w-5 text-white" />
+                        <User className="h-5 w-5 text-bemusic-primary" />
                       </div>
-                      <span className="text-white font-medium">Auditeur</span>
-                      <span className="text-xs text-gray-400 text-center">Écoutez et découvrez de la musique</span>
+                      <span className="text-bemusic-primary font-medium">Auditeur</span>
+                      <span className="text-xs text-bemusic-secondary text-center">Écoutez et découvrez de la musique</span>
                     </div>
                   </div>
                 </label>
                 
-                <label className={`relative group cursor-pointer transition-all duration-300 ${
-                  formData.userType === 'artist'
-                    ? 'scale-105'
-                    : 'hover:scale-102'
+                <label className={`relative group cursor-pointer transition-bemusic ${
+                  formData.userType === 'artist' ? 'scale-105' : 'hover:scale-102'
                 }`}>
                   <input
                     type="radio"
@@ -231,19 +251,19 @@ const RegisterForm = ({ onRegister }) => {
                     onChange={handleChange}
                     className="sr-only"
                   />
-                  <div className={`p-4 rounded-xl border-2 transition-all duration-300 ${
+                  <div className={`p-4 rounded-xl border-2 transition-bemusic ${
                     formData.userType === 'artist'
-                      ? 'border-purple-500 bg-gradient-to-r from-purple-500/20 to-purple-600/20 shadow-lg shadow-purple-500/25'
-                      : 'border-gray-600 bg-gray-800/50 hover:border-gray-500 hover:bg-gray-700/50'
+                      ? 'border-purple-500 bg-purple-500/20 shadow-lg shadow-purple-500/25'
+                      : 'border-bemusic-tertiary bg-bemusic-tertiary/20 hover:border-bemusic-secondary hover:bg-bemusic-secondary/20'
                   }`}>
                     <div className="flex flex-col items-center space-y-2">
                       <div className={`p-2 rounded-full ${
-                        formData.userType === 'artist' ? 'bg-purple-500' : 'bg-gray-600'
+                        formData.userType === 'artist' ? 'bg-purple-500' : 'bg-bemusic-tertiary'
                       }`}>
-                        <Music className="h-5 w-5 text-white" />
+                        <Music className="h-5 w-5 text-bemusic-primary" />
                       </div>
-                      <span className="text-white font-medium">Artiste</span>
-                      <span className="text-xs text-gray-400 text-center">Partagez votre musique</span>
+                      <span className="text-bemusic-primary font-medium">Artiste</span>
+                      <span className="text-xs text-bemusic-secondary text-center">Partagez votre musique</span>
                     </div>
                   </div>
                 </label>
@@ -253,32 +273,32 @@ const RegisterForm = ({ onRegister }) => {
             {/* Name Fields */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-200 mb-2">
+                <label className={`block text-sm font-medium mb-2 transition-bemusic ${
+                  formData.firstName ? 'text-accent-bemusic' : 'text-bemusic-secondary'
+                }`}>
                   Prénom
                 </label>
-                <div className="relative group">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-400 transition-colors" />
-                  <input
-                    type="text"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleChange}
-                    placeholder="Votre prénom"
-                    className={`w-full bg-gray-800/50 text-white placeholder-gray-400 rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-gray-700/50 transition-all duration-300 border ${
-                      errors.firstName ? 'border-red-500' : 'border-gray-600 focus:border-blue-500'
-                    }`}
-                  />
-                </div>
+                <input
+                  type="text"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  placeholder="Votre prénom"
+                  className={`w-full bg-transparent text-bemusic-primary placeholder-bemusic-tertiary py-3 px-0 border-b-2 transition-bemusic focus:outline-none ${
+                    formData.firstName 
+                      ? 'border-accent-bemusic' 
+                      : 'border-bemusic-tertiary focus:border-bemusic-secondary'
+                  }`}
+                />
                 {errors.firstName && (
-                  <p className="text-red-400 text-sm mt-1 flex items-center space-x-1">
-                    <AlertCircle className="h-4 w-4" />
-                    <span>{errors.firstName}</span>
-                  </p>
+                  <p className="text-red-400 text-sm mt-1">{errors.firstName}</p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-200 mb-2">
+                <label className={`block text-sm font-medium mb-2 transition-bemusic ${
+                  formData.lastName ? 'text-accent-bemusic' : 'text-bemusic-secondary'
+                }`}>
                   Nom
                 </label>
                 <input
@@ -287,66 +307,60 @@ const RegisterForm = ({ onRegister }) => {
                   value={formData.lastName}
                   onChange={handleChange}
                   placeholder="Votre nom"
-                  className={`w-full bg-gray-800/50 text-white placeholder-gray-400 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-gray-700/50 transition-all duration-300 border ${
-                    errors.lastName ? 'border-red-500' : 'border-gray-600 focus:border-blue-500'
+                  className={`w-full bg-transparent text-bemusic-primary placeholder-bemusic-tertiary py-3 px-0 border-b-2 transition-bemusic focus:outline-none ${
+                    formData.lastName 
+                      ? 'border-accent-bemusic' 
+                      : 'border-bemusic-tertiary focus:border-bemusic-secondary'
                   }`}
                 />
                 {errors.lastName && (
-                  <p className="text-red-400 text-sm mt-1 flex items-center space-x-1">
-                    <AlertCircle className="h-4 w-4" />
-                    <span>{errors.lastName}</span>
-                  </p>
+                  <p className="text-red-400 text-sm mt-1">{errors.lastName}</p>
                 )}
               </div>
             </div>
 
             {/* Email Field */}
             <div>
-              <label className="block text-sm font-semibold text-gray-200 mb-2">
-                Adresse Email
+              <label className={`block text-sm font-medium mb-2 transition-bemusic ${
+                formData.email ? 'text-accent-bemusic' : 'text-bemusic-secondary'
+              }`}>
+                Email
               </label>
-              <div className="relative group">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-400 transition-colors" />
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="votre@email.com"
-                  className={`w-full bg-gray-800/50 text-white placeholder-gray-400 rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-gray-700/50 transition-all duration-300 border ${
-                    errors.email ? 'border-red-500' : 'border-gray-600 focus:border-blue-500'
-                  }`}
-                />
-              </div>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="votre@email.com"
+                className={`w-full bg-transparent text-bemusic-primary placeholder-bemusic-tertiary py-3 px-0 border-b-2 transition-bemusic focus:outline-none ${
+                  formData.email 
+                    ? 'border-accent-bemusic' 
+                    : 'border-bemusic-tertiary focus:border-bemusic-secondary'
+                }`}
+              />
               {errors.email && (
-                <p className="text-red-400 text-sm mt-1 flex items-center space-x-1">
-                  <AlertCircle className="h-4 w-4" />
-                  <span>{errors.email}</span>
-                </p>
+                <p className="text-red-400 text-sm mt-1">{errors.email}</p>
               )}
             </div>
 
             {/* Password Field */}
             <div>
-              <label className="block text-sm font-semibold text-gray-200 mb-2">
+              <label className="block text-sm font-medium text-bemusic-secondary mb-2">
                 Mot de passe
               </label>
-              <div className="relative group">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-400 transition-colors" />
+              <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="Créez un mot de passe"
-                  className={`w-full bg-gray-800/50 text-white placeholder-gray-400 rounded-xl pl-10 pr-12 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-gray-700/50 transition-all duration-300 border ${
-                    errors.password ? 'border-red-500' : 'border-gray-600 focus:border-blue-500'
-                  }`}
+                  className="w-full bg-transparent text-bemusic-primary placeholder-bemusic-tertiary py-3 px-0 border-b-2 border-bemusic-tertiary focus:border-bemusic-secondary focus:outline-none transition-bemusic"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  className="absolute right-0 top-1/2 transform -translate-y-1/2 text-bemusic-tertiary hover:text-bemusic-secondary transition-bemusic"
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
@@ -360,10 +374,10 @@ const RegisterForm = ({ onRegister }) => {
                       {[1, 2, 3].map((level) => (
                         <div
                           key={level}
-                          className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+                          className={`h-1 flex-1 rounded-full transition-bemusic ${
                             level <= passwordStrength.strength
                               ? `bg-${passwordStrength.color}-500`
-                              : 'bg-gray-600'
+                              : 'bg-bemusic-tertiary'
                           }`}
                         />
                       ))}
@@ -380,43 +394,34 @@ const RegisterForm = ({ onRegister }) => {
               )}
               
               {errors.password && (
-                <p className="text-red-400 text-sm mt-1 flex items-center space-x-1">
-                  <AlertCircle className="h-4 w-4" />
-                  <span>{errors.password}</span>
-                </p>
+                <p className="text-red-400 text-sm mt-1">{errors.password}</p>
               )}
             </div>
 
             {/* Confirm Password Field */}
             <div>
-              <label className="block text-sm font-semibold text-gray-200 mb-2">
+              <label className="block text-sm font-medium text-bemusic-secondary mb-2">
                 Confirmer le mot de passe
               </label>
-              <div className="relative group">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-400 transition-colors" />
+              <div className="relative">
                 <input
                   type={showConfirmPassword ? 'text' : 'password'}
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   placeholder="Confirmez votre mot de passe"
-                  className={`w-full bg-gray-800/50 text-white placeholder-gray-400 rounded-xl pl-10 pr-12 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-gray-700/50 transition-all duration-300 border ${
-                    errors.confirmPassword ? 'border-red-500' : 'border-gray-600 focus:border-blue-500'
-                  }`}
+                  className="w-full bg-transparent text-bemusic-primary placeholder-bemusic-tertiary py-3 px-0 border-b-2 border-bemusic-tertiary focus:border-bemusic-secondary focus:outline-none transition-bemusic"
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  className="absolute right-0 top-1/2 transform -translate-y-1/2 text-bemusic-tertiary hover:text-bemusic-secondary transition-bemusic"
                 >
                   {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
               {errors.confirmPassword && (
-                <p className="text-red-400 text-sm mt-1 flex items-center space-x-1">
-                  <AlertCircle className="h-4 w-4" />
-                  <span>{errors.confirmPassword}</span>
-                </p>
+                <p className="text-red-400 text-sm mt-1">{errors.confirmPassword}</p>
               )}
             </div>
 
@@ -425,30 +430,27 @@ const RegisterForm = ({ onRegister }) => {
               <button
                 type="button"
                 onClick={() => setAgreedToTerms(!agreedToTerms)}
-                className={`mt-1 p-1 rounded-lg transition-all duration-300 ${
+                className={`mt-1 p-1 rounded-lg transition-bemusic ${
                   agreedToTerms 
-                    ? 'bg-green-500 text-white' 
-                    : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                    ? 'bg-accent-bemusic text-bemusic-primary' 
+                    : 'bg-bemusic-tertiary text-bemusic-secondary hover:bg-bemusic-secondary'
                 }`}
               >
                 {agreedToTerms ? <CheckCircle className="h-4 w-4" /> : <div className="h-4 w-4" />}
               </button>
               <div className="flex-1">
-                <p className="text-sm text-gray-300 leading-relaxed">
+                <p className="text-sm text-bemusic-secondary leading-relaxed">
                   J'accepte les{' '}
-                  <a href="#" className="text-blue-400 hover:text-blue-300 font-medium transition-colors">
+                  <a href="#" className="text-accent-bemusic hover:text-accent-bemusic/80 font-medium transition-bemusic">
                     Conditions d'utilisation
                   </a>
                   {' '}et la{' '}
-                  <a href="#" className="text-blue-400 hover:text-blue-300 font-medium transition-colors">
+                  <a href="#" className="text-accent-bemusic hover:text-accent-bemusic/80 font-medium transition-bemusic">
                     Politique de confidentialité
                   </a>
                 </p>
                 {errors.terms && (
-                  <p className="text-red-400 text-sm mt-1 flex items-center space-x-1">
-                    <AlertCircle className="h-4 w-4" />
-                    <span>{errors.terms}</span>
-                  </p>
+                  <p className="text-red-400 text-sm mt-1">{errors.terms}</p>
                 )}
               </div>
             </div>
@@ -457,28 +459,46 @@ const RegisterForm = ({ onRegister }) => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl"
+              className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-bemusic-primary py-4 rounded-xl font-semibold hover:from-purple-700 hover:to-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-bemusic-primary disabled:opacity-50 disabled:cursor-not-allowed transition-bemusic transform hover:scale-105 active:scale-95 shadow-lg"
             >
               {isLoading ? (
                 <div className="flex items-center justify-center space-x-2">
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-bemusic-primary/30 border-t-bemusic-primary rounded-full animate-spin" />
                   <span>Création du compte...</span>
                 </div>
               ) : (
-                'Créer mon compte'
+                'S\'inscrire'
               )}
             </button>
 
+            {/* Social Login Section */}
+            <div className="text-center">
+              <p className="text-bemusic-tertiary text-sm mb-4">
+                Inscription rapide avec vos réseaux sociaux
+              </p>
+              <div className="flex justify-center space-x-4">
+                <button className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-bemusic-primary hover:bg-blue-600 transition-bemusic">
+                  <span className="font-bold text-sm">f</span>
+                </button>
+                <button className="w-12 h-12 bg-blue-400 rounded-full flex items-center justify-center text-bemusic-primary hover:bg-blue-500 transition-bemusic">
+                  <span className="font-bold text-sm">t</span>
+                </button>
+                <button className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center text-bemusic-primary hover:bg-red-600 transition-bemusic">
+                  <span className="font-bold text-sm">g+</span>
+                </button>
+              </div>
+            </div>
+
             {/* Sign In Link */}
             <div className="text-center">
-              <p className="text-gray-300">
-                Vous avez déjà un compte ?{' '}
+              <p className="text-bemusic-tertiary text-sm">
+                Si vous avez déjà un compte,{' '}
                 <button
                   type="button"
                   onClick={() => navigate('/login')}
-                  className="text-blue-400 hover:text-blue-300 font-semibold transition-colors hover:underline"
+                  className="text-accent-bemusic hover:text-accent-bemusic/80 font-semibold transition-bemusic"
                 >
-                  Se connecter
+                  connectez-vous
                 </button>
               </p>
             </div>

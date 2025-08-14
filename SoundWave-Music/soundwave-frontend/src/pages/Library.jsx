@@ -1,125 +1,460 @@
-import React, { useState } from 'react';
-import { Heart, Clock, Plus, Music, User, Disc } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { 
+  Play, 
+  Heart, 
+  Plus, 
+  Search,
+  Filter,
+  Grid,
+  List,
+  Clock,
+  Calendar,
+  User,
+  Disc
+} from 'lucide-react';
+import { useMusic } from '../store/MusicContext';
+import { useAuth } from '../hooks/useAuth';
+import toast from 'react-hot-toast';
 
 const Library = () => {
+  const { user } = useAuth();
+  const { 
+    likedTracks, 
+    playHistory, 
+    playTrack, 
+    addToQueue, 
+    toggleLike,
+    playPlaylist,
+    playAlbum
+  } = useMusic();
+  
   const [activeTab, setActiveTab] = useState('playlists');
-
+  const [viewMode, setViewMode] = useState('grid');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterType, setFilterType] = useState('Tout');
+  
   const tabs = [
-    { id: 'playlists', name: 'Playlists', icon: Music },
-    { id: 'liked', name: 'Liked Songs', icon: Heart },
-    { id: 'recent', name: 'Recently Played', icon: Clock },
-    { id: 'artists', name: 'Artists', icon: User },
-    { id: 'albums', name: 'Albums', icon: Disc },
+    { id: 'playlists', label: 'Playlists', icon: List },
+    { id: 'songs', label: 'Chansons', icon: Heart },
+    { id: 'albums', label: 'Albums', icon: Disc },
+    { id: 'artists', label: 'Artistes', icon: User },
+    { id: 'recent', label: 'Récents', icon: Clock }
   ];
+
+  const filterTypes = ['Tout', 'Créées par vous', 'Suivies'];
+
+  // Données simulées (à remplacer par l'API)
+  const [playlists, setPlaylists] = useState([
+    {
+      id: 1,
+      name: 'Mes favoris 2024',
+      description: 'Les meilleures chansons de l\'année',
+      coverUrl: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop',
+      songCount: 25,
+      isOwned: true,
+      createdAt: '2024-01-15'
+    },
+    {
+      id: 2,
+      name: 'Workout Mix',
+      description: 'Énergique pour le sport',
+      coverUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop',
+      songCount: 18,
+      isOwned: true,
+      createdAt: '2024-01-10'
+    },
+    {
+      id: 3,
+      name: 'Chill Vibes',
+      description: 'Musique relaxante',
+      coverUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&h=300&fit=crop',
+      songCount: 32,
+      isOwned: false,
+      createdAt: '2024-01-05'
+    }
+  ]);
+
+  const [albums, setAlbums] = useState([
+    {
+      id: 1,
+      name: 'SALGOAT',
+      artist: 'LFERDA',
+      coverUrl: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop',
+      year: 2024
+    },
+    {
+      id: 2,
+      name: 'BLEDARD (Deluxe)',
+      artist: 'Draganov',
+      coverUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop',
+      year: 2024
+    }
+  ]);
+
+  const [artists, setArtists] = useState([
+    {
+      id: 1,
+      name: 'LFERDA',
+      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=200&h=200&fit=crop&crop=face',
+      followers: 1500000
+    },
+    {
+      id: 2,
+      name: 'Draganov',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face',
+      followers: 800000
+    }
+  ]);
+
+  const handlePlayPlaylist = (playlist) => {
+    playPlaylist(playlist);
+    toast.success(`Lecture de la playlist ${playlist.name}`);
+  };
+
+  const handlePlayAlbum = (album) => {
+    playAlbum(album);
+    toast.success(`Lecture de l'album ${album.name}`);
+  };
+
+  const handlePlayArtist = (artist) => {
+    // Simuler la lecture des meilleurs titres de l'artiste
+    toast.success(`Lecture des meilleurs titres de ${artist.name}`);
+  };
+
+  const handlePlaySong = (song) => {
+    playTrack(song);
+    toast.success(`Lecture de ${song.title}`);
+  };
+
+  const handleAddToQueue = (song) => {
+    addToQueue(song);
+    toast.success('Ajouté à la file d\'attente');
+  };
+
+  const handleCreatePlaylist = () => {
+    toast.success('Création de playlist - Fonctionnalité à implémenter');
+  };
+
+  const renderPlaylists = () => {
+    const filteredPlaylists = playlists.filter(playlist => {
+      const matchesSearch = playlist.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesFilter = filterType === 'Tout' || 
+        (filterType === 'Créées par vous' && playlist.isOwned) ||
+        (filterType === 'Suivies' && !playlist.isOwned);
+      
+      return matchesSearch && matchesFilter;
+    });
+
+    if (filteredPlaylists.length === 0) {
+      return (
+        <div className="text-center py-12">
+          <p className="text-gray-400">Aucune playlist trouvée</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className={`grid gap-4 ${
+        viewMode === 'grid' 
+          ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5' 
+          : 'grid-cols-1'
+      }`}>
+        {filteredPlaylists.map((playlist) => (
+          <div key={playlist.id} className="group cursor-pointer">
+            <div className="relative mb-3">
+              <div className="aspect-square bg-gray-800 rounded-lg overflow-hidden">
+                <img
+                  src={playlist.coverUrl}
+                  alt={playlist.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                />
+              </div>
+              
+              <button 
+                onClick={() => handlePlayPlaylist(playlist)}
+                className="absolute bottom-2 right-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 hover:bg-green-400 shadow-lg"
+              >
+                <Play className="h-6 w-6 text-black ml-1" />
+              </button>
+            </div>
+            
+            <h3 className="font-semibold text-sm mb-1 truncate group-hover:text-green-400 transition-colors">
+              {playlist.name}
+            </h3>
+            <p className="text-xs text-gray-400 truncate">
+              {playlist.description}
+            </p>
+            <div className="flex items-center justify-between mt-1">
+              <p className="text-xs text-gray-500">
+                {playlist.songCount} chansons
+              </p>
+              {playlist.isOwned && (
+                <span className="text-xs text-green-400">Créée par vous</span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const renderAlbums = () => {
+    const filteredAlbums = albums.filter(album => 
+      album.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      album.artist.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    if (filteredAlbums.length === 0) {
+      return (
+        <div className="text-center py-12">
+          <p className="text-gray-400">Aucun album trouvé</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className={`grid gap-4 ${
+        viewMode === 'grid' 
+          ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5' 
+          : 'grid-cols-1'
+      }`}>
+        {filteredAlbums.map((album) => (
+          <div key={album.id} className="group cursor-pointer">
+            <div className="relative mb-3">
+              <div className="aspect-square bg-gray-800 rounded-lg overflow-hidden">
+                <img
+                  src={album.coverUrl}
+                  alt={album.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                />
+              </div>
+              
+              <button 
+                onClick={() => handlePlayAlbum(album)}
+                className="absolute bottom-2 right-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 hover:bg-green-400 shadow-lg"
+              >
+                <Play className="h-6 w-6 text-black ml-1" />
+              </button>
+            </div>
+            
+            <h3 className="font-semibold text-sm mb-1 truncate group-hover:text-green-400 transition-colors">
+              {album.name}
+            </h3>
+            <p className="text-xs text-gray-400 truncate">
+              {album.artist}
+            </p>
+            <p className="text-xs text-gray-500">
+              {album.year}
+            </p>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const renderArtists = () => {
+    const filteredArtists = artists.filter(artist => 
+      artist.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    if (filteredArtists.length === 0) {
+      return (
+        <div className="text-center py-12">
+          <p className="text-gray-400">Aucun artiste trouvé</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className={`grid gap-4 ${
+        viewMode === 'grid' 
+          ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5' 
+          : 'grid-cols-1'
+      }`}>
+        {filteredArtists.map((artist) => (
+          <div key={artist.id} className="text-center group cursor-pointer">
+            <div className="relative mb-3">
+              <div className={`${viewMode === 'grid' ? 'w-full aspect-square' : 'w-32 h-32'} bg-gray-800 rounded-full overflow-hidden mx-auto`}>
+                <img
+                  src={artist.avatar}
+                  alt={artist.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              
+              <button 
+                onClick={() => handlePlayArtist(artist)}
+                className="absolute bottom-0 right-0 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 shadow-lg"
+              >
+                <Play className="h-5 w-5 text-black ml-1" />
+              </button>
+            </div>
+            
+            <h3 className="font-semibold text-sm group-hover:text-green-400 transition-colors">
+              {artist.name}
+            </h3>
+            <p className="text-xs text-gray-400">
+              {artist.followers.toLocaleString()} abonnés
+            </p>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const renderRecent = () => {
+    const recentItems = playHistory.slice(0, 20);
+    
+    if (recentItems.length === 0) {
+      return (
+        <div className="text-center py-12">
+          <p className="text-gray-400">Aucun élément récent</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-2">
+        {recentItems.map((item, index) => (
+          <div key={`${item.id}-${index}`} className="flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-800 transition-colors group">
+            <div className="w-12 h-12 bg-gray-700 rounded flex-shrink-0">
+              {item.coverUrl && (
+                <img src={item.coverUrl} alt={item.title} className="w-full h-full object-cover rounded" />
+              )}
+            </div>
+            
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium text-white truncate">
+                {item.title}
+              </div>
+              <div className="text-xs text-gray-400 truncate">
+                {item.artist}
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button 
+                onClick={() => handleAddToQueue(item)}
+                className="p-2 rounded-full text-gray-400 hover:text-white transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+              
+              <button 
+                onClick={() => handlePlaySong(item)}
+                className="p-2 rounded-full bg-green-500 text-black hover:bg-green-400 transition-colors"
+              >
+                <Play className="h-4 w-4 ml-0.5" />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   const renderContent = () => {
     switch (activeTab) {
       case 'playlists':
-        return (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-semibold text-white">Your Playlists</h3>
-              <button className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                <Plus className="h-4 w-4" />
-                <span>Create Playlist</span>
-              </button>
-            </div>
-            <div className="text-center py-12">
-              <Music className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400 text-lg">No playlists yet</p>
-              <p className="text-gray-500">Create your first playlist to get started</p>
-            </div>
-          </div>
-        );
-      
-      case 'liked':
-        return (
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold text-white">Liked Songs</h3>
-            <div className="text-center py-12">
-              <Heart className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400 text-lg">No liked songs yet</p>
-              <p className="text-gray-500">Like songs to see them here</p>
-            </div>
-          </div>
-        );
-      
-      case 'recent':
-        return (
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold text-white">Recently Played</h3>
-            <div className="text-center py-12">
-              <Clock className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400 text-lg">No recent activity</p>
-              <p className="text-gray-500">Start listening to music to see your history</p>
-            </div>
-          </div>
-        );
-      
-      case 'artists':
-        return (
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold text-white">Followed Artists</h3>
-            <div className="text-center py-12">
-              <User className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400 text-lg">No followed artists</p>
-              <p className="text-gray-500">Follow artists to see them here</p>
-            </div>
-          </div>
-        );
-      
+        return renderPlaylists();
       case 'albums':
-        return (
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold text-white">Saved Albums</h3>
-            <div className="text-center py-12">
-              <Disc className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400 text-lg">No saved albums</p>
-              <p className="text-gray-500">Save albums to see them here</p>
-            </div>
-          </div>
-        );
-      
+        return renderAlbums();
+      case 'artists':
+        return renderArtists();
+      case 'recent':
+        return renderRecent();
       default:
         return null;
     }
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-white mb-2">Your Library</h1>
-        <p className="text-gray-300">Manage your music collection</p>
-      </div>
+    <div className="min-h-screen bg-black text-white p-6">
+      {/* En-tête */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold">Votre Bibliothèque</h1>
+          <button 
+            onClick={handleCreatePlaylist}
+            className="px-4 py-2 bg-white text-black rounded-full font-semibold hover:scale-105 transition-transform"
+          >
+            Créer une playlist
+          </button>
+        </div>
 
-      {/* Tabs */}
-      <div className="border-b border-gray-700">
-        <div className="flex space-x-8">
+        {/* Barre de recherche */}
+        <div className="relative max-w-md mb-6">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Rechercher dans votre bibliothèque"
+            className="w-full bg-gray-800 text-white placeholder-gray-400 rounded-full pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500"
+          />
+        </div>
+
+        {/* Onglets */}
+        <div className="flex items-center space-x-1 mb-6">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center space-x-2 py-4 px-1 border-b-2 transition-colors ${
+                className={`flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                   activeTab === tab.id
-                    ? 'border-blue-500 text-blue-500'
-                    : 'border-transparent text-gray-400 hover:text-white hover:border-gray-600'
+                    ? 'bg-white text-black'
+                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                 }`}
               >
-                <Icon className="h-5 w-5" />
-                <span className="font-medium">{tab.name}</span>
+                <Icon className="h-4 w-4" />
+                <span>{tab.label}</span>
               </button>
             );
           })}
         </div>
+
+        {/* Filtres et options d'affichage */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <Filter className="h-4 w-4 text-gray-400" />
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="bg-gray-800 text-white text-sm rounded px-3 py-1 focus:outline-none focus:ring-2 focus:ring-green-500"
+              >
+                {filterTypes.map((type) => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-2 rounded transition-colors ${
+                viewMode === 'grid' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <Grid className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-2 rounded transition-colors ${
+                viewMode === 'list' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <List className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Content */}
-      <div className="min-h-96">
-        {renderContent()}
-      </div>
+      {/* Contenu */}
+      {renderContent()}
     </div>
   );
 };
