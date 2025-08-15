@@ -228,6 +228,70 @@ export const musicDataService = {
         data: []
       };
     }
+  },
+
+  // Récupérer les artistes populaires
+  getPopularArtists: async (limit = 10) => {
+    try {
+      console.log('🎵 Récupération des artistes populaires...');
+      const response = await apiClient.get('/artists/popular', {
+        params: { limit }
+      });
+      
+      console.log('✅ Artistes populaires récupérés:', response);
+      
+      if (response.success && response.data) {
+        return {
+          success: true,
+          data: response.data
+        };
+      }
+      
+      return {
+        success: false,
+        error: 'Format de réponse invalide',
+        data: []
+      };
+    } catch (error) {
+      console.error('💥 Erreur lors de la récupération des artistes populaires:', error);
+      return {
+        success: false,
+        error: 'Impossible de récupérer les artistes populaires',
+        data: []
+      };
+    }
+  },
+
+  // Récupérer les playlists recommandées
+  getRecommendedPlaylists: async (limit = 10) => {
+    try {
+      console.log('🎵 Récupération des playlists recommandées...');
+      const response = await apiClient.get('/playlists/recommended', {
+        params: { limit }
+      });
+      
+      console.log('✅ Playlists recommandées récupérées:', response);
+      
+      if (response.success && response.data) {
+        return {
+          success: true,
+          data: response.data
+        };
+      }
+      
+      return {
+        success: false,
+        error: 'Format de réponse invalide',
+        data: []
+      };
+    } catch (error) {
+      console.error('💥 Erreur lors de la récupération des playlists recommandées:', error);
+      return {
+        success: false,
+        error: 'Impossible de récupérer les playlists recommandées',
+        data: []
+      };
+    }
   }
 };
 

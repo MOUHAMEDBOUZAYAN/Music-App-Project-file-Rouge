@@ -1,26 +1,30 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+
+// Contexts
 import { AuthProvider } from './store/AuthContext';
 import { MusicProvider } from './store/MusicContext';
+
+// Components
+import ProtectedRoute from './components/common/ProtectedRoute';
 import Layout from './components/common/Layout';
+
+// Pages
 import Home from './pages/Home';
+import Login from './components/auth/LoginForm';
+import Register from './components/auth/RegisterForm';
 import Search from './pages/Search';
 import Library from './pages/Library';
 import LikedSongs from './pages/LikedSongs';
+import Album from './pages/Album';
 import Playlist from './pages/Playlist';
 import Artist from './pages/Artist';
-import Album from './pages/Album';
-import Genres from './pages/Genres';
-import PopularAlbums from './pages/PopularAlbums';
-import PopularSongs from './pages/PopularSongs';
-import NewReleases from './pages/NewReleases';
-// import Profile from './pages/Profile';
 import Settings from './pages/Settings';
-import LoginForm from './components/auth/LoginForm';
-import RegisterForm from './components/auth/RegisterForm';
-import ProtectedRoute from './components/common/ProtectedRoute';
-import './App.css';
+
+// Styles
+import './styles/globals.css';
+import './styles/components.css';
 import './styles/theme.css';
 
 function App() {
@@ -55,8 +59,8 @@ function App() {
             
             <Routes>
               {/* Routes publiques */}
-              <Route path="/login" element={<LoginForm />} />
-              <Route path="/register" element={<RegisterForm />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
               
               {/* Routes protégées avec layout Spotify */}
               <Route path="/" element={
@@ -71,38 +75,6 @@ function App() {
                 <ProtectedRoute>
                   <Layout>
                     <Search />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              
-              <Route path="/genres" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Genres />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              
-              <Route path="/popular-albums" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <PopularAlbums />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              
-              <Route path="/popular-songs" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <PopularSongs />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              
-              <Route path="/new-releases" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <NewReleases />
                   </Layout>
                 </ProtectedRoute>
               } />

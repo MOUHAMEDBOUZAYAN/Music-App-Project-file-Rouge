@@ -12,7 +12,7 @@ const searchSongs = async (req, res, next) => {
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
     
-    const { q, genre, artist, album, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
+    const { q, genre, artist, album, sortBy = 'createdAt', sortOrder = 'desc', sort, order } = req.query;
     
     // Construire le filtre
     const filter = {};
@@ -33,13 +33,40 @@ const searchSongs = async (req, res, next) => {
       filter.album = { $regex: album, $options: 'i' };
     }
     
-    // Construire le tri
-    const sort = {};
-    sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+    // Construire le tri (gérer les deux formats: sortBy/sortOrder et sort/order)
+    const sortField = sort || sortBy;
+    const sortDirection = order || sortOrder;
+    
+    // Validation des champs de tri autorisés
+    const allowedSortFields = ['createdAt', 'releaseDate', 'title', 'artist', 'genre', 'views', 'playCount', 'likes'];
+    const allowedSortOrders = ['asc', 'desc', '1', '-1'];
+    
+    if (sortField && !allowedSortFields.includes(sortField)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Champ de tri non autorisé',
+        details: `Champs autorisés: ${allowedSortFields.join(', ')}`
+      });
+    }
+    
+    if (sortDirection && !allowedSortOrders.includes(sortDirection)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Ordre de tri non autorisé',
+        details: 'Ordres autorisés: asc, desc, 1, -1'
+      });
+    }
+    
+    const sortObj = {};
+    if (sortField) {
+      sortObj[sortField] = sortDirection === 'desc' || sortDirection === '-1' ? -1 : 1;
+    } else {
+      sortObj.createdAt = -1; // Tri par défaut
+    }
     
     const songs = await Song.find(filter)
       .populate('uploader', 'username avatar')
-      .sort(sort)
+      .sort(sortObj)
       .skip(skip)
       .limit(limit);
     
@@ -325,6 +352,71 @@ const getTrendingSongs = async (req, res, next) => {
   }
 };
 
+// @desc    Obtenir toutes les chansons (pour les albums récents)
+// @route   GET /api/songs/all
+// @access  Public
+const getAllSongs = async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+    
+    const { sortBy = 'createdAt', sortOrder = 'desc', sort, order } = req.query;
+    
+    // Construire le tri (gérer les deux formats: sortBy/sortOrder et sort/order)
+    const sortField = sort || sortBy;
+    const sortDirection = order || sortOrder;
+    
+    // Validation des champs de tri autorisés
+    const allowedSortFields = ['createdAt', 'releaseDate', 'title', 'artist', 'genre', 'views', 'playCount', 'likes'];
+    const allowedSortOrders = ['asc', 'desc', '1', '-1'];
+    
+    if (sortField && !allowedSortFields.includes(sortField)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Champ de tri non autorisé',
+        details: `Champs autorisés: ${allowedSortFields.join(', ')}`
+      });
+    }
+    
+    if (sortDirection && !allowedSortOrders.includes(sortDirection)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Ordre de tri non autorisé',
+        details: 'Ordres autorisés: asc, desc, 1, -1'
+      });
+    }
+    
+    const sortObj = {};
+    if (sortField) {
+      sortObj[sortField] = sortDirection === 'desc' || sortDirection === '-1' ? -1 : 1;
+    } else {
+      sortObj.createdAt = -1; // Tri par défaut
+    }
+    
+    const songs = await Song.find({})
+      .populate('uploader', 'username avatar')
+      .sort(sortObj)
+      .skip(skip)
+      .limit(limit);
+    
+    const total = await Song.countDocuments({});
+    
+    res.json({
+      success: true,
+      data: songs,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    next(new AppError('Erreur lors de la récupération des chansons', 500));
+  }
+};
+
 module.exports = {
   searchSongs,
   getSongById,
@@ -333,5 +425,6 @@ module.exports = {
   deleteSong,
   likeUnlikeSong,
   addComment,
-  getTrendingSongs
+  getTrendingSongs,
+  getAllSongs
 }; 

@@ -11,12 +11,14 @@ import {
   Settings,
   LogOut,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Menu,
+  X
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useMusic } from '../../store/MusicContext';
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen, onToggle }) => {
   const { user, logout } = useAuth();
   const { likedTracks } = useMusic();
   const location = useLocation();
@@ -27,13 +29,6 @@ const Sidebar = () => {
     { icon: Home, label: 'Accueil', path: '/' },
     { icon: Search, label: 'Rechercher', path: '/search' },
     { icon: Library, label: 'Votre Bibliothèque', path: '/library' }
-  ];
-
-  const browseItems = [
-    { icon: Home, label: 'Albums Populaires', path: '/popular-albums' },
-    { icon: Search, label: 'Genres', path: '/genres' },
-    { icon: Library, label: 'Chansons Populaires', path: '/popular-songs' },
-    { icon: Library, label: 'Nouvelles Sorties', path: '/new-releases' }
   ];
 
   const libraryItems = [
@@ -52,13 +47,41 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="w-64 bg-bemusic-secondary border-r border-bemusic-primary flex flex-col">
-      {/* Logo */}
-      <div className="p-6">
-        <div className="text-2xl font-bold text-bemusic-primary">
-          SoundWave
+    <>
+      {/* Overlay pour mobile */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={onToggle}
+        />
+      )}
+      
+      {/* Sidebar */}
+      <div className={`
+        fixed lg:static inset-y-0 left-0 z-50
+        w-64 bg-bemusic-secondary border-r border-bemusic-primary 
+        flex flex-col transform transition-transform duration-300 ease-in-out
+        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}>
+        {/* Header mobile avec bouton fermer */}
+        <div className="flex items-center justify-between p-4 lg:hidden">
+          <div className="text-xl font-bold text-bemusic-primary">
+            SoundWave
+          </div>
+          <button
+            onClick={onToggle}
+            className="p-2 rounded-md text-bemusic-primary hover:bg-bemusic-tertiary"
+          >
+            <X className="h-6 w-6" />
+          </button>
         </div>
-      </div>
+        
+        {/* Logo (caché sur mobile car déjà dans le header) */}
+        <div className="p-6 hidden lg:block">
+          <div className="text-2xl font-bold text-bemusic-primary">
+            SoundWave
+          </div>
+        </div>
 
       {/* Navigation principale */}
       <nav className="px-6 mb-6">
@@ -85,35 +108,6 @@ const Sidebar = () => {
           })}
         </ul>
       </nav>
-
-      {/* Section Parcourir */}
-      <div className="px-6 mb-6">
-        <h3 className="text-xs font-semibold text-bemusic-tertiary uppercase tracking-wider mb-3">
-          PARCOURIR
-        </h3>
-        <ul className="space-y-2">
-          {browseItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
-            
-            return (
-              <li key={item.path}>
-                <Link
-                  to={item.path}
-                  className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-bemusic ${
-                    isActive
-                      ? 'text-bemusic-primary bg-bemusic-tertiary'
-                      : 'text-bemusic-secondary hover:text-bemusic-primary hover:bg-bemusic-tertiary'
-                  }`}
-                >
-                  <Icon className="h-5 w-5" />
-                  <span className="text-sm">{item.label}</span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
 
       {/* Bibliothèque */}
       <div className="px-6 mb-6">
@@ -229,6 +223,7 @@ const Sidebar = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

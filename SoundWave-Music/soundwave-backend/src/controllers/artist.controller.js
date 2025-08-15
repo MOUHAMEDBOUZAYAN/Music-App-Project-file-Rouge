@@ -47,7 +47,7 @@ const getPopularArtists = async (req, res) => {
         {
           _id: 'demo-artist-4',
           username: 'Billie Eilish',
-          profilePicture: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
+          profilePicture: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face',
           bio: 'Chanteuse pop alternative',
           followers: 6000000,
           role: 'artist'
@@ -55,7 +55,7 @@ const getPopularArtists = async (req, res) => {
         {
           _id: 'demo-artist-5',
           username: 'Post Malone',
-          profilePicture: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
+          profilePicture: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
           bio: 'Rappeur et chanteur pop',
           followers: 5000000,
           role: 'artist'

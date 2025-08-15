@@ -1,58 +1,38 @@
-import React from 'react';
-import { useMusic } from '../../store/MusicContext';
-import AudioPlayer from '../player/AudioPlayer';
+import React, { useState } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import AudioPlayer from '../player/AudioPlayer';
+import { Menu } from 'lucide-react';
 
 const Layout = ({ children }) => {
-  const { 
-    currentTrack, 
-    isPlaying, 
-    togglePlayPause, 
-    nextTrack, 
-    previousTrack, 
-    setShuffle, 
-    setRepeat,
-    queue 
-  } = useMusic();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
 
   return (
     <div className="min-h-screen bg-bemusic-primary text-bemusic-primary">
-      {/* Layout principal avec sidebar */}
-      <div className="flex h-screen">
-        {/* Sidebar */}
-        <Sidebar />
+      {/* Bouton hamburger pour mobile */}
+      <button
+        onClick={toggleSidebar}
+        className="fixed top-4 left-4 z-50 p-2 bg-bemusic-secondary rounded-md text-bemusic-primary lg:hidden"
+      >
+        <Menu className="h-6 w-6" />
+      </button>
+
+      <div className="flex">
+        <Sidebar isOpen={isSidebarOpen} onToggle={toggleSidebar} />
         
-        {/* Contenu principal */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Header */}
+        <div className="flex-1 flex flex-col min-w-0">
           <Header />
-          
-          {/* Contenu de la page */}
           <main className="flex-1 overflow-y-auto bg-bemusic-primary">
             {children}
           </main>
         </div>
       </div>
-
-      {/* Lecteur audio (fixe en bas) */}
-      {currentTrack && (
-        <AudioPlayer
-          currentTrack={currentTrack}
-          isPlaying={isPlaying}
-          onPlayPause={togglePlayPause}
-          onNext={nextTrack}
-          onPrevious={previousTrack}
-          onShuffle={() => setShuffle(!shuffle)}
-          onRepeat={() => {
-            const repeatModes = ['none', 'one', 'all'];
-            const currentIndex = repeatModes.indexOf(repeat);
-            const nextIndex = (currentIndex + 1) % repeatModes.length;
-            setRepeat(repeatModes[nextIndex]);
-          }}
-          queue={queue}
-        />
-      )}
+      
+      <AudioPlayer />
     </div>
   );
 };

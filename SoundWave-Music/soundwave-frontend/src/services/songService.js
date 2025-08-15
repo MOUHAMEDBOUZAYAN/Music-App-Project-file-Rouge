@@ -197,5 +197,58 @@ export const songService = {
         error: error.response?.data?.message || 'Erreur lors de la récupération des chansons likées'
       };
     }
+  },
+
+  // Obtenir les albums récents
+  getRecentAlbums: async (params = {}) => {
+    try {
+      const response = await apiClient.get('/songs/all', {
+        params: {
+          ...params,
+          sort: 'releaseDate',
+          order: 'desc'
+        }
+      });
+      
+      // Grouper par album et formater
+      const albumsMap = new Map();
+      
+      response.data.forEach(song => {
+        if (song.album) {
+          const albumId = song.album._id || song.album.id;
+          if (!albumsMap.has(albumId)) {
+            albumsMap.set(albumId, {
+              id: albumId,
+              name: song.album.title || song.album.name,
+              artist: song.album.artist?.name || song.artist?.name || 'Artiste inconnu',
+              coverUrl: song.album.cover || song.album.artwork || song.cover,
+              genre: song.genre || 'Pop',
+              releaseDate: song.releaseDate || song.createdAt,
+              tracks: []
+            });
+          }
+          
+          const album = albumsMap.get(albumId);
+          album.tracks.push(song);
+        }
+      });
+      
+      // Trier par date de sortie et retourner
+      const recentAlbums = Array.from(albumsMap.values())
+        .sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate))
+        .slice(0, params.limit || 10);
+      
+      return {
+        success: true,
+        data: recentAlbums
+      };
+    } catch (error) {
+      console.error('Erreur lors de la récupération des albums récents:', error);
+      return {
+        success: false,
+        error: 'Impossible de récupérer les albums récents',
+        data: []
+      };
+    }
   }
 };
