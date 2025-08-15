@@ -97,19 +97,34 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkAuth = () => {
       try {
+        // Nettoyer le localStorage au démarrage
+        const cleanedCount = secureStorage.cleanup();
+        if (cleanedCount > 0) {
+          console.log(`🧹 Nettoyage du localStorage: ${cleanedCount} éléments supprimés`);
+        }
+        
         const token = secureStorage.get('authToken');
         const user = secureStorage.get('user');
         
-        if (token && user) {
+        // Vérifier que les données sont valides
+        if (token && user && typeof user === 'object' && user._id) {
+          console.log('✅ Authentification trouvée:', { user: user.username, token: token.substring(0, 20) + '...' });
           dispatch({
             type: AuthActionTypes.LOGIN_SUCCESS,
             payload: { token, user }
           });
         } else {
+          console.log('ℹ️ Aucune authentification valide trouvée');
+          // Nettoyer les données invalides
+          if (token && !user) secureStorage.remove('authToken');
+          if (user && !token) secureStorage.remove('user');
           dispatch({ type: AuthActionTypes.SET_LOADING, payload: false });
         }
       } catch (error) {
-        console.error('Erreur lors de la vérification de l\'authentification:', error);
+        console.error('❌ Erreur lors de la vérification de l\'authentification:', error);
+        // Nettoyer les données corrompues
+        secureStorage.remove('authToken');
+        secureStorage.remove('user');
         dispatch({ type: AuthActionTypes.SET_LOADING, payload: false });
       }
     };
@@ -122,11 +137,48 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: AuthActionTypes.LOGIN_START });
     
     try {
-      const { user, token } = userData;
+      console.log('🔐 Données reçues dans AuthContext:', userData);
+      
+      // Vérifier la structure des données
+      let user, token;
+      
+      if (userData.data) {
+        // Structure: { data: { user, token } }
+        user = userData.data.user;
+        token = userData.data.token;
+        console.log('✅ Structure data détectée:', { user, token });
+      } else if (userData.user && userData.token) {
+        // Structure: { user, token }
+        user = userData.user;
+        token = userData.token;
+        console.log('✅ Structure directe détectée:', { user, token });
+      } else if (userData.success && userData.data) {
+        // Structure: { success: true, data: { user, token } }
+        user = userData.data.user;
+        token = userData.data.token;
+        console.log('✅ Structure success détectée:', { user, token });
+      } else {
+        console.error('❌ Structure de données invalide:', userData);
+        throw new Error('Structure de données invalide pour la connexion');
+      }
+      
+      // Vérifier que les données nécessaires existent
+      if (!user || !token) {
+        console.error('❌ Données manquantes:', { user: !!user, token: !!token });
+        throw new Error('Données utilisateur ou token manquantes');
+      }
+      
+      console.log('✅ Données validées, sauvegarde en cours...');
       
       // Sauvegarde dans le localStorage
-      secureStorage.set('authToken', token);
-      secureStorage.set('user', user);
+      const tokenSaved = secureStorage.set('authToken', token);
+      const userSaved = secureStorage.set('user', user);
+      
+      if (!tokenSaved || !userSaved) {
+        throw new Error('Erreur lors de la sauvegarde des données');
+      }
+      
+      console.log('✅ Données sauvegardées avec succès');
       
       dispatch({
         type: AuthActionTypes.LOGIN_SUCCESS,
@@ -135,6 +187,7 @@ export const AuthProvider = ({ children }) => {
       
       return { success: true };
     } catch (error) {
+      console.error('❌ Erreur lors de la connexion:', error);
       dispatch({
         type: AuthActionTypes.LOGIN_FAILURE,
         payload: error.message

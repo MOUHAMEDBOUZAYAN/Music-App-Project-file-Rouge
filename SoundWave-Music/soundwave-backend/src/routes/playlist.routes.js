@@ -22,6 +22,16 @@ router.get('/',
   playlistController.getMyPlaylists
 );
 
+// @route   GET api/playlists/recommended
+// @desc    Obtenir les playlists recommandées
+// @access  Public
+router.get('/recommended', playlistController.getRecommendedPlaylists);
+
+// @route   GET api/playlists/public
+// @desc    Obtenir les playlists publiques
+// @access  Public
+router.get('/public', playlistController.getPublicPlaylists);
+
 // @route   GET api/playlists/:id
 // @desc    Obtenir une playlist par son ID
 // @access  Public (si la playlist est publique) ou Private

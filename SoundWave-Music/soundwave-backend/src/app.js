@@ -57,6 +57,7 @@ app.use('/api/users', require('./routes/user.routes'));
 app.use('/api/songs', require('./routes/song.routes'));
 app.use('/api/playlists', require('./routes/playlist.routes'));
 app.use('/api/albums', require('./routes/album.routes'));
+app.use('/api/artists', require('./routes/artist.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
 app.use('/api/search', require('./routes/search.routes'));
 app.use('/api/social', require('./routes/social.routes'));

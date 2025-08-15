@@ -110,16 +110,12 @@ const RegisterForm = ({ onRegister }) => {
             icon: '🎵',
           });
           
-          // Inscription réussie
-          login(result.data.user, result.data.token);
+          // Inscription réussie - passer tout l'objet result
+          login(result);
           
           setTimeout(() => {
             navigate('/', { replace: true });
           }, 2000);
-          
-          if (onRegister && result.data) {
-            onRegister(result.data);
-          }
         } else {
           // Données manquantes dans la réponse
           console.error('Données manquantes dans la réponse:', result.data);

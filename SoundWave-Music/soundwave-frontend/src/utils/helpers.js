@@ -151,7 +151,20 @@ export const handleApiError = (error) => {
 export const secureStorage = {
   set: (key, value) => {
     try {
+      // Vérifier que la valeur n'est pas null ou undefined
+      if (value === null || value === undefined) {
+        console.warn('Tentative de sauvegarde d\'une valeur invalide:', { key, value });
+        return false;
+      }
+      
       const serializedValue = JSON.stringify(value);
+      
+      // Vérifier que la sérialisation a réussi
+      if (serializedValue === 'null' || serializedValue === 'undefined') {
+        console.warn('Sérialisation échouée pour la valeur:', { key, value });
+        return false;
+      }
+      
       localStorage.setItem(key, serializedValue);
       return true;
     } catch (error) {
@@ -163,9 +176,29 @@ export const secureStorage = {
   get: (key) => {
     try {
       const item = localStorage.getItem(key);
-      return item ? JSON.parse(item) : null;
+      
+      // Vérifier que l'item existe et n'est pas vide
+      if (!item || item === 'null' || item === 'undefined' || item.trim() === '') {
+        return null;
+      }
+      
+      // Essayer de parser l'item
+      const parsed = JSON.parse(item);
+      
+      // Vérifier que le parsing a donné un résultat valide
+      if (parsed === null || parsed === undefined) {
+        return null;
+      }
+      
+      return parsed;
     } catch (error) {
       console.error('Erreur lors de la récupération:', error);
+      // En cas d'erreur, nettoyer l'item corrompu
+      try {
+        localStorage.removeItem(key);
+      } catch (cleanupError) {
+        console.error('Erreur lors du nettoyage:', cleanupError);
+      }
       return null;
     }
   },
@@ -187,6 +220,41 @@ export const secureStorage = {
     } catch (error) {
       console.error('Erreur lors du nettoyage:', error);
       return false;
+    }
+  },
+  
+  // Nettoyer les données corrompues
+  cleanup: () => {
+    try {
+      const keys = Object.keys(localStorage);
+      let cleanedCount = 0;
+      
+      keys.forEach(key => {
+        try {
+          const item = localStorage.getItem(key);
+          if (item === 'null' || item === 'undefined' || item === '') {
+            localStorage.removeItem(key);
+            cleanedCount++;
+          }
+        } catch (error) {
+          // Supprimer les clés problématiques
+          try {
+            localStorage.removeItem(key);
+            cleanedCount++;
+          } catch (cleanupError) {
+            console.error('Impossible de supprimer la clé:', key, cleanupError);
+          }
+        }
+      });
+      
+      if (cleanedCount > 0) {
+        console.log(`🧹 Nettoyage effectué: ${cleanedCount} clés supprimées`);
+      }
+      
+      return cleanedCount;
+    } catch (error) {
+      console.error('Erreur lors du nettoyage automatique:', error);
+      return 0;
     }
   }
 };
