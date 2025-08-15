@@ -6,22 +6,52 @@ export const authService = {
   // Connexion utilisateur
   login: async (credentials) => {
     try {
-      const response = await apiClient.post(endpoints.auth.login, {
+      console.log('🔐 Tentative de connexion avec:', { email: credentials.email });
+      
+      const responseData = await apiClient.post(endpoints.auth.login, {
         email: credentials.email,
         password: credentials.password
       });
       
-      // Si la connexion réussit, sauvegarder les données
-      if (response.data && response.data.success) {
-        secureStorage.set('authToken', response.data.token);
-        secureStorage.set('user', JSON.stringify(response.data.user));
+      console.log('📄 Réponse du serveur de connexion:', responseData);
+      
+      // Vérifier que la réponse contient les données attendues
+      if (responseData && responseData.success) {
+        // Si la connexion réussit, sauvegarder les données
+        if (responseData.token) {
+          secureStorage.set('authToken', responseData.token);
+          console.log('✅ Token sauvegardé');
+        }
+        if (responseData.user) {
+          secureStorage.set('user', JSON.stringify(responseData.user));
+          console.log('✅ Utilisateur sauvegardé:', responseData.user);
+        }
+        
+        return {
+          success: true,
+          data: responseData
+        };
+      } else {
+        // Si la réponse n'est pas dans le format attendu
+        console.warn('⚠️ Réponse inattendue du serveur de connexion:', responseData);
+        return {
+          success: false,
+          error: 'Format de réponse inattendu du serveur'
+        };
+      }
+    } catch (error) {
+      console.error('💥 Erreur lors de la connexion:', error);
+      
+      // Gérer les erreurs de validation du backend
+      if (error.response && error.response.data) {
+        console.log('📋 Erreur de réponse:', error.response.data);
+        return {
+          success: false,
+          error: error.response.data.message || 'Erreur lors de la connexion',
+          details: error.response.data.errors || null
+        };
       }
       
-      return {
-        success: true,
-        data: response.data
-      };
-    } catch (error) {
       return {
         success: false,
         error: error.message || 'Erreur lors de la connexion'
@@ -32,9 +62,9 @@ export const authService = {
   // Inscription utilisateur
   register: async (userData) => {
     try {
-      console.log('Envoi des données d\'inscription:', userData);
+      console.log('📝 Envoi des données d\'inscription:', userData);
       
-      const response = await apiClient.post(endpoints.auth.register, {
+      const responseData = await apiClient.post(endpoints.auth.register, {
         firstName: userData.firstName,
         lastName: userData.lastName,
         email: userData.email,
@@ -43,35 +73,38 @@ export const authService = {
         userType: userData.userType || 'listener'
       });
       
-      console.log('Réponse du serveur:', response.data);
+      console.log('📄 Réponse du serveur:', responseData);
       
       // Vérifier que la réponse contient les données attendues
-      if (response.data && response.data.success) {
+      if (responseData && responseData.success) {
         // Si l'inscription réussit, sauvegarder les données
-        if (response.data.token) {
-          secureStorage.set('authToken', response.data.token);
+        if (responseData.token) {
+          secureStorage.set('authToken', responseData.token);
+          console.log('✅ Token sauvegardé');
         }
-        if (response.data.user) {
-          secureStorage.set('user', JSON.stringify(response.data.user));
+        if (responseData.user) {
+          secureStorage.set('user', JSON.stringify(responseData.user));
+          console.log('✅ Utilisateur sauvegardé:', responseData.user);
         }
         
         return {
           success: true,
-          data: response.data
+          data: responseData
         };
       } else {
         // Si la réponse n'est pas dans le format attendu
-        console.warn('Réponse inattendue du serveur:', response.data);
+        console.warn('⚠️ Réponse inattendue du serveur:', responseData);
         return {
           success: false,
           error: 'Format de réponse inattendu du serveur'
         };
       }
     } catch (error) {
-      console.error('Erreur lors de l\'inscription:', error);
+      console.error('💥 Erreur lors de l\'inscription:', error);
       
       // Gérer les erreurs de validation du backend
       if (error.response && error.response.data) {
+        console.log('📋 Erreur de réponse:', error.response.data);
         return {
           success: false,
           error: error.response.data.message || 'Erreur lors de l\'inscription',

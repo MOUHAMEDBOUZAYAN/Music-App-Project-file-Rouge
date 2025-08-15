@@ -35,7 +35,7 @@ const validateRegister = [
     .trim()
     .isLength({ min: 2, max: 50 })
     .withMessage('Le nom doit contenir entre 2 et 50 caractères')
-    .matches(/^[a-zA-ZÀ-ÿ\s'.-]+$/)
+    .matches(/^[a-zA-ZÀ-ÿ\u00C0-\u017F\s'.-]+$/)
     .withMessage('Le nom ne peut contenir que des lettres, espaces, tirets, apostrophes et points'),
   
   body('email')

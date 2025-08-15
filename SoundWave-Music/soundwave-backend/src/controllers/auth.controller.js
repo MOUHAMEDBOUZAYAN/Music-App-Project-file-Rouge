@@ -143,8 +143,9 @@ const register = async (req, res) => {
 
     if (user) {
       console.log('✅ Utilisateur créé avec succès dans la base de données');
+      console.log('📤 Envoi de la réponse au frontend...');
       
-      res.status(201).json({
+      const responseData = {
         success: true,
         message: 'Compte créé avec succès !',
         user: {
@@ -154,11 +155,15 @@ const register = async (req, res) => {
           role: user.role
         },
         token: generateToken(user._id)
-      });
+      };
+      
+      console.log('📋 Données de réponse:', responseData);
+      
+      return res.status(201).json(responseData);
     } else {
       console.log('❌ Échec de la création de l\'utilisateur');
       
-      res.status(400).json({ 
+      return res.status(400).json({ 
         success: false,
         message: 'Données utilisateur invalides',
         errors: {
@@ -195,7 +200,7 @@ const register = async (req, res) => {
       }
     }
     
-    res.status(500).json({ 
+    return res.status(500).json({ 
       success: false,
       message: 'Erreur serveur lors de l\'inscription',
       error: error.message 
@@ -271,7 +276,7 @@ const login = async (req, res) => {
     if (user && (await user.matchPassword(password))) {
       console.log('✅ Connexion réussie');
       
-      res.json({
+      return res.json({
         success: true,
         message: 'Connexion réussie !',
         user: {
@@ -285,7 +290,7 @@ const login = async (req, res) => {
     } else {
       console.log('❌ Connexion échouée - identifiants incorrects');
       
-      res.status(401).json({ 
+      return res.status(401).json({ 
         success: false,
         message: 'Email ou mot de passe incorrect',
         errors: {
@@ -296,7 +301,7 @@ const login = async (req, res) => {
   } catch (error) {
     console.error('💥 Erreur lors de la connexion:', error);
     
-    res.status(500).json({ 
+    return res.status(500).json({ 
       success: false,
       message: 'Erreur serveur lors de la connexion',
       error: error.message 

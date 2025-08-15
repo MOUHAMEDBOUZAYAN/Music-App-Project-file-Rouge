@@ -49,7 +49,6 @@ export const FloatingCard = ({ children, className = "", delay = 0 }) => (
     initial={{ opacity: 0, y: 30 }}
     animate={{ 
       opacity: 1, 
-      y: 0,
       y: [0, -8, 0]
     }}
     transition={{ 

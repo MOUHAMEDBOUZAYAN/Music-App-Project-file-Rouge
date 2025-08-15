@@ -102,42 +102,80 @@ const RegisterForm = ({ onRegister }) => {
       const result = await authService.register(formData);
       
       if (result.success) {
-        const successMessage = result.data?.message || 'Compte créé avec succès ! 🎉';
-        toast.success(successMessage, {
-          duration: 4000,
-          icon: '🎵',
-        });
-        
-        if (result.data.user && result.data.token) {
+        // Vérifier que les données nécessaires existent
+        if (result.data && result.data.user && result.data.token) {
+          const successMessage = result.data.message || 'Compte créé avec succès ! 🎉';
+          toast.success(successMessage, {
+            duration: 4000,
+            icon: '🎵',
+          });
+          
+          // Inscription réussie
           login(result.data.user, result.data.token);
-        }
-        
-        setTimeout(() => {
-          navigate('/', { replace: true });
-        }, 2000);
-        
-        if (onRegister && result.data) {
-          onRegister(result.data);
+          
+          setTimeout(() => {
+            navigate('/', { replace: true });
+          }, 2000);
+          
+          if (onRegister && result.data) {
+            onRegister(result.data);
+          }
+        } else {
+          // Données manquantes dans la réponse
+          console.error('Données manquantes dans la réponse:', result.data);
+          toast.error('Erreur d\'inscription: données manquantes', {
+            duration: 5000,
+          });
+          setErrors({ general: 'Erreur d\'inscription: données manquantes' });
         }
       } else {
-        toast.error(result.error || 'L\'inscription a échoué. Veuillez réessayer.', {
-          duration: 5000,
-        });
-        
-        if (result.details) {
-          setErrors(result.details);
+        // Gestion améliorée des erreurs
+        if (result.details && typeof result.details === 'object') {
+          // Erreurs de validation du serveur
+          const serverErrors = {};
+          Object.keys(result.details).forEach(key => {
+            if (key === 'firstName' || key === 'lastName' || key === 'email' || key === 'password' || key === 'confirmPassword') {
+              serverErrors[key] = result.details[key];
+            }
+          });
+          setErrors(serverErrors);
+          
+          // Afficher le message d'erreur principal
+          toast.error(result.error || 'Veuillez corriger les erreurs dans le formulaire', {
+            duration: 5000,
+          });
         } else {
-          setErrors({ general: result.error });
+          // Erreur générale
+          setErrors({ general: result.error || 'L\'inscription a échoué. Veuillez réessayer.' });
+          toast.error(result.error || 'L\'inscription a échoué. Veuillez réessayer.', {
+            duration: 5000,
+          });
         }
       }
     } catch (error) {
       console.error('Erreur lors de l\'inscription:', error);
       
-      toast.error('Erreur de connexion. Vérifiez votre connexion internet.', {
-        duration: 5000,
-      });
-      
-      setErrors({ general: 'L\'inscription a échoué. Veuillez réessayer.' });
+      // Gestion des erreurs réseau
+      if (error.response && error.response.data) {
+        const serverErrors = {};
+        if (error.response.data.errors) {
+          Object.keys(error.response.data.errors).forEach(key => {
+            if (key === 'firstName' || key === 'lastName' || key === 'email' || key === 'password' || key === 'confirmPassword') {
+              serverErrors[key] = error.response.data.errors[key];
+            }
+          });
+          setErrors(serverErrors);
+        }
+        
+        toast.error(error.response.data.message || 'Erreur de validation', {
+          duration: 5000,
+        });
+      } else {
+        setErrors({ general: 'Erreur de connexion. Vérifiez votre connexion internet.' });
+        toast.error('Erreur de connexion. Vérifiez votre connexion internet.', {
+          duration: 5000,
+        });
+      }
     } finally {
       setIsLoading(false);
     }

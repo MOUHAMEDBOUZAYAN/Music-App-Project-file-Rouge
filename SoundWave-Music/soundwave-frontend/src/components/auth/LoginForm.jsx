@@ -78,30 +78,80 @@ const LoginForm = () => {
       const result = await authService.login(formData);
       
       if (result.success) {
-        toast.success('Connexion réussie ! 🎉', {
-          duration: 3000,
-          icon: '🎵',
-        });
-        
-        login(result.data.user, result.data.token);
-        
-        const redirectTo = location.state?.redirectTo || '/';
-        navigate(redirectTo, { replace: true });
+        // Vérifier que les données nécessaires existent
+        if (result.data && result.data.user && result.data.token) {
+          const successMessage = result.data.message || 'Connexion réussie ! 🎉';
+          toast.success(successMessage, {
+            duration: 4000,
+            icon: '🎵',
+          });
+          
+          // Connexion réussie
+          login(result.data.user, result.data.token);
+          
+          setTimeout(() => {
+            navigate('/', { replace: true });
+          }, 2000);
+          
+          if (onLogin && result.data) {
+            onLogin(result.data);
+          }
+        } else {
+          // Données manquantes dans la réponse
+          console.error('Données manquantes dans la réponse:', result.data);
+          toast.error('Erreur de connexion: données manquantes', {
+            duration: 5000,
+          });
+          setErrors({ general: 'Erreur de connexion: données manquantes' });
+        }
       } else {
-        toast.error(result.error || 'Email ou mot de passe incorrect', {
-          duration: 5000,
-        });
-        
-        setErrors({ general: result.error });
+        // Gestion améliorée des erreurs
+        if (result.details && typeof result.details === 'object') {
+          // Erreurs de validation du serveur
+          const serverErrors = {};
+          Object.keys(result.details).forEach(key => {
+            if (key === 'email' || key === 'password') {
+              serverErrors[key] = result.details[key];
+            }
+          });
+          setErrors(serverErrors);
+          
+          // Afficher le message d'erreur principal
+          toast.error(result.error || 'Veuillez corriger les erreurs dans le formulaire', {
+            duration: 5000,
+          });
+        } else {
+          // Erreur générale
+          setErrors({ general: result.error || 'La connexion a échoué. Veuillez réessayer.' });
+          toast.error(result.error || 'La connexion a échoué. Veuillez réessayer.', {
+            duration: 5000,
+          });
+        }
       }
     } catch (error) {
       console.error('Erreur lors de la connexion:', error);
       
-      toast.error('Erreur de connexion. Vérifiez votre connexion internet.', {
-        duration: 5000,
-      });
-      
-      setErrors({ general: 'Erreur de connexion. Veuillez réessayer.' });
+      // Gestion des erreurs réseau
+      if (error.response && error.response.data) {
+        const serverErrors = {};
+        if (error.response.data.errors) {
+          Object.keys(error.response.data.errors).forEach(key => {
+            if (key === 'email' || key === 'password') {
+              serverErrors[key] = error.response.data.errors[key];
+            }
+          });
+          setErrors(serverErrors);
+        }
+        
+        toast.error(error.response.data.message || 'Erreur de validation', {
+          duration: 5000,
+        });
+      } else {
+        setErrors({ general: 'Erreur de connexion. Vérifiez votre connexion internet.' });
+        toast.error('Erreur de connexion. Vérifiez votre connexion internet.', {
+          duration: 5000,
+        });
+      }
     } finally {
       setIsLoading(false);
     }
