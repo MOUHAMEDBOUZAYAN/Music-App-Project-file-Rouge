@@ -5,11 +5,14 @@ import { handleApiError, secureStorage } from '../utils/helpers.js';
 
 // Configuration de base d'Axios
 const api = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 10000,
+  baseURL: API_BASE_URL || 'http://localhost:5000',
+  timeout: 15000, // Augmenté à 15 secondes
   headers: {
     'Content-Type': 'application/json',
   },
+  // Configuration pour éviter les boucles infinies
+  retry: 2,
+  retryDelay: 1000,
 });
 
 // Intercepteur de requêtes - Ajout du token d'authentification
@@ -42,7 +45,27 @@ api.interceptors.response.use(
     }
     return response;
   },
-  (error) => {
+  async (error) => {
+    // Gestion spéciale des erreurs de connexion réseau
+    if (error.code === 'ECONNABORTED' || error.code === 'ERR_NETWORK') {
+      console.error('❌ Erreur de connexion réseau:', error.message);
+      return Promise.reject({
+        message: 'Erreur de connexion réseau. Vérifiez votre connexion internet et que le serveur backend fonctionne.',
+        status: 'NETWORK_ERROR',
+        originalError: error
+      });
+    }
+
+    // Gestion des timeouts
+    if (error.code === 'ECONNABORTED') {
+      console.error('❌ Timeout de la requête:', error.message);
+      return Promise.reject({
+        message: 'La requête a pris trop de temps. Vérifiez votre connexion.',
+        status: 'TIMEOUT',
+        originalError: error
+      });
+    }
+
     const errorInfo = handleApiError(error);
     
     // Gestion spécifique des codes d'erreur
