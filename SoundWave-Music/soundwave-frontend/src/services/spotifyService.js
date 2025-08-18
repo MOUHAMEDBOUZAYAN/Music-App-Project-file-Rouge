@@ -35,8 +35,10 @@ class SpotifyService {
   // Authentification Spotify
   async login() {
     try {
-      const response = await api.get('/api/auth/spotify/login');
-      return response.data;
+      // Au lieu de faire un appel API, rediriger directement vers l'endpoint
+      // Le backend redirigera vers Spotify
+      window.location.href = 'http://localhost:5000/api/auth/spotify/login';
+      return { success: true, message: 'Redirection vers Spotify...' };
     } catch (error) {
       console.error('Erreur de connexion Spotify:', error);
       throw new Error('Erreur lors de la connexion Spotify');
@@ -45,7 +47,7 @@ class SpotifyService {
 
   async handleCallback(code) {
     try {
-      const response = await api.get(`/api/auth/spotify/callback?code=${code}`);
+      const response = await api.post('/api/auth/spotify/exchange', { code });
       return response.data;
     } catch (error) {
       console.error('Erreur callback Spotify:', error);

@@ -38,7 +38,7 @@ router.get('/login',
 );
 
 // @route   GET api/auth/spotify/callback
-// @desc    Recevoir le code de Spotify et obtenir le token
+// @desc    Recevoir le code de Spotify et rediriger vers le frontend
 // @access  Public
 router.get('/callback', 
   corsAuth,
@@ -54,23 +54,51 @@ router.get('/callback',
       });
     }
     
+    if (!code) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Code d\'autorisation manquant' 
+      });
+    }
+    
+    // Rediriger vers le frontend avec le code
+    const redirectUrl = `http://localhost:3000/spotify-callback?code=${code}&state=${state}`;
+    res.redirect(redirectUrl);
+  }
+);
+
+// @route   POST api/auth/spotify/exchange
+// @desc    Échanger le code d'autorisation contre un token
+// @access  Public
+router.post('/exchange', 
+  corsAuth,
+  activityLogger('spotify_exchange_code'), 
+  async (req, res) => {
+    const { code } = req.body;
+    
+    if (!code) {
+      return res.status(400).json({
+        success: false,
+        error: 'Code d\'autorisation requis'
+      });
+    }
+    
     try {
       const data = await spotifyApi.authorizationCodeGrant(code);
-      console.log('Authentification avec Spotify réussie');
+      console.log('Échange de code réussi');
       
-      // Envoyer les tokens au frontend ou les stocker selon le besoin
       res.json({
         success: true,
         access_token: data.body.access_token,
         refresh_token: data.body.refresh_token,
         expires_in: data.body.expires_in,
-        message: 'Authentification avec Spotify réussie'
+        message: 'Échange de code réussi'
       });
     } catch (err) {
-      console.error('Échec de l\'authentification avec Spotify:', err.message);
+      console.error('Échec de l\'échange de code:', err.message);
       res.status(400).json({ 
         success: false,
-        error: 'Échec de l\'authentification avec Spotify', 
+        error: 'Échec de l\'échange de code', 
         details: err.message 
       });
     }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSpotify } from '../../store/SpotifyContext';
-import { FaSpotify, FaMusic, FaHeadphones, FaPlay } from 'react-icons/fa';
+import { FaSpotify, FaMusic, FaHeadphones, FaPlay, FaUser, FaSignInAlt } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 
 const SpotifyLogin = () => {
   const { login, loading, error, spotifyToken } = useSpotify();
@@ -92,6 +93,26 @@ const SpotifyLogin = () => {
               <FaPlay className="text-green-400 text-lg" />
               <span>Playlists personnalisées</span>
             </div>
+          </div>
+        </div>
+
+        {/* Liens vers autres pages d'authentification */}
+        <div className="mt-6 text-center">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link
+              to="/register"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+            >
+              <FaUser />
+              Créer un compte
+            </Link>
+            <Link
+              to="/login"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+            >
+              <FaSignInAlt />
+              Se connecter
+            </Link>
           </div>
         </div>
 

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Search, MoreVertical, Mail, Lock, User, Music, CheckCircle, AlertCircle, Eye, EyeOff, ArrowLeft as ArrowLeftIcon } from 'lucide-react';
+import { FaSpotify } from 'react-icons/fa';
 import { authService } from '../../services/authService';
 import { useAuth } from '../../hooks/useAuth';
+import { useSpotify } from '../../store/SpotifyContext';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -34,6 +36,7 @@ const RegisterForm = ({ onRegister }) => {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { login: spotifyLogin, loading: spotifyLoading } = useSpotify();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -234,20 +237,19 @@ const RegisterForm = ({ onRegister }) => {
         </div>
       </div>
 
-      {/* Floating Navigation Card */}
+      {/* Floating Navigation Card - Moved to bottom right */}
       <FloatingCard 
-        className="absolute top-20 right-6 z-20"
+        className="absolute bottom-6 right-6 z-20"
         delay={0.5}
       >
-        <div className="bg-bemusic-secondary/90 backdrop-blur-lg rounded-2xl p-4 shadow-2xl border border-bemusic-primary/20">
+        <div className="bg-bemusic-secondary/90 backdrop-blur-lg rounded-xl p-3 shadow-xl border border-bemusic-primary/20">
           <div className="text-center">
-            <p className="text-bemusic-secondary text-sm mb-2">Déjà un compte ?</p>
+            <p className="text-bemusic-secondary text-xs mb-2">Déjà un compte ?</p>
             <AnimatedButton
               onClick={handleSwitchToLogin}
-              className="bg-gradient-to-r from-blue-600 to-blue-700 text-bemusic-primary px-6 py-2 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg flex items-center space-x-2 mx-auto group"
+              className="bg-gradient-to-r from-blue-600 to-blue-700 text-bemusic-primary px-4 py-2 rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg text-sm"
             >
-              <ArrowLeftIcon className="h-4 w-4 group-hover:-translate-x-1 transition-transform duration-300" />
-              <span>Se connecter</span>
+              Se connecter
             </AnimatedButton>
           </div>
         </div>
@@ -335,63 +337,73 @@ const RegisterForm = ({ onRegister }) => {
                 >
                   Je veux rejoindre en tant que :
                 </AnimatedLabel>
-                <div className="grid grid-cols-2 gap-4">
-                  <label className={`relative group cursor-pointer transition-bemusic ${
-                    formData.userType === 'listener' ? 'scale-105' : 'hover:scale-102'
-                  }`}>
-                    <input
-                      type="radio"
-                      name="userType"
-                      value="listener"
-                      checked={formData.userType === 'listener'}
-                      onChange={handleChange}
-                      className="sr-only"
-                    />
-                    <div className={`p-4 rounded-xl border-2 transition-bemusic ${
-                      formData.userType === 'listener'
-                        ? 'border-accent-bemusic bg-accent-bemusic/20 shadow-lg shadow-accent-bemusic/25'
-                        : 'border-bemusic-tertiary bg-bemusic-tertiary/20 hover:border-bemusic-secondary hover:bg-bemusic-secondary/20'
-                    }`}>
-                      <div className="flex flex-col items-center space-y-2">
-                        <div className={`p-2 rounded-full ${
-                          formData.userType === 'listener' ? 'bg-accent-bemusic' : 'bg-bemusic-tertiary'
-                        }`}>
-                          <User className="h-5 w-5 text-bemusic-primary" />
-                        </div>
-                        <span className="text-bemusic-primary font-medium">Auditeur</span>
-                        <span className="text-xs text-bemusic-secondary text-center">Écoutez et découvrez de la musique</span>
-                      </div>
-                    </div>
-                  </label>
-                  
-                  <label className={`relative group cursor-pointer transition-bemusic ${
-                    formData.userType === 'artist' ? 'scale-105' : 'hover:scale-102'
-                  }`}>
-                    <input
-                      type="radio"
-                      name="userType"
-                      value="artist"
-                      checked={formData.userType === 'artist'}
-                      onChange={handleChange}
-                      className="sr-only"
-                    />
-                    <div className={`p-4 rounded-xl border-2 transition-bemusic ${
-                      formData.userType === 'artist'
-                        ? 'border-purple-500 bg-purple-500/20 shadow-lg shadow-purple-500/25'
-                        : 'border-bemusic-tertiary bg-bemusic-tertiary/20 hover:border-bemusic-secondary hover:bg-bemusic-secondary/20'
-                    }`}>
-                      <div className="flex flex-col items-center space-y-2">
-                        <div className={`p-2 rounded-full ${
-                          formData.userType === 'artist' ? 'bg-purple-500' : 'bg-bemusic-tertiary'
-                        }`}>
-                          <Music className="h-5 w-5 text-bemusic-primary" />
-                        </div>
-                        <span className="text-bemusic-primary font-medium">Artiste</span>
-                        <span className="text-xs text-bemusic-secondary text-center">Partagez votre musique</span>
-                      </div>
-                    </div>
-                  </label>
-                </div>
+                                 <div className="grid grid-cols-2 gap-3">
+                   <label className={`relative cursor-pointer transition-all duration-300 ${
+                     formData.userType === 'listener' ? 'scale-105' : 'hover:scale-102'
+                   }`}>
+                     <input
+                       type="radio"
+                       name="userType"
+                       value="listener"
+                       checked={formData.userType === 'listener'}
+                       onChange={handleChange}
+                       className="sr-only"
+                     />
+                     <div className={`h-24 rounded-xl border-2 transition-all duration-300 flex flex-col items-center justify-center ${
+                       formData.userType === 'listener'
+                         ? 'border-accent-bemusic bg-accent-bemusic/20 shadow-lg'
+                         : 'border-bemusic-tertiary/30 bg-bemusic-tertiary/10 hover:border-bemusic-secondary/50 hover:bg-bemusic-secondary/20'
+                     }`}>
+                       <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 transition-all duration-300 ${
+                         formData.userType === 'listener' 
+                           ? 'bg-accent-bemusic shadow-lg' 
+                           : 'bg-bemusic-tertiary/30'
+                       }`}>
+                         <User className={`h-6 w-6 transition-all duration-300 ${
+                           formData.userType === 'listener' ? 'text-white' : 'text-bemusic-secondary'
+                         }`} />
+                       </div>
+                       <span className={`font-semibold text-sm transition-all duration-300 ${
+                         formData.userType === 'listener' ? 'text-accent-bemusic' : 'text-bemusic-primary'
+                       }`}>
+                         Auditeur
+                       </span>
+                     </div>
+                   </label>
+                   
+                   <label className={`relative cursor-pointer transition-all duration-300 ${
+                     formData.userType === 'artist' ? 'scale-105' : 'hover:scale-102'
+                   }`}>
+                     <input
+                       type="radio"
+                       name="userType"
+                       value="artist"
+                       checked={formData.userType === 'artist'}
+                       onChange={handleChange}
+                       className="sr-only"
+                     />
+                     <div className={`h-24 rounded-xl border-2 transition-all duration-300 flex flex-col items-center justify-center ${
+                       formData.userType === 'artist'
+                         ? 'border-purple-500 bg-purple-500/20 shadow-lg'
+                         : 'border-bemusic-tertiary/30 bg-bemusic-tertiary/10 hover:border-bemusic-secondary/50 hover:bg-bemusic-secondary/20'
+                     }`}>
+                       <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 transition-all duration-300 ${
+                         formData.userType === 'artist' 
+                           ? 'bg-purple-500 shadow-lg' 
+                           : 'bg-bemusic-tertiary/30'
+                       }`}>
+                         <Music className={`h-6 w-6 transition-all duration-300 ${
+                           formData.userType === 'artist' ? 'text-white' : 'text-bemusic-secondary'
+                         }`} />
+                       </div>
+                       <span className={`font-semibold text-sm transition-all duration-300 ${
+                         formData.userType === 'artist' ? 'text-purple-400' : 'text-bemusic-primary'
+                       }`}>
+                         Artiste
+                       </span>
+                     </div>
+                   </label>
+                 </div>
               </div>
             </StaggerItem>
 
@@ -681,6 +693,17 @@ const RegisterForm = ({ onRegister }) => {
                     className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center text-bemusic-primary hover:bg-red-600 transition-bemusic shadow-lg hover:shadow-red-500/50"
                   >
                     <span className="font-bold text-sm">g+</span>
+                  </AnimatedButton>
+                  <AnimatedButton
+                    onClick={spotifyLogin}
+                    disabled={spotifyLoading}
+                    className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-bemusic-primary hover:bg-green-600 transition-bemusic shadow-lg hover:shadow-green-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {spotifyLoading ? (
+                      <div className="w-5 h-5 border-2 border-bemusic-primary/30 border-t-bemusic-primary rounded-full animate-spin" />
+                    ) : (
+                      <FaSpotify className="h-5 w-5" />
+                    )}
                   </AnimatedButton>
                 </div>
               </div>

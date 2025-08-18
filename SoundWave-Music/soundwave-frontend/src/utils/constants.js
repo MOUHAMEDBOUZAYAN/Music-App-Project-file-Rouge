@@ -1,6 +1,6 @@
 // Constants will be implemented here 
 // API Configuration
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 export const SPOTIFY_API_URL = 'https://api.spotify.com/v1';
 export const CLOUDINARY_BASE_URL = import.meta.env.VITE_CLOUDINARY_URL || '';
 

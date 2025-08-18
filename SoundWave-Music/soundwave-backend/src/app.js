@@ -16,6 +16,7 @@ const {
 // Load environment variables
 dotenv.config();
 
+
 // Connect to database (optional for now)
 try {
   connectDB();
@@ -53,6 +54,7 @@ app.get('/api/health', (req, res) => {
 // Routes
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/auth/spotify', require('./routes/spotify.routes'));
+app.use('/api/spotify', require('./routes/spotify.routes')); // Routes Spotify publiques
 app.use('/api/users', require('./routes/user.routes'));
 app.use('/api/songs', require('./routes/song.routes'));
 app.use('/api/playlists', require('./routes/playlist.routes'));

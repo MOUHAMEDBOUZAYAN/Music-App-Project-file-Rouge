@@ -22,9 +22,21 @@ const SpotifyHome = () => {
 
   useEffect(() => {
     // Charger les données au montage du composant
-    getNewReleases();
-    getFeaturedPlaylists();
-    getCategories();
+    // Si l'utilisateur n'est pas authentifié, les sections afficheront des messages d'authentification
+    const loadSpotifyData = async () => {
+      try {
+        await Promise.allSettled([
+          getNewReleases(),
+          getFeaturedPlaylists(),
+          getCategories()
+        ]);
+      } catch (error) {
+        console.log('Erreur lors du chargement des données Spotify:', error.message);
+        // Ne pas propager l'erreur, laisser les sections gérer l'affichage
+      }
+    };
+    
+    loadSpotifyData();
   }, [getNewReleases, getFeaturedPlaylists, getCategories]);
 
   const handlePlayTrack = (track) => {
@@ -36,7 +48,29 @@ const SpotifyHome = () => {
   };
 
   const renderNewReleases = () => {
-    if (!newReleases?.length) return null;
+    if (!newReleases?.length) {
+      return (
+        <section className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-white">Nouvelles sorties</h2>
+          </div>
+          <div className="bg-gray-800 rounded-xl p-8 text-center">
+            <FaSpotify className="text-6xl text-green-500 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-white mb-2">Connectez-vous à Spotify</h3>
+            <p className="text-gray-400 mb-4">
+              Connectez-vous à votre compte Spotify pour découvrir les dernières sorties
+            </p>
+            <Link
+              to="/login"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors"
+            >
+              <FaSpotify />
+              Se connecter à Spotify
+            </Link>
+          </div>
+        </section>
+      );
+    }
 
     return (
       <section className="mb-12">
@@ -93,7 +127,29 @@ const SpotifyHome = () => {
   };
 
   const renderFeaturedPlaylists = () => {
-    if (!featuredPlaylists?.length) return null;
+    if (!featuredPlaylists?.length) {
+      return (
+        <section className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-white">Playlists en vedette</h2>
+          </div>
+          <div className="bg-gray-800 rounded-xl p-8 text-center">
+            <FaSpotify className="text-6xl text-green-500 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-white mb-2">Découvrez des playlists</h3>
+            <p className="text-gray-400 mb-4">
+              Connectez-vous à Spotify pour voir les playlists recommandées
+            </p>
+            <Link
+              to="/login"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors"
+            >
+              <FaSpotify />
+              Se connecter à Spotify
+            </Link>
+          </div>
+        </section>
+      );
+    }
 
     return (
       <section className="mb-12">
@@ -153,7 +209,29 @@ const SpotifyHome = () => {
   };
 
   const renderCategories = () => {
-    if (!categories?.length) return null;
+    if (!categories?.length) {
+      return (
+        <section className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-white">Catégories</h2>
+          </div>
+          <div className="bg-gray-800 rounded-xl p-8 text-center">
+            <FaSpotify className="text-6xl text-green-500 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-white mb-2">Explorez par genre</h3>
+            <p className="text-gray-400 mb-4">
+              Connectez-vous à Spotify pour explorer la musique par catégorie
+            </p>
+            <Link
+              to="/login"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors"
+            >
+              <FaSpotify />
+              Se connecter à Spotify
+            </Link>
+          </div>
+        </section>
+      );
+    }
 
     return (
       <section className="mb-12">
@@ -217,40 +295,8 @@ const SpotifyHome = () => {
     );
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-flex items-center gap-3 text-white mb-4">
-            <FaSpotify className="text-4xl text-green-500" />
-            <span className="text-2xl font-bold">SoundWave</span>
-          </div>
-          <div className="inline-flex items-center gap-3 text-white">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
-            <span>Chargement...</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 flex items-center justify-center">
-        <div className="text-center text-white">
-          <div className="text-6xl mb-4">😕</div>
-          <h1 className="text-2xl font-bold mb-2">Une erreur est survenue</h1>
-          <p className="text-gray-400">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-4 px-6 py-3 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors"
-          >
-            Réessayer
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // Afficher le contenu même si les données Spotify ne sont pas disponibles
+  // Les sections afficheront des messages d'authentification si nécessaire
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 p-6">

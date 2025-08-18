@@ -14,7 +14,9 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Pages
 import SpotifyHome from './components/home/SpotifyHome';
+import SimpleHome from './components/home/SimpleHome';
 import SpotifyLogin from './components/auth/SpotifyLogin';
+import LoginForm from './components/auth/LoginForm';
 import Register from './components/auth/RegisterForm';
 import SpotifySearch from './components/search/SpotifySearch';
 import Library from './pages/Library';
@@ -22,7 +24,9 @@ import LikedSongs from './pages/LikedSongs';
 import Album from './pages/Album';
 import Playlist from './pages/Playlist';
 import Artist from './pages/Artist';
+import Profile from './pages/Profile';
 import Settings from './pages/Settings';
+import SpotifyCallback from './pages/SpotifyCallback';
 
 // Styles
 import './styles/globals.css';
@@ -63,14 +67,15 @@ function App() {
                 
                 <Routes>
                   {/* Routes publiques */}
-                  <Route path="/login" element={<SpotifyLogin />} />
+                  <Route path="/login" element={<LoginForm />} />
                   <Route path="/register" element={<Register />} />
+                  <Route path="/spotify-callback" element={<SpotifyCallback />} />
                   
                   {/* Routes protégées avec layout Spotify */}
                   <Route path="/" element={
                     <ProtectedRoute>
                       <Layout>
-                        <SpotifyHome />
+                        <SimpleHome />
                       </Layout>
                     </ProtectedRoute>
                   } />
@@ -123,13 +128,13 @@ function App() {
                     </ProtectedRoute>
                   } />
                   
-                  {/* <Route path="/profile" element={
+                  <Route path="/profile" element={
                     <ProtectedRoute>
                       <Layout>
                         <Profile />
                       </Layout>
                     </ProtectedRoute>
-                  } /> */}
+                  } />
                   
                   <Route path="/settings" element={
                     <ProtectedRoute>

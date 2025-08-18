@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
+import { FaSpotify } from 'react-icons/fa';
+import { useSpotify } from '../../store/SpotifyContext';
 
 const ResetPassword = ({ onBackToLogin }) => {
   const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const { login: spotifyLogin, loading: spotifyLoading } = useSpotify();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -128,6 +131,26 @@ const ResetPassword = ({ onBackToLogin }) => {
           >
             <ArrowLeft className="h-4 w-4" />
             <span>Back to Sign In</span>
+          </button>
+        </div>
+
+        {/* Spotify Login Option */}
+        <div className="text-center">
+          <p className="text-gray-400 text-sm mb-3">
+            Ou connectez-vous avec Spotify
+          </p>
+          <button
+            type="button"
+            onClick={spotifyLogin}
+            disabled={spotifyLoading}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {spotifyLoading ? (
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <FaSpotify className="h-5 w-5" />
+            )}
+            Continuer avec Spotify
           </button>
         </div>
       </form>

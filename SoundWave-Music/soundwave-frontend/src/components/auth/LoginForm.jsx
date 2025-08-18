@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Search, MoreVertical, Mail, Lock, Eye, EyeOff, AlertCircle, ArrowRight } from 'lucide-react';
+import { FaSpotify } from 'react-icons/fa';
 import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/authService';
+import { useSpotify } from '../../store/SpotifyContext';
 import toast from 'react-hot-toast';
 import { 
   AnimatedPage, 
@@ -23,6 +25,7 @@ const LoginForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
+  const { login: spotifyLogin, loading: spotifyLoading } = useSpotify();
   
   const [formData, setFormData] = useState({
     email: '',
@@ -199,20 +202,19 @@ const LoginForm = () => {
         </div>
       </div>
 
-      {/* Floating Navigation Card */}
+      {/* Floating Navigation Card - Moved to bottom right */}
       <FloatingCard 
-        className="absolute top-20 right-6 z-20"
+        className="absolute bottom-6 right-6 z-20"
         delay={0.5}
       >
-        <div className="bg-bemusic-secondary/90 backdrop-blur-lg rounded-2xl p-4 shadow-2xl border border-bemusic-primary/20">
+        <div className="bg-bemusic-secondary/90 backdrop-blur-lg rounded-xl p-3 shadow-xl border border-bemusic-primary/20">
           <div className="text-center">
-            <p className="text-bemusic-secondary text-sm mb-2">Nouveau sur SoundWave ?</p>
+            <p className="text-bemusic-secondary text-xs mb-2">Nouveau sur SoundWave ?</p>
             <AnimatedButton
               onClick={handleSwitchToRegister}
-              className="bg-gradient-to-r from-accent-bemusic to-purple-600 text-bemusic-primary px-6 py-2 rounded-xl font-semibold hover:from-accent-bemusic/90 hover:to-purple-600/90 transition-all duration-300 shadow-lg flex items-center space-x-2 mx-auto group"
+              className="bg-gradient-to-r from-accent-bemusic to-purple-600 text-bemusic-primary px-4 py-2 rounded-lg font-medium hover:from-accent-bemusic/90 hover:to-purple-600/90 transition-all duration-300 shadow-lg text-sm"
             >
-              <span>S'inscrire</span>
-              <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
+              S'inscrire
             </AnimatedButton>
           </div>
         </div>
@@ -405,6 +407,17 @@ const LoginForm = () => {
                     className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center text-bemusic-primary hover:bg-red-600 transition-bemusic shadow-lg hover:shadow-red-500/50"
                   >
                     <span className="font-bold text-sm">g+</span>
+                  </AnimatedButton>
+                  <AnimatedButton
+                    onClick={spotifyLogin}
+                    disabled={spotifyLoading}
+                    className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-bemusic-primary hover:bg-green-600 transition-bemusic shadow-lg hover:shadow-green-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {spotifyLoading ? (
+                      <div className="w-5 h-5 border-2 border-bemusic-primary/30 border-t-bemusic-primary rounded-full animate-spin" />
+                    ) : (
+                      <FaSpotify className="h-5 w-5" />
+                    )}
                   </AnimatedButton>
                 </div>
               </div>
