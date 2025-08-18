@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   Search, 
   SkipBack, 
@@ -11,7 +12,8 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 
 const Header = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleSearch = (e) => {
@@ -92,18 +94,21 @@ const Header = () => {
                 </div>
                 
                 <div className="py-1">
-                  <button className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-bemusic-secondary hover:bg-bemusic-hover hover:text-bemusic-primary transition-bemusic">
+                  <Link to="/profile" className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-bemusic-secondary hover:bg-bemusic-hover hover:text-bemusic-primary transition-bemusic">
                     <User className="h-4 w-4" />
                     <span>Profil</span>
-                  </button>
-                  <button className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-bemusic-secondary hover:bg-bemusic-hover hover:text-bemusic-primary transition-bemusic">
+                  </Link>
+                  <Link to="/settings" className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-bemusic-secondary hover:bg-bemusic-hover hover:text-bemusic-primary transition-bemusic">
                     <Settings className="h-4 w-4" />
                     <span>Paramètres</span>
-                  </button>
+                  </Link>
                 </div>
                 
                 <div className="border-t border-bemusic-primary pt-1">
-                  <button className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-bemusic-secondary hover:bg-bemusic-hover hover:text-bemusic-primary transition-bemusic">
+                  <button 
+                    onClick={() => { logout(); navigate('/login'); }}
+                    className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-bemusic-secondary hover:bg-bemusic-hover hover:text-bemusic-primary transition-bemusic"
+                  >
                     <span>Déconnexion</span>
                   </button>
                 </div>

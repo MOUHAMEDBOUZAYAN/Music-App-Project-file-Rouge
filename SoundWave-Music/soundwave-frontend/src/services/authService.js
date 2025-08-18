@@ -23,7 +23,7 @@ export const authService = {
           console.log('✅ Token sauvegardé');
         }
         if (responseData.user) {
-          secureStorage.set('user', JSON.stringify(responseData.user));
+          secureStorage.set('user', responseData.user);
           console.log('✅ Utilisateur sauvegardé:', responseData.user);
         }
         
@@ -83,7 +83,7 @@ export const authService = {
           console.log('✅ Token sauvegardé');
         }
         if (responseData.user) {
-          secureStorage.set('user', JSON.stringify(responseData.user));
+          secureStorage.set('user', responseData.user);
           console.log('✅ Utilisateur sauvegardé:', responseData.user);
         }
         
@@ -189,15 +189,13 @@ export const authService = {
   updateProfile: async (profileData) => {
     try {
       const response = await apiClient.put(endpoints.users.update, profileData);
-      
-      // Mettre à jour les données utilisateur en local
-      if (response.data && response.data.success) {
-        secureStorage.set('user', JSON.stringify(response.data.user));
+      // response est déjà le body: { success, data }
+      if (response && response.success && response.data) {
+        secureStorage.set('user', response.data);
       }
-      
       return {
-        success: true,
-        data: response.data
+        success: !!response?.success,
+        data: response
       };
     } catch (error) {
       return {

@@ -27,7 +27,7 @@ const Profile = () => {
               <FaUser className="text-4xl text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold mb-2">{user.name || 'Utilisateur'}</h1>
+              <h1 className="text-3xl font-bold mb-2">{user.username || 'Utilisateur'}</h1>
               <p className="text-green-100 text-lg">Membre SoundWave</p>
             </div>
             <button className="ml-auto px-6 py-3 bg-white text-green-800 font-semibold rounded-full hover:bg-gray-100 transition-colors flex items-center gap-2">
@@ -46,8 +46,8 @@ const Profile = () => {
             </h2>
             <div className="space-y-3">
               <div>
-                <label className="text-gray-400 text-sm">Nom complet</label>
-                <p className="text-white font-medium">{user.name || 'Non spécifié'}</p>
+                <label className="text-gray-400 text-sm">Nom d'utilisateur</label>
+                <p className="text-white font-medium">{user.username || 'Non spécifié'}</p>
               </div>
               <div>
                 <label className="text-gray-400 text-sm">Nom d'utilisateur</label>

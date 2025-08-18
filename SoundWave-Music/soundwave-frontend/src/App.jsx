@@ -13,6 +13,7 @@ import Layout from './components/common/Layout';
 import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Pages
+import Home from './pages/Home';
 import SpotifyHome from './components/home/SpotifyHome';
 import SimpleHome from './components/home/SimpleHome';
 import SpotifyLogin from './components/auth/SpotifyLogin';
@@ -69,13 +70,14 @@ function App() {
                   {/* Routes publiques */}
                   <Route path="/login" element={<LoginForm />} />
                   <Route path="/register" element={<Register />} />
+                  <Route path="/spotify-login" element={<SpotifyLogin />} />
                   <Route path="/spotify-callback" element={<SpotifyCallback />} />
                   
                   {/* Routes protégées avec layout Spotify */}
                   <Route path="/" element={
                     <ProtectedRoute>
                       <Layout>
-                        <SimpleHome />
+                        <Home />
                       </Layout>
                     </ProtectedRoute>
                   } />

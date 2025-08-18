@@ -8,6 +8,26 @@ const {
   activityLogger 
 } = require('../middleware');
 
+// Middleware pour garantir un access token Spotify valide
+const ensureAccessToken = async (req, res, next) => {
+  try {
+    const currentToken = spotifyApi.getAccessToken();
+    if (!currentToken) {
+      const refreshToken = spotifyApi.getRefreshToken();
+      if (refreshToken) {
+        const data = await spotifyApi.refreshAccessToken();
+        spotifyApi.setAccessToken(data.body.access_token);
+      } else {
+        return res.status(401).json({ success: false, error: 'Token Spotify manquant. Veuillez vous connecter.' });
+      }
+    }
+    next();
+  } catch (err) {
+    console.error('Erreur ensureAccessToken:', err.message);
+    return res.status(401).json({ success: false, error: 'Échec de validation du token Spotify', details: err.message });
+  }
+};
+
 // @route   GET api/auth/spotify/login
 // @desc    Rediriger l'utilisateur vers la page de connexion Spotify
 // @access  Public
@@ -86,6 +106,13 @@ router.post('/exchange',
     try {
       const data = await spotifyApi.authorizationCodeGrant(code);
       console.log('Échange de code réussi');
+      // Sauvegarder les tokens dans l'instance côté serveur
+      try {
+        spotifyApi.setAccessToken(data.body.access_token);
+        spotifyApi.setRefreshToken(data.body.refresh_token);
+      } catch (setErr) {
+        console.warn('Impossible de définir les tokens Spotify côté serveur:', setErr.message);
+      }
       
       res.json({
         success: true,
@@ -147,6 +174,7 @@ router.post('/refresh',
 // @access  Private
 router.get('/search', 
   corsAuth,
+  ensureAccessToken,
   activityLogger('spotify_search'), 
   async (req, res) => {
     const { q, type, limit = 20, offset = 0 } = req.query;
@@ -184,6 +212,7 @@ router.get('/search',
 // @access  Private
 router.get('/me', 
   corsAuth,
+  ensureAccessToken,
   activityLogger('spotify_get_profile'), 
   async (req, res) => {
     try {
@@ -209,6 +238,7 @@ router.get('/me',
 // @access  Private
 router.get('/playlists', 
   corsAuth,
+  ensureAccessToken,
   activityLogger('spotify_get_playlists'), 
   async (req, res) => {
     const { limit = 20, offset = 0 } = req.query;
@@ -239,6 +269,7 @@ router.get('/playlists',
 // @access  Private
 router.get('/playlist/:id', 
   corsAuth,
+  ensureAccessToken,
   activityLogger('spotify_get_playlist'), 
   async (req, res) => {
     const { id } = req.params;
@@ -266,6 +297,7 @@ router.get('/playlist/:id',
 // @access  Private
 router.get('/album/:id', 
   corsAuth,
+  ensureAccessToken,
   activityLogger('spotify_get_album'), 
   async (req, res) => {
     const { id } = req.params;
@@ -293,6 +325,7 @@ router.get('/album/:id',
 // @access  Private
 router.get('/artist/:id', 
   corsAuth,
+  ensureAccessToken,
   activityLogger('spotify_get_artist'), 
   async (req, res) => {
     const { id } = req.params;
@@ -320,6 +353,7 @@ router.get('/artist/:id',
 // @access  Private
 router.get('/artist/:id/top-tracks', 
   corsAuth,
+  ensureAccessToken,
   activityLogger('spotify_get_artist_top_tracks'), 
   async (req, res) => {
     const { id } = req.params;
@@ -348,6 +382,7 @@ router.get('/artist/:id/top-tracks',
 // @access  Private
 router.get('/artist/:id/albums', 
   corsAuth,
+  ensureAccessToken,
   activityLogger('spotify_get_artist_albums'), 
   async (req, res) => {
     const { id } = req.params;
@@ -379,6 +414,7 @@ router.get('/artist/:id/albums',
 // @access  Private
 router.get('/recommendations', 
   corsAuth,
+  ensureAccessToken,
   activityLogger('spotify_get_recommendations'), 
   async (req, res) => {
     const { 
@@ -418,6 +454,7 @@ router.get('/recommendations',
 // @access  Private
 router.get('/new-releases', 
   corsAuth,
+  ensureAccessToken,
   activityLogger('spotify_get_new_releases'), 
   async (req, res) => {
     const { limit = 20, offset = 0, country = 'FR' } = req.query;
@@ -449,6 +486,7 @@ router.get('/new-releases',
 // @access  Private
 router.get('/featured-playlists', 
   corsAuth,
+  ensureAccessToken,
   activityLogger('spotify_get_featured_playlists'), 
   async (req, res) => {
     const { limit = 20, offset = 0, country = 'FR' } = req.query;
@@ -480,6 +518,7 @@ router.get('/featured-playlists',
 // @access  Private
 router.get('/categories', 
   corsAuth,
+  ensureAccessToken,
   activityLogger('spotify_get_categories'), 
   async (req, res) => {
     const { limit = 20, offset = 0, country = 'FR' } = req.query;
@@ -511,6 +550,7 @@ router.get('/categories',
 // @access  Private
 router.get('/category/:id/playlists', 
   corsAuth,
+  ensureAccessToken,
   activityLogger('spotify_get_category_playlists'), 
   async (req, res) => {
     const { id } = req.params;

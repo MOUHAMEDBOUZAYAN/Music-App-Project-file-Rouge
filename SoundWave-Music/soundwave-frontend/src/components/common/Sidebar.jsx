@@ -56,13 +56,14 @@ const Sidebar = ({ isOpen, onToggle }) => {
         />
       )}
       
-      {/* Sidebar */}
-      <div className={`
-        fixed lg:static inset-y-0 left-0 z-50
-        w-64 bg-bemusic-secondary border-r border-bemusic-primary 
-        flex flex-col transform transition-transform duration-300 ease-in-out
-        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-      `}>
+             {/* Sidebar */}
+       <div className={`
+         fixed lg:static inset-y-0 left-0 z-50
+         w-64 bg-bemusic-secondary border-r border-bemusic-primary 
+         flex flex-col transform transition-transform duration-300 ease-in-out
+         h-screen overflow-y-auto
+         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+       `}>
         {/* Header mobile avec bouton fermer */}
         <div className="flex items-center justify-between p-4 lg:hidden">
           <div className="text-xl font-bold text-bemusic-primary">
@@ -205,7 +206,7 @@ const Sidebar = ({ isOpen, onToggle }) => {
       </div>
 
       {/* Informations utilisateur */}
-      <div className="px-6 py-4 border-t border-bemusic-primary">
+      <div className="px-6 py-4 border-t border-bemusic-primary pb-24">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-gradient-to-r from-accent-bemusic to-blue-500 rounded-full flex items-center justify-center">
             <span className="text-sm font-bold text-bemusic-primary">

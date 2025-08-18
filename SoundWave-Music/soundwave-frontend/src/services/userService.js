@@ -4,7 +4,7 @@ class UserService {
   // Get current user profile
   async getCurrentUser() {
     try {
-      const response = await api.get('/users/me');
+      const response = await api.get('/api/users/me');
       return response.data;
     } catch (error) {
       console.error('Error fetching current user:', error);
@@ -26,7 +26,7 @@ class UserService {
   // Update user profile
   async updateProfile(userData) {
     try {
-      const response = await api.put('/users/profile', userData);
+      const response = await api.put('/api/users/profile', userData);
       return response.data;
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -77,7 +77,7 @@ class UserService {
   // Follow user
   async followUser(userId) {
     try {
-      const response = await api.post(`/users/${userId}/follow`);
+      const response = await api.post(`/api/users/${userId}/follow`);
       return response.data;
     } catch (error) {
       console.error('Error following user:', error);
@@ -88,7 +88,8 @@ class UserService {
   // Unfollow user
   async unfollowUser(userId) {
     try {
-      const response = await api.delete(`/users/${userId}/follow`);
+      // Backend utilise un POST toggle sur le même endpoint
+      const response = await api.post(`/api/users/${userId}/follow`);
       return response.data;
     } catch (error) {
       console.error('Error unfollowing user:', error);
@@ -99,7 +100,7 @@ class UserService {
   // Get user followers
   async getUserFollowers(userId, page = 1, limit = 20) {
     try {
-      const response = await api.get(`/users/${userId}/followers`, {
+      const response = await api.get(`/api/users/${userId}/followers`, {
         params: { page, limit }
       });
       return response.data;
@@ -112,7 +113,7 @@ class UserService {
   // Get user following
   async getUserFollowing(userId, page = 1, limit = 20) {
     try {
-      const response = await api.get(`/users/${userId}/following`, {
+      const response = await api.get(`/api/users/${userId}/following`, {
         params: { page, limit }
       });
       return response.data;

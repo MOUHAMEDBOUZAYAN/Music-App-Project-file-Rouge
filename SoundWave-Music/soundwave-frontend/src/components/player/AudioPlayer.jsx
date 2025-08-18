@@ -15,18 +15,19 @@ import {
   Mic2
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { useMusic } from '../../store/MusicContext';
 
-const AudioPlayer = ({ 
-  currentTrack, 
-  isPlaying, 
-  onPlayPause, 
-  onNext, 
-  onPrevious, 
-  onShuffle, 
-  onRepeat,
-  queue,
-  onQueueChange 
-}) => {
+const AudioPlayer = () => {
+  const {
+    currentTrack,
+    isPlaying,
+    queue,
+    togglePlayPause,
+    nextTrack,
+    previousTrack,
+    setShuffle,
+    setRepeat,
+  } = useMusic();
   const [volume, setVolume] = useState(0.7);
   const [isMuted, setIsMuted] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -42,7 +43,7 @@ const AudioPlayer = ({
   // Gérer la lecture audio
   useEffect(() => {
     if (currentTrack && audioRef.current) {
-      audioRef.current.src = currentTrack.audioUrl || currentTrack.previewUrl;
+      audioRef.current.src = currentTrack.audioUrl || currentTrack.previewUrl || currentTrack.preview_url || '';
       audioRef.current.load();
       
       if (isPlaying) {
@@ -82,7 +83,7 @@ const AudioPlayer = ({
   };
 
   const handleEnded = () => {
-    onNext();
+    nextTrack();
   };
 
   const handleProgressClick = (e) => {
@@ -121,7 +122,79 @@ const AudioPlayer = ({
   };
 
   if (!currentTrack) {
-    return null;
+    // Afficher un player minimal avec contrôles désactivés
+    return (
+      <div className="fixed bottom-0 left-64 right-0 bg-black border-t border-gray-800 z-40 lg:left-64">
+        <div className="px-4 py-2">
+          {/* Barre de progression vide */}
+          <div className="w-full h-1 bg-gray-600"></div>
+          
+          {/* Contrôles principaux désactivés */}
+          <div className="flex items-center justify-between h-16">
+            {/* Informations de la piste - vide */}
+            <div className="flex items-center space-x-4 flex-1 min-w-0">
+              <div className="w-14 h-14 bg-gray-800 rounded flex-shrink-0"></div>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-medium text-gray-500">Aucune piste sélectionnée</div>
+                <div className="text-xs text-gray-600">Sélectionnez une musique pour commencer</div>
+              </div>
+            </div>
+
+            {/* Contrôles de lecture centraux désactivés */}
+            <div className="flex flex-col items-center space-y-2 flex-1">
+              <div className="flex items-center space-x-4">
+                <button disabled className="text-gray-600 cursor-not-allowed">
+                  <Shuffle className="h-5 w-5" />
+                </button>
+                <button disabled className="text-gray-600 cursor-not-allowed">
+                  <SkipBack className="h-6 w-6" />
+                </button>
+                <button disabled className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center cursor-not-allowed">
+                  <Play className="h-5 w-5 text-gray-400 ml-1" />
+                </button>
+                <button disabled className="text-gray-600 cursor-not-allowed">
+                  <SkipForward className="h-6 w-6" />
+                </button>
+                <button disabled className="text-gray-600 cursor-not-allowed">
+                  <Repeat className="h-5 w-5" />
+                </button>
+              </div>
+              
+              {/* Barre de progression du temps vide */}
+              <div className="flex items-center space-x-2 w-full max-w-md">
+                <span className="text-xs text-gray-600 w-10 text-right">0:00</span>
+                <div className="flex-1 h-1 bg-gray-600 rounded-full"></div>
+                <span className="text-xs text-gray-600 w-10">0:00</span>
+              </div>
+            </div>
+
+            {/* Contrôles supplémentaires désactivés */}
+            <div className="flex items-center space-x-4 flex-1 justify-end">
+              <button disabled className="text-gray-600 cursor-not-allowed">
+                <List className="h-4 w-4" />
+              </button>
+              <button disabled className="text-gray-600 cursor-not-allowed">
+                <Mic2 className="h-4 w-4" />
+              </button>
+              <button disabled className="text-gray-600 cursor-not-allowed">
+                <Monitor className="h-4 w-4" />
+              </button>
+              
+              {/* Contrôle du volume désactivé */}
+              <div className="flex items-center space-x-2">
+                <button disabled className="text-gray-600 cursor-not-allowed">
+                  <Volume2 className="h-4 w-4" />
+                </button>
+              </div>
+              
+              <button disabled className="text-gray-600 cursor-not-allowed">
+                <Maximize2 className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -135,8 +208,8 @@ const AudioPlayer = ({
         preload="metadata"
       />
 
-      {/* Barre de lecture (style Spotify) */}
-      <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-gray-800 z-50">
+             {/* Barre de lecture (style Spotify) */}
+       <div className="fixed bottom-0 left-64 right-0 bg-black border-t border-gray-800 z-40 lg:left-64">
         <div className="px-4 py-2">
           {/* Barre de progression */}
           <div 
@@ -155,9 +228,9 @@ const AudioPlayer = ({
             {/* Informations de la piste */}
             <div className="flex items-center space-x-4 flex-1 min-w-0">
               <div className="w-14 h-14 bg-gray-800 rounded flex-shrink-0">
-                {currentTrack.coverUrl && (
+                {(currentTrack.cover || currentTrack.coverUrl) && (
                   <img 
-                    src={currentTrack.coverUrl} 
+                    src={currentTrack.cover || currentTrack.coverUrl} 
                     alt={currentTrack.title}
                     className="w-full h-full object-cover rounded"
                   />
@@ -185,19 +258,19 @@ const AudioPlayer = ({
             <div className="flex flex-col items-center space-y-2 flex-1">
               <div className="flex items-center space-x-4">
                 <button 
-                  onClick={onShuffle}
+                  onClick={() => setShuffle(true)}
                   className="text-gray-400 hover:text-white transition-colors"
                 >
                   <Shuffle className="h-5 w-5" />
                 </button>
                 <button 
-                  onClick={onPrevious}
+                  onClick={previousTrack}
                   className="text-gray-400 hover:text-white transition-colors"
                 >
                   <SkipBack className="h-6 w-6" />
                 </button>
                 <button 
-                  onClick={onPlayPause}
+                  onClick={togglePlayPause}
                   className="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:scale-105 transition-transform"
                 >
                   {isPlaying ? (
@@ -207,13 +280,13 @@ const AudioPlayer = ({
                   )}
                 </button>
                 <button 
-                  onClick={onNext}
+                  onClick={nextTrack}
                   className="text-gray-400 hover:text-white transition-colors"
                 >
                   <SkipForward className="h-6 w-6" />
                 </button>
                 <button 
-                  onClick={onRepeat}
+                  onClick={() => setRepeat('all')}
                   className="text-gray-400 hover:text-white transition-colors"
                 >
                   <Repeat className="h-5 w-5" />

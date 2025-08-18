@@ -118,7 +118,7 @@ export const musicDataService = {
   getMusicGenres: async () => {
     try {
       // Essayer de récupérer les genres depuis l'API
-      const response = await apiClient.get('/genres');
+      const response = await apiClient.get(endpoints.songs.getAll);
       
       if (response.success && response.data) {
         return {
@@ -234,7 +234,7 @@ export const musicDataService = {
   getPopularArtists: async (limit = 10) => {
     try {
       console.log('🎵 Récupération des artistes populaires...');
-      const response = await apiClient.get('/artists/popular', {
+      const response = await apiClient.get(endpoints.artists.popular, {
         params: { limit }
       });
       
@@ -266,7 +266,7 @@ export const musicDataService = {
   getRecommendedPlaylists: async (limit = 10) => {
     try {
       console.log('🎵 Récupération des playlists recommandées...');
-      const response = await apiClient.get('/playlists/recommended', {
+      const response = await apiClient.get(endpoints.playlists.getAll, {
         params: { limit }
       });
       

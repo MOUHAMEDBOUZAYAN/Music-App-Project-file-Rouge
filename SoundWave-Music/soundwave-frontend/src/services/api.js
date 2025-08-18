@@ -104,80 +104,93 @@ api.interceptors.response.use(
 export const endpoints = {
   // Authentification
   auth: {
-    login: '/auth/login',
-    register: '/auth/register',
-    logout: '/auth/logout',
-    refresh: '/auth/refresh',
-    forgotPassword: '/auth/forgot-password',
-    resetPassword: '/auth/reset-password',
-    verifyEmail: '/auth/verify-email'
+    login: '/api/auth/login',
+    register: '/api/auth/register',
+    logout: '/api/auth/logout',
+    refresh: '/api/auth/refresh',
+    forgotPassword: '/api/auth/forgot-password',
+    resetPassword: '/api/auth/reset-password',
+    verifyEmail: '/api/auth/verify-email',
+    changePassword: '/api/auth/change-password'
   },
   
   // Utilisateurs
   users: {
-    profile: '/users/profile',
-    update: '/users/update',
-    uploadAvatar: '/users/avatar',
-    follow: (userId) => `/users/${userId}/follow`,
-    unfollow: (userId) => `/users/${userId}/unfollow`,
-    followers: (userId) => `/users/${userId}/followers`,
-    following: (userId) => `/users/${userId}/following`,
-    search: '/users/search'
+    profile: '/api/users/profile',
+    update: '/api/users/profile',
+    uploadAvatar: '/api/users/avatar',
+    follow: (userId) => `/api/users/${userId}/follow`,
+    unfollow: (userId) => `/api/users/${userId}/unfollow`,
+    followers: (userId) => `/api/users/${userId}/followers`,
+    following: (userId) => `/api/users/${userId}/following`,
+    search: '/api/users/search'
   },
   
   // Morceaux
   songs: {
-    getAll: '/songs',
-    getById: (id) => `/songs/${id}`,
-    create: '/songs',
-    update: (id) => `/songs/${id}`,
-    delete: (id) => `/songs/${id}`,
-    upload: '/songs/upload',
-    like: (id) => `/songs/${id}/like`,
-    unlike: (id) => `/songs/${id}/unlike`,
-    search: '/songs/search',
-    trending: '/songs/trending',
-    recommendations: '/songs/recommendations'
+    getAll: '/api/songs',
+    getById: (id) => `/api/songs/${id}`,
+    create: '/api/songs',
+    update: (id) => `/api/songs/${id}`,
+    delete: (id) => `/api/songs/${id}`,
+    upload: '/api/songs/upload',
+    like: (id) => `/api/songs/${id}/like`,
+    unlike: (id) => `/api/songs/${id}/unlike`,
+    search: '/api/songs/search',
+    trending: '/api/songs/trending',
+    recommendations: '/api/songs/recommendations'
   },
   
   // Albums
   albums: {
-    getAll: '/albums',
-    getById: (id) => `/albums/${id}`,
-    create: '/albums',
-    update: (id) => `/albums/${id}`,
-    delete: (id) => `/albums/${id}`,
-    songs: (id) => `/albums/${id}/songs`
+    getAll: '/api/albums',
+    getById: (id) => `/api/albums/${id}`,
+    create: '/api/albums',
+    update: (id) => `/api/albums/${id}`,
+    delete: (id) => `/api/albums/${id}`,
+    songs: (id) => `/api/albums/${id}/songs`
+  },
+  
+  // Artistes
+  artists: {
+    getAll: '/api/artists',
+    getById: (id) => `/api/artists/${id}`,
+    create: '/api/artists',
+    update: (id) => `/api/artists/${id}`,
+    delete: (id) => `/api/artists/${id}`,
+    popular: '/api/artists/popular',
+    topTracks: (id) => `/api/artists/${id}/tracks`,
+    albums: (id) => `/api/artists/${id}/albums`
   },
   
   // Playlists
   playlists: {
-    getAll: '/playlists',
-    getById: (id) => `/playlists/${id}`,
-    create: '/playlists',
-    update: (id) => `/playlists/${id}`,
-    delete: (id) => `/playlists/${id}`,
-    addSong: (id) => `/playlists/${id}/songs`,
-    removeSong: (playlistId, songId) => `/playlists/${playlistId}/songs/${songId}`,
-    follow: (id) => `/playlists/${id}/follow`,
-    unfollow: (id) => `/playlists/${id}/unfollow`
+    getAll: '/api/playlists',
+    getById: (id) => `/api/playlists/${id}`,
+    create: '/api/playlists',
+    update: (id) => `/api/playlists/${id}`,
+    delete: (id) => `/api/playlists/${id}`,
+    addSong: (id) => `/api/playlists/${id}/songs`,
+    removeSong: (playlistId, songId) => `/api/playlists/${playlistId}/songs/${songId}`,
+    follow: (id) => `/api/playlists/${id}/follow`,
+    unfollow: (id) => `/api/playlists/${id}/unfollow`
   },
   
   // Recherche
   search: {
-    global: '/search',
-    songs: '/search/songs',
-    artists: '/search/artists',
-    albums: '/search/albums',
-    playlists: '/search/playlists'
+    global: '/api/search',
+    songs: '/api/search/songs',
+    artists: '/api/search/artists',
+    albums: '/api/search/albums',
+    playlists: '/api/search/playlists'
   },
   
   // Statistiques
   analytics: {
-    dashboard: '/analytics/dashboard',
-    songStats: (id) => `/analytics/songs/${id}`,
-    userStats: '/analytics/user',
-    trending: '/analytics/trending'
+    dashboard: '/api/analytics/dashboard',
+    songStats: (id) => `/api/analytics/songs/${id}`,
+    userStats: '/api/analytics/user',
+    trending: '/api/analytics/trending'
   }
 };
 

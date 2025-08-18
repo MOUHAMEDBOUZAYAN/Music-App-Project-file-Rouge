@@ -14,15 +14,19 @@ import {
   Maximize2,
   Clock,
   Plus,
-  ArrowRight
+  ArrowRight,
+  Music2
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useMusic } from '../store/MusicContext';
 import { songService } from '../services/songService';
 import { artistService } from '../services/artistService';
 import { playlistService } from '../services/playlistService';
+import spotifyService from '../services/spotifyService';
+import SpotifyHome from '../components/home/SpotifyHome';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import ImageWithFallback from '../components/common/ImageWithFallback';
 
 const Home = () => {
   const { user } = useAuth();
@@ -45,46 +49,65 @@ const Home = () => {
   const [playlists, setPlaylists] = useState([]);
   const [recentAlbums, setRecentAlbums] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasSpotifyAccess, setHasSpotifyAccess] = useState(false);
 
   // Charger les données au montage du composant
   useEffect(() => {
+    checkSpotifyAccess();
     loadHomeData();
   }, []);
+
+  const checkSpotifyAccess = async () => {
+    try {
+      // Vérifier si l'utilisateur a accès à Spotify
+      const hasAccess = localStorage.getItem('spotify_access_token') || 
+                       localStorage.getItem('spotify_refresh_token');
+      setHasSpotifyAccess(!!hasAccess);
+    } catch (error) {
+      console.log('Pas d\'accès Spotify:', error);
+      setHasSpotifyAccess(false);
+    }
+  };
+
+  // Si l'utilisateur a accès à Spotify, utiliser SpotifyHome
+  if (hasSpotifyAccess) {
+    return <SpotifyHome />;
+  }
 
   const loadHomeData = async () => {
     setIsLoading(true);
     try {
-      // Charger les chansons tendance
+      // Charger les chansons tendance depuis l'API locale
       const trendingResult = await songService.getTrendingSongs({ limit: 20 });
       if (trendingResult.success) {
         setTrendingSongs(trendingResult.data.songs || []);
       }
 
-      // Charger les artistes populaires depuis l'API
+      // Charger les artistes populaires depuis l'API locale
       const artistsResult = await artistService.getPopularArtists({ limit: 10 });
       if (artistsResult.success) {
         setPopularArtists(artistsResult.data || []);
       } else {
-        console.warn('Impossible de charger les artistes depuis l\'API:', artistsResult.error);
+        console.warn('Impossible de charger les artistes depuis l\'API locale:', artistsResult.error);
         setPopularArtists([]);
       }
 
-      // Charger les playlists recommandées depuis l'API
+      // Charger les playlists recommandées depuis l'API locale
       const playlistsResult = await playlistService.getRecommendedPlaylists({ limit: 10 });
       if (playlistsResult.success) {
         setPlaylists(playlistsResult.data || []);
       } else {
-        console.warn('Impossible de charger les playlists depuis l\'API:', playlistsResult.error);
+        console.warn('Impossible de charger les playlists depuis l\'API locale:', playlistsResult.error);
         setPlaylists([]);
       }
 
-      // Charger les albums récents depuis l'API
+      // Charger les albums récents depuis l'API locale
       try {
         const albumsResult = await songService.getRecentAlbums({ limit: 4 });
         if (albumsResult.success) {
           setRecentAlbums(albumsResult.data || []);
         } else {
-          console.warn('Impossible de charger les albums récents depuis l\'API:', albumsResult.error);
+          console.warn('Impossible de charger les albums récents depuis l\'API locale:', albumsResult.error);
           setRecentAlbums([]);
         }
       } catch (error) {
@@ -101,17 +124,50 @@ const Home = () => {
   };
 
   const handlePlaySong = (song) => {
-    playTrack(song);
-    toast.success(`Lecture de ${song.title || song.name}`);
+    // Convertir l'objet Spotify en format compatible avec le player
+    const spotifySong = {
+      _id: song.id,
+      title: song.name,
+      artist: song.artists?.[0]?.name || 'Artiste inconnu',
+      cover: song.album?.images?.[0]?.url,
+      audioUrl: song.preview_url, // Spotify fournit des previews de 30 secondes
+      duration: song.duration_ms,
+      album: song.album?.name,
+      spotifyId: song.id,
+      isSpotify: true
+    };
+    
+    playTrack(spotifySong);
+    toast.success(`Lecture de ${song.name}`);
   };
 
   const handlePlayPlaylist = (playlist) => {
-    playPlaylist(playlist);
+    // Convertir la playlist Spotify en format compatible
+    const spotifyPlaylist = {
+      _id: playlist.id,
+      name: playlist.name,
+      description: playlist.description,
+      cover: playlist.images?.[0]?.url,
+      spotifyId: playlist.id,
+      isSpotify: true
+    };
+    
+    playPlaylist(spotifyPlaylist);
     toast.success(`Lecture de la playlist ${playlist.name}`);
   };
 
   const handlePlayAlbum = (album) => {
-    playAlbum(album);
+    // Convertir l'album Spotify en format compatible
+    const spotifyAlbum = {
+      _id: album.id,
+      name: album.name,
+      artist: album.artists?.[0]?.name || 'Artiste inconnu',
+      cover: album.images?.[0]?.url,
+      spotifyId: album.id,
+      isSpotify: true
+    };
+    
+    playAlbum(spotifyAlbum);
     toast.success(`Lecture de l'album ${album.name}`);
   };
 
@@ -147,60 +203,7 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-bemusic-primary text-bemusic-primary overflow-x-hidden">
-      {/* Header avec recherche */}
-      <div className="sticky top-0 z-10 bg-bemusic-primary/95 backdrop-blur-sm border-b border-bemusic-tertiary/20">
-        <div className="px-4 lg:px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="flex space-x-2">
-                <button className="p-2 rounded-full bg-bemusic-secondary hover:bg-bemusic-tertiary transition-colors">
-                  <SkipBack className="h-5 w-5" />
-                </button>
-                <button className="p-2 rounded-full bg-bemusic-secondary hover:bg-bemusic-tertiary transition-colors">
-                  <SkipForward className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-            
-            <div className="flex-1 max-w-2xl mx-4 lg:mx-8">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-bemusic-tertiary" />
-                <input
-                  type="text"
-                  placeholder="Que souhaitez-vous écouter ou regarder ?"
-                  className="w-full bg-bemusic-secondary text-bemusic-primary placeholder-bemusic-tertiary rounded-full pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-bemusic"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <button className="p-2 rounded-full bg-bemusic-secondary hover:bg-bemusic-tertiary transition-colors">
-                <List className="h-5 w-5" />
-              </button>
-              <div className="w-8 h-8 bg-gradient-to-r from-accent-bemusic to-blue-500 rounded-full flex items-center justify-center">
-                <span className="text-sm font-bold text-white">{user?.username?.charAt(0) || 'U'}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Filtres */}
-          <div className="flex space-x-4 mt-4 overflow-x-auto pb-2">
-            {['Tout', 'Musique', 'Podcasts'].map((filter) => (
-              <button
-                key={filter}
-                onClick={() => setCurrentFilter(filter)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
-                  currentFilter === filter
-                    ? 'bg-accent-bemusic text-white'
-                    : 'bg-bemusic-secondary text-bemusic-tertiary hover:bg-bemusic-tertiary hover:text-bemusic-primary'
-                }`}
-              >
-                {filter}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
+      {/* Header global est déjà rendu par Layout. On évite de le dupliquer ici. */}
 
       {/* Contenu principal */}
       <div className="px-4 lg:px-6 py-6 lg:py-8 space-y-6 lg:space-y-8 pb-24">
@@ -215,7 +218,7 @@ const Home = () => {
         {trendingSongs.length > 0 && (
           <section>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-bemusic-primary">Chansons tendance</h2>
+              <h2 className="text-2xl font-bold text-bemusic-primary">Recommandations Spotify</h2>
               <button className="text-sm text-bemusic-tertiary hover:text-bemusic-primary transition-colors flex items-center">
                 Tout afficher <ArrowRight className="h-4 w-4 ml-1" />
               </button>
@@ -223,12 +226,12 @@ const Home = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
               {trendingSongs.slice(0, 10).map((song, index) => (
-                <div key={song._id} className="group bg-bemusic-secondary p-4 rounded-lg hover:bg-bemusic-tertiary/20 transition-all duration-200 cursor-pointer border border-bemusic-tertiary/20">
+                <div key={song.id} className="group bg-bemusic-secondary p-4 rounded-lg hover:bg-bemusic-tertiary/20 transition-all duration-200 cursor-pointer border border-bemusic-tertiary/20">
                   <div className="relative mb-4">
                     <div className="aspect-square bg-bemusic-tertiary/20 rounded-lg overflow-hidden">
-                      <img
-                        src={song.cover || `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop`}
-                        alt={song.title}
+                      <ImageWithFallback
+                        src={song.album?.images?.[0]?.url}
+                        alt={song.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                       />
                     </div>
@@ -248,15 +251,15 @@ const Home = () => {
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleToggleLike(song._id);
+                        handleToggleLike(song.id);
                       }}
                       className={`absolute top-2 right-2 p-2 rounded-full transition-all duration-200 ${
-                        likedTracks.includes(song._id) 
+                        likedTracks.includes(song.id) 
                           ? 'text-accent-bemusic bg-bemusic-primary/50' 
                           : 'text-bemusic-tertiary bg-bemusic-primary/50 hover:text-bemusic-primary'
                       }`}
                     >
-                      <Heart className="h-4 w-4" fill={likedTracks.includes(song._id) ? 'currentColor' : 'none'} />
+                      <Heart className="h-4 w-4" fill={likedTracks.includes(song.id) ? 'currentColor' : 'none'} />
                     </button>
 
                     {/* Bouton plus d'options */}
@@ -272,10 +275,10 @@ const Home = () => {
                   </div>
                   
                   <h3 className="font-semibold text-sm mb-1 truncate group-hover:text-accent-bemusic transition-colors text-bemusic-primary">
-                    {song.title}
+                    {song.name}
                   </h3>
                   <p className="text-xs text-bemusic-tertiary truncate">
-                    {song.artist}
+                    {song.artists?.[0]?.name || 'Artiste inconnu'}
                   </p>
                 </div>
               ))}
@@ -301,8 +304,8 @@ const Home = () => {
                       className="w-24 h-24 lg:w-32 lg:h-32 bg-bemusic-secondary rounded-full overflow-hidden cursor-pointer hover:scale-105 transition-transform duration-200"
                       onClick={() => handleArtistClick(artist)}
                     >
-                      <img
-                        src={artist.profilePicture || artist.avatar || artist.image || `https://images.unsplash.com/photo-1494790108755-2616b612b786?w=128&h=128&fit=crop&crop=face`}
+                      <ImageWithFallback
+                        src={artist.profilePicture || artist.avatar || artist.image}
                         alt={artist.username || artist.name}
                         className="w-full h-full object-cover"
                       />
@@ -336,7 +339,7 @@ const Home = () => {
         {/* Section Albums récents */}
         <section>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-bemusic-primary">Albums et singles populaires</h2>
+            <h2 className="text-2xl font-bold text-bemusic-primary">Nouvelles sorties Spotify</h2>
             <button className="text-sm text-bemusic-tertiary hover:text-bemusic-primary transition-colors flex items-center">
               Tout afficher <ArrowRight className="h-4 w-4 ml-1" />
             </button>
@@ -347,8 +350,8 @@ const Home = () => {
               <div key={album.id} className="group cursor-pointer">
                 <div className="relative mb-3">
                   <div className="aspect-square bg-bemusic-tertiary/20 rounded-lg overflow-hidden border border-bemusic-tertiary/30">
-                    <img
-                      src={album.coverUrl}
+                    <ImageWithFallback
+                      src={album.images?.[0]?.url}
                       alt={album.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                     />
@@ -367,7 +370,7 @@ const Home = () => {
                   {album.name}
                 </h3>
                 <p className="text-xs text-bemusic-tertiary truncate">
-                  {album.artist}
+                  {album.artists?.[0]?.name || 'Artiste inconnu'}
                 </p>
               </div>
             ))}
@@ -377,7 +380,7 @@ const Home = () => {
         {/* Section Playlists recommandées */}
         <section>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-bemusic-primary">Playlists recommandées</h2>
+            <h2 className="text-2xl font-bold text-bemusic-primary">Playlists Spotify en vedette</h2>
             <button className="text-sm text-bemusic-tertiary hover:text-bemusic-primary transition-colors flex items-center">
               Tout afficher <ArrowRight className="h-4 w-4 ml-1" />
             </button>
@@ -386,11 +389,11 @@ const Home = () => {
           {playlists.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
               {playlists.map((playlist) => (
-                <div key={playlist._id || playlist.id} className="group cursor-pointer">
+                <div key={playlist.id} className="group cursor-pointer">
                   <div className="relative mb-3">
                     <div className="aspect-square bg-bemusic-tertiary/20 rounded-lg overflow-hidden border border-bemusic-tertiary/30">
-                      <img
-                        src={playlist.coverUrl || playlist.cover || `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop`}
+                      <ImageWithFallback
+                        src={playlist.images?.[0]?.url}
                         alt={playlist.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                       />
@@ -409,11 +412,11 @@ const Home = () => {
                     {playlist.name}
                   </h3>
                   <p className="text-xs text-bemusic-tertiary truncate">
-                    {playlist.description || 'Playlist personnalisée'}
+                    {playlist.description || 'Playlist Spotify'}
                   </p>
-                  {playlist.songCount && (
+                  {playlist.tracks?.total && (
                     <p className="text-xs text-bemusic-tertiary/70 mt-1">
-                      {playlist.songCount} chansons
+                      {playlist.tracks.total} chansons
                     </p>
                   )}
                 </div>
@@ -421,7 +424,7 @@ const Home = () => {
             </div>
           ) : (
             <div className="text-center py-8">
-              <p className="text-bemusic-tertiary">Aucune playlist recommandée disponible pour le moment</p>
+              <p className="text-bemusic-tertiary">Aucune playlist Spotify disponible pour le moment</p>
             </div>
           )}
         </section>
@@ -440,8 +443,8 @@ const Home = () => {
               <div key={`summer-${album.id}`} className="group cursor-pointer">
                 <div className="relative mb-3">
                   <div className="aspect-square bg-bemusic-tertiary/20 rounded-lg overflow-hidden border border-bemusic-tertiary/30">
-                    <img
-                      src={album.coverUrl}
+                    <ImageWithFallback
+                      src={album.images?.[0]?.url}
                       alt={album.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                     />
@@ -465,12 +468,43 @@ const Home = () => {
                   {album.name}
                 </h3>
                 <p className="text-xs text-bemusic-tertiary truncate">
-                  {album.artist}
+                  {album.artists?.[0]?.name || 'Artiste inconnu'}
                 </p>
               </div>
             ))}
           </div>
         </section>
+
+        {/* Message si pas de données */}
+        {trendingSongs.length === 0 && popularArtists.length === 0 && playlists.length === 0 && recentAlbums.length === 0 && (
+          <section className="text-center py-16">
+            <div className="max-w-md mx-auto">
+              <div className="w-16 h-16 bg-bemusic-tertiary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Music2 className="h-8 w-8 text-bemusic-tertiary" />
+              </div>
+              <h3 className="text-xl font-semibold text-bemusic-primary mb-2">
+                Aucune musique disponible
+              </h3>
+              <p className="text-bemusic-tertiary mb-6">
+                Connectez-vous à Spotify pour découvrir de la musique personnalisée ou ajoutez vos propres chansons
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <button 
+                  onClick={() => navigate('/spotify-login')}
+                  className="bg-accent-bemusic text-white px-6 py-3 rounded-full font-medium hover:bg-accent-bemusic/80 transition-colors"
+                >
+                  Se connecter à Spotify
+                </button>
+                <button 
+                  onClick={() => navigate('/upload')}
+                  className="bg-bemusic-secondary text-bemusic-primary px-6 py-3 rounded-full font-medium hover:bg-bemusic-tertiary transition-colors"
+                >
+                  Ajouter ma musique
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );

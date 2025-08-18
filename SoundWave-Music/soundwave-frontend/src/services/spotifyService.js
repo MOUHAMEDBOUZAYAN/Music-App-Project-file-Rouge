@@ -48,6 +48,18 @@ class SpotifyService {
   async handleCallback(code) {
     try {
       const response = await api.post('/api/auth/spotify/exchange', { code });
+      // Sauvegarder les tokens dans le stockage local pour l'accès côté client
+      if (response.data?.access_token) {
+        localStorage.setItem('spotify_access_token', response.data.access_token);
+      }
+      if (response.data?.refresh_token) {
+        localStorage.setItem('spotify_refresh_token', response.data.refresh_token);
+      }
+      const expiresIn = response.data?.expires_in;
+      if (expiresIn) {
+        const expiryTime = Date.now() + expiresIn * 1000;
+        localStorage.setItem('spotify_token_expiry', String(expiryTime));
+      }
       return response.data;
     } catch (error) {
       console.error('Erreur callback Spotify:', error);

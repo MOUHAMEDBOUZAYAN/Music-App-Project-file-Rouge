@@ -104,7 +104,22 @@ export const AuthProvider = ({ children }) => {
         }
         
         const token = secureStorage.get('authToken');
-        const user = secureStorage.get('user');
+        let user = secureStorage.get('user');
+        
+        // Corriger les anciens formats (double JSON encodé)
+        if (user && typeof user === 'string') {
+          try {
+            const reparsed = JSON.parse(user);
+            if (reparsed && typeof reparsed === 'object') {
+              user = reparsed;
+              secureStorage.set('user', user); // normaliser le stockage
+            }
+          } catch (_) {
+            // valeur inutilisable, on la nettoie
+            secureStorage.remove('user');
+            user = null;
+          }
+        }
         
         // Vérifier que les données sont valides
         if (token && user && typeof user === 'object' && user._id) {
@@ -115,7 +130,7 @@ export const AuthProvider = ({ children }) => {
           });
         } else {
           console.log('ℹ️ Aucune authentification valide trouvée');
-          // Nettoyer les données invalides
+          // Nettoyer les données invalides minimales
           if (token && !user) secureStorage.remove('authToken');
           if (user && !token) secureStorage.remove('user');
           dispatch({ type: AuthActionTypes.SET_LOADING, payload: false });
