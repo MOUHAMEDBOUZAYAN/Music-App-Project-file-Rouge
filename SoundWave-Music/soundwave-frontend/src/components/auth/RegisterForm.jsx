@@ -3,7 +3,7 @@ import { ArrowLeft, Search, MoreVertical, Mail, Lock, User, Music, CheckCircle, 
 import { FaSpotify } from 'react-icons/fa';
 import { authService } from '../../services/authService';
 import { useAuth } from '../../hooks/useAuth';
-import { useSpotify } from '../../store/SpotifyContext';
+import { useDeezer } from '../../store/DeezerContext';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -34,9 +34,26 @@ const RegisterForm = ({ onRegister }) => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [spotifyLoading, setSpotifyLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
-  const { login: spotifyLogin, loading: spotifyLoading } = useSpotify();
+  const { loading: deezerLoading } = useDeezer();
+
+  // Fonction pour la connexion Spotify
+  const spotifyLogin = async () => {
+    try {
+      setSpotifyLoading(true);
+      // Rediriger vers la route d'authentification Spotify du backend
+      const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const spotifyAuthUrl = `${backendUrl}/api/auth/spotify/login`;
+      window.location.href = spotifyAuthUrl;
+    } catch (error) {
+      console.error('Erreur lors de la connexion Spotify:', error);
+      toast.error('Erreur lors de la connexion Spotify');
+    } finally {
+      setSpotifyLoading(false);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;

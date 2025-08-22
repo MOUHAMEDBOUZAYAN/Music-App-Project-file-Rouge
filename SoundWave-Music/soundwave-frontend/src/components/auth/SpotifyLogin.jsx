@@ -1,23 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { useSpotify } from '../../store/SpotifyContext';
+import { useDeezer } from '../../store/DeezerContext';
 import { FaSpotify, FaMusic, FaHeadphones, FaPlay, FaUser, FaSignInAlt } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 
 const SpotifyLogin = () => {
-  const { login, loading, error, spotifyToken } = useSpotify();
+  const { loading, error } = useDeezer();
   const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
-    // Vérifier si l'utilisateur est déjà connecté à Spotify
-    if (spotifyToken) {
-      // Rediriger ou mettre à jour l'interface
-      console.log('Déjà connecté à Spotify');
-    }
-  }, [spotifyToken]);
+    // Vérifier si l'utilisateur est déjà connecté
+    console.log('Composant SpotifyLogin monté');
+  }, []);
 
   const handleSpotifyLogin = async () => {
     try {
-      await login();
+      console.log('Tentative de connexion Spotify...');
+      // TODO: Implémenter la logique de connexion
     } catch (error) {
       console.error('Erreur de connexion Spotify:', error);
     }

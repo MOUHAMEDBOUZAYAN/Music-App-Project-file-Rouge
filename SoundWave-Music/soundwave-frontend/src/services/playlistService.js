@@ -36,7 +36,7 @@ export const playlistService = {
   // Obtenir les playlists recommandées
   getRecommendedPlaylists: async (params = {}) => {
     try {
-      const response = await apiClient.get('/playlists/recommended', { params });
+      const response = await apiClient.get('/api/playlists/recommended', { params });
       return {
         success: true,
         data: response.data

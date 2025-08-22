@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useSpotify } from '../../store/SpotifyContext';
+import { useDeezer } from '../../store/DeezerContext';
 import { FaSearch, FaFilter, FaTimes, FaMusic, FaUser, FaCompactDisc, FaList } from 'react-icons/fa';
 import { debounce } from 'lodash';
 
 const SpotifySearch = () => {
-  const { search, searchResults, loading, error, clearSearch } = useSpotify();
+  const { search, loading, error } = useDeezer();
   const [query, setQuery] = useState('');
   const [searchType, setSearchType] = useState('track,artist,album,playlist');
   const [filters, setFilters] = useState({
@@ -18,11 +18,9 @@ const SpotifySearch = () => {
     debounce((searchQuery, type, limit) => {
       if (searchQuery.trim()) {
         search(searchQuery, type, limit);
-      } else {
-        clearSearch();
       }
     }, 500),
-    [search, clearSearch]
+    [search]
   );
 
   useEffect(() => {
@@ -40,7 +38,6 @@ const SpotifySearch = () => {
 
   const handleClearSearch = () => {
     setQuery('');
-    clearSearch();
   };
 
   const getSearchTypeIcon = (type) => {

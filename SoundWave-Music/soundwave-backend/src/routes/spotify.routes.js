@@ -11,20 +11,33 @@ const {
 // Middleware pour garantir un access token Spotify valide
 const ensureAccessToken = async (req, res, next) => {
   try {
-    const currentToken = spotifyApi.getAccessToken();
-    if (!currentToken) {
-      const refreshToken = spotifyApi.getRefreshToken();
-      if (refreshToken) {
-        const data = await spotifyApi.refreshAccessToken();
-        spotifyApi.setAccessToken(data.body.access_token);
-      } else {
-        return res.status(401).json({ success: false, error: 'Token Spotify manquant. Veuillez vous connecter.' });
-      }
+    // Récupérer le token depuis l'en-tête Authorization
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ 
+        success: false, 
+        error: 'Token Spotify manquant dans l\'en-tête Authorization' 
+      });
     }
+    
+    const accessToken = authHeader.substring(7); // Enlever 'Bearer '
+    if (!accessToken) {
+      return res.status(401).json({ 
+        success: false, 
+        error: 'Token Spotify manquant' 
+      });
+    }
+    
+    // Définir le token dans l'instance Spotify
+    spotifyApi.setAccessToken(accessToken);
     next();
   } catch (err) {
     console.error('Erreur ensureAccessToken:', err.message);
-    return res.status(401).json({ success: false, error: 'Échec de validation du token Spotify', details: err.message });
+    return res.status(401).json({ 
+      success: false, 
+      error: 'Échec de validation du token Spotify', 
+      details: err.message 
+    });
   }
 };
 
@@ -82,7 +95,8 @@ router.get('/callback',
     }
     
     // Rediriger vers le frontend avec le code
-    const redirectUrl = `http://localhost:3000/spotify-callback?code=${code}&state=${state}`;
+    const frontendRedirectBase = process.env.SPOTIFY_REDIRECT_URI || 'http://127.0.0.1:3000/spotify-callback';
+    const redirectUrl = `${frontendRedirectBase}?code=${code}&state=${state}`;
     res.redirect(redirectUrl);
   }
 );

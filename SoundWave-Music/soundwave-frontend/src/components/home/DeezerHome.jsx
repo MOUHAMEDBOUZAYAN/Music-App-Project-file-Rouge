@@ -11,58 +11,29 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useMusic } from '../../store/MusicContext';
-import spotifyService from '../../services/spotifyService';
+import { useDeezer } from '../../store/DeezerContext';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 const SpotifyHome = () => {
   const { user } = useAuth();
   const { playTrack, addToQueue, toggleLike, likedTracks } = useMusic();
+  const { newReleases, featuredPlaylists, loading, error, popularArtists } = useDeezer();
   const navigate = useNavigate();
   
   const [currentFilter, setCurrentFilter] = useState('Tout');
   const [trendingSongs, setTrendingSongs] = useState([]);
-  const [newReleases, setNewReleases] = useState([]);
-  const [featuredPlaylists, setFeaturedPlaylists] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadSpotifyData();
-  }, []);
+    // Les données sont chargées automatiquement par DeezerContext
+    console.log('🔍 DeezerHome - État des données:');
+    console.log('📀 newReleases:', newReleases);
+    console.log('🎵 featuredPlaylists:', featuredPlaylists);
+    console.log('⏳ loading:', loading);
+    console.log('❌ error:', error);
+  }, [newReleases, featuredPlaylists, loading, error]);
 
-  const loadSpotifyData = async () => {
-    setIsLoading(true);
-    try {
-      // Charger les nouvelles sorties Spotify
-      const newReleasesResult = await spotifyService.getNewReleases({ limit: 20 });
-      if (newReleasesResult.success) {
-        setNewReleases(newReleasesResult.data.albums?.items || []);
-      }
-
-      // Charger les playlists en vedette
-      const featuredResult = await spotifyService.getFeaturedPlaylists({ limit: 10 });
-      if (featuredResult.success) {
-        setFeaturedPlaylists(featuredResult.data.playlists?.items || []);
-      }
-
-      // Charger les recommandations personnalisées
-      const recommendationsResult = await spotifyService.getRecommendations(
-        [], // seed artists
-        ['pop', 'rock', 'hip-hop'], // seed genres
-        [], // seed tracks
-        20
-      );
-      if (recommendationsResult.success) {
-        setTrendingSongs(recommendationsResult.data.tracks || []);
-      }
-
-    } catch (error) {
-      console.error('Erreur lors du chargement des données Spotify:', error);
-      toast.error('Erreur lors du chargement des données Spotify');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Les données sont chargées automatiquement par DeezerContext
 
   const handlePlaySong = (song) => {
     const spotifySong = {
@@ -102,7 +73,7 @@ const SpotifyHome = () => {
     toggleLike(songId);
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
@@ -252,24 +223,72 @@ const SpotifyHome = () => {
           </section>
         )}
 
-        {/* Section Nouvelles sorties */}
-        {newReleases.length > 0 && (
-          <section>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-bemusic-primary">Nouvelles sorties</h2>
-              <button className="text-sm text-bemusic-tertiary hover:text-bemusic-primary transition-colors flex items-center">
-                Tout afficher <ArrowRight className="h-4 w-4 ml-1" />
-              </button>
+        {/* Section Artistes populaires */}
+        <section>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-bemusic-primary">Artistes populaires</h2>
+            <button className="text-sm text-bemusic-tertiary hover:text-bemusic-primary transition-colors flex items-center">
+              Tout afficher <ArrowRight className="h-4 w-4 ml-1" />
+            </button>
+          </div>
+          
+          {popularArtists.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+              {popularArtists.map((artist) => (
+                <div key={artist.id} className="group cursor-pointer">
+                  <div className="relative mb-3">
+                    <div className="aspect-square bg-bemusic-tertiary/20 rounded-lg overflow-hidden border border-bemusic-tertiary/30">
+                      <img
+                        src={artist.picture || artist.cover || artist.images?.[0]?.url || `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop`}
+                        alt={artist.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                      />
+                    </div>
+                    
+                    {/* Bouton play */}
+                    <button 
+                      onClick={() => handlePlaySong(artist)}
+                      className="absolute bottom-2 right-2 w-12 h-12 bg-accent-bemusic rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 hover:bg-accent-bemusic/80 shadow-lg"
+                    >
+                      <Play className="h-6 w-6 text-bemusic-primary ml-1" />
+                    </button>
+                  </div>
+                  
+                  <h3 className="font-semibold text-sm mb-1 truncate group-hover:text-accent-bemusic transition-colors text-bemusic-primary">
+                    {artist.name}
+                  </h3>
+                  <p className="text-xs text-bemusic-tertiary truncate">
+                    Artiste
+                  </p>
+                </div>
+              ))}
             </div>
-            
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-bemusic-tertiary">Aucun artiste populaire disponible</p>
+              <p className="text-sm text-bemusic-tertiary/70 mt-2">Données reçues: {JSON.stringify(popularArtists)}</p>
+            </div>
+          )}
+        </section>
+
+        {/* Section Nouvelles sorties */}
+        <section>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-bemusic-primary">Nouvelles sorties</h2>
+            <button className="text-sm text-bemusic-tertiary hover:text-bemusic-primary transition-colors flex items-center">
+              Tout afficher <ArrowRight className="h-4 w-4 ml-1" />
+            </button>
+          </div>
+          
+          {newReleases.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
               {newReleases.map((album) => (
                 <div key={album.id} className="group cursor-pointer">
                   <div className="relative mb-3">
                     <div className="aspect-square bg-bemusic-tertiary/20 rounded-lg overflow-hidden border border-bemusic-tertiary/30">
                       <img
-                        src={album.images?.[0]?.url || `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop`}
-                        alt={album.name}
+                        src={album.cover || album.images?.[0]?.url || `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop`}
+                        alt={album.title || album.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                       />
                     </div>
@@ -284,35 +303,40 @@ const SpotifyHome = () => {
                   </div>
                   
                   <h3 className="font-semibold text-sm mb-1 truncate group-hover:text-accent-bemusic transition-colors text-bemusic-primary">
-                    {album.name}
+                    {album.title || album.name}
                   </h3>
                   <p className="text-xs text-bemusic-tertiary truncate">
-                    {album.artists?.[0]?.name || 'Artiste inconnu'}
+                    {album.artist?.name || album.artists?.[0]?.name || 'Artiste inconnu'}
                   </p>
                 </div>
               ))}
             </div>
-          </section>
-        )}
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-bemusic-tertiary">Aucune nouvelle sortie disponible</p>
+              <p className="text-sm text-bemusic-tertiary/70 mt-2">Données reçues: {JSON.stringify(newReleases)}</p>
+            </div>
+          )}
+        </section>
 
         {/* Section Playlists en vedette */}
-        {featuredPlaylists.length > 0 && (
-          <section>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-bemusic-primary">Playlists en vedette</h2>
-              <button className="text-sm text-bemusic-tertiary hover:text-bemusic-primary transition-colors flex items-center">
-                Tout afficher <ArrowRight className="h-4 w-4 ml-1" />
-              </button>
-            </div>
-            
+        <section>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-bemusic-primary">Playlists Spotify en vedette</h2>
+            <button className="text-sm text-bemusic-tertiary hover:text-bemusic-primary transition-colors flex items-center">
+              Tout afficher <ArrowRight className="h-4 w-4 ml-1" />
+            </button>
+          </div>
+          
+          {featuredPlaylists.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
               {featuredPlaylists.map((playlist) => (
                 <div key={playlist.id} className="group cursor-pointer">
                   <div className="relative mb-3">
                     <div className="aspect-square bg-bemusic-tertiary/20 rounded-lg overflow-hidden border border-bemusic-tertiary/30">
                       <img
-                        src={playlist.images?.[0]?.url || `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop`}
-                        alt={playlist.name}
+                        src={playlist.picture || playlist.cover || playlist.images?.[0]?.url || `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop`}
+                        alt={playlist.title || playlist.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                       />
                     </div>
@@ -327,21 +351,26 @@ const SpotifyHome = () => {
                   </div>
                   
                   <h3 className="font-semibold text-sm mb-1 truncate group-hover:text-accent-bemusic transition-colors text-bemusic-primary">
-                    {playlist.name}
+                    {playlist.title || playlist.name}
                   </h3>
                   <p className="text-xs text-bemusic-tertiary truncate">
-                    {playlist.description || 'Playlist Spotify'}
+                    {playlist.description || 'Playlist Deezer'}
                   </p>
-                  {playlist.tracks?.total && (
+                  {playlist.nb_tracks && (
                     <p className="text-xs text-bemusic-tertiary/70 mt-1">
-                      {playlist.tracks.total} chansons
+                      {playlist.nb_tracks} chansons
                     </p>
                   )}
                 </div>
               ))}
             </div>
-          </section>
-        )}
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-bemusic-tertiary">Aucune playlist disponible</p>
+              <p className="text-sm text-bemusic-tertiary/70 mt-2">Données reçues: {JSON.stringify(featuredPlaylists)}</p>
+            </div>
+          )}
+        </section>
 
         {/* Message si pas de données */}
         {trendingSongs.length === 0 && newReleases.length === 0 && featuredPlaylists.length === 0 && (

@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useSpotify } from '../store/SpotifyContext';
+import { useDeezer } from '../store/DeezerContext';
 import { FaSpotify, FaCheck, FaTimes, FaSpinner } from 'react-icons/fa';
 
 const SpotifyCallback = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { handleCallback } = useSpotify();
+  const { loading } = useDeezer();
   const [status, setStatus] = useState('processing');
   const [message, setMessage] = useState('Traitement de votre connexion Spotify...');
 
@@ -31,8 +31,8 @@ const SpotifyCallback = () => {
           return;
         }
 
-        // Traiter le callback avec le contexte Spotify
-        await handleCallback(code);
+        // TODO: Traiter le callback avec le contexte Deezer
+        console.log('Code reçu:', code);
         
         setStatus('success');
         setMessage('Connexion Spotify réussie ! Redirection...');
@@ -49,7 +49,7 @@ const SpotifyCallback = () => {
     };
 
     processCallback();
-  }, [searchParams, handleCallback, navigate]);
+  }, [searchParams, navigate]);
 
   const getStatusIcon = () => {
     switch (status) {

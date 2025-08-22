@@ -1,7 +1,7 @@
 // Configuration Spotify pour le frontend
 export const SPOTIFY_CONFIG = {
   // URL de l'API backend
-  API_BASE_URL: process.env.REACT_APP_API_URL || 'http://localhost:5000',
+  API_BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
   
   // Endpoints Spotify
   ENDPOINTS: {

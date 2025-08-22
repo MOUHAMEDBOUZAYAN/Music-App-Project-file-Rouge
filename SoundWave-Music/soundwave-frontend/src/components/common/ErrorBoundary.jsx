@@ -49,7 +49,7 @@ class ErrorBoundary extends React.Component {
               </button>
             </div>
 
-            {process.env.NODE_ENV === 'development' && this.state.error && (
+            {import.meta.env.MODE === 'development' && this.state.error && (
               <details className="mt-6 text-left">
                 <summary className="text-gray-400 cursor-pointer hover:text-white">
                   Détails de l'erreur (Développement)

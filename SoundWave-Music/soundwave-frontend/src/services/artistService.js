@@ -4,7 +4,7 @@ export const artistService = {
   // Rechercher des artistes
   searchArtists: async (params = {}) => {
     try {
-      const response = await apiClient.get(endpoints.search.artists, { params });
+      const response = await apiClient.get('/api/artists/search', { params });
       return {
         success: true,
         data: response.data
@@ -20,7 +20,7 @@ export const artistService = {
   // Obtenir les artistes populaires
   getPopularArtists: async (params = {}) => {
     try {
-      const response = await apiClient.get('/artists/popular', { params });
+      const response = await apiClient.get('/api/artists/popular', { params });
       return {
         success: true,
         data: response.data
@@ -36,7 +36,7 @@ export const artistService = {
   // Obtenir un artiste par ID
   getArtistById: async (id) => {
     try {
-      const response = await apiClient.get(`/artists/${id}`);
+      const response = await apiClient.get(`/api/artists/${id}`);
       return {
         success: true,
         data: response.data
@@ -52,7 +52,7 @@ export const artistService = {
   // Obtenir les chansons d'un artiste
   getArtistSongs: async (artistId, params = {}) => {
     try {
-      const response = await apiClient.get(`/artists/${artistId}/songs`, { params });
+      const response = await apiClient.get(`/api/artists/${artistId}/songs`, { params });
       return {
         success: true,
         data: response.data
@@ -68,7 +68,7 @@ export const artistService = {
   // Suivre un artiste
   followArtist: async (artistId) => {
     try {
-      const response = await apiClient.post(`/artists/${artistId}/follow`);
+      const response = await apiClient.post(`/api/artists/${artistId}/follow`);
       return {
         success: true,
         data: response.data
@@ -84,7 +84,7 @@ export const artistService = {
   // Ne plus suivre un artiste
   unfollowArtist: async (artistId) => {
     try {
-      const response = await apiClient.delete(`/artists/${artistId}/follow`);
+      const response = await apiClient.delete(`/api/artists/${artistId}/follow`);
       return {
         success: true,
         data: response.data

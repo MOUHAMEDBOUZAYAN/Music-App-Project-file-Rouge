@@ -5,7 +5,7 @@ import { Toaster } from 'react-hot-toast';
 // Contexts
 import { AuthProvider } from './store/AuthContext';
 import { MusicProvider } from './store/MusicContext';
-import { SpotifyProvider } from './store/SpotifyContext';
+import { DeezerProvider } from './store/DeezerContext';
 
 // Components
 import ProtectedRoute from './components/common/ProtectedRoute';
@@ -14,7 +14,7 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Pages
 import Home from './pages/Home';
-import SpotifyHome from './components/home/SpotifyHome';
+import DeezerHome from './components/home/DeezerHome';
 import SimpleHome from './components/home/SimpleHome';
 import SpotifyLogin from './components/auth/SpotifyLogin';
 import LoginForm from './components/auth/LoginForm';
@@ -28,6 +28,7 @@ import Artist from './pages/Artist';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import SpotifyCallback from './pages/SpotifyCallback';
+import SpotifyTest from './components/test/SpotifyTest';
 
 // Styles
 import './styles/globals.css';
@@ -40,7 +41,7 @@ function App() {
       <Router>
         <AuthProvider>
           <MusicProvider>
-            <SpotifyProvider>
+            <DeezerProvider>
               <div className="App">
                 <Toaster 
                   position="top-right"
@@ -72,6 +73,7 @@ function App() {
                   <Route path="/register" element={<Register />} />
                   <Route path="/spotify-login" element={<SpotifyLogin />} />
                   <Route path="/spotify-callback" element={<SpotifyCallback />} />
+                  <Route path="/spotify-test" element={<SpotifyTest />} />
                   
                   {/* Routes protégées avec layout Spotify */}
                   <Route path="/" element={
@@ -150,7 +152,7 @@ function App() {
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </div>
-            </SpotifyProvider>
+            </DeezerProvider>
           </MusicProvider>
         </AuthProvider>
       </Router>

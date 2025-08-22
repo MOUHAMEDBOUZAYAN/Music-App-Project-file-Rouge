@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { AuthProvider, useAuth } from './AuthContext';
 import { MusicProvider, useMusic } from './MusicContext';
-import { SpotifyProvider, useSpotify } from './SpotifyContext';
+import { DeezerProvider, useDeezer } from './DeezerContext';
 
 // Global App State
 const AppStateContext = createContext();
@@ -576,9 +576,9 @@ export const AppProvider = ({ children }) => {
       <AppDispatchContext.Provider value={dispatch}>
         <AuthProvider>
           <MusicProvider>
-            <SpotifyProvider>
+            <DeezerProvider>
               {children}
-            </SpotifyProvider>
+            </DeezerProvider>
           </MusicProvider>
         </AuthProvider>
       </AppDispatchContext.Provider>
@@ -609,14 +609,14 @@ export const useApp = () => {
   const dispatch = useAppDispatch();
   const auth = useAuth();
   const music = useMusic();
-  const spotify = useSpotify();
+  const deezer = useDeezer();
 
   return {
     state,
     dispatch,
     auth,
     music,
-    spotify,
+    deezer,
     
     // Convenience methods
     actions: {

@@ -1,14 +1,32 @@
 import React, { useState } from 'react';
 import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
 import { FaSpotify } from 'react-icons/fa';
-import { useSpotify } from '../../store/SpotifyContext';
+import { useDeezer } from '../../store/DeezerContext';
+import toast from 'react-hot-toast';
 
 const ResetPassword = ({ onBackToLogin }) => {
   const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const { login: spotifyLogin, loading: spotifyLoading } = useSpotify();
+  const [spotifyLoading, setSpotifyLoading] = useState(false);
+  const { loading: deezerLoading } = useDeezer();
+
+  // Fonction pour la connexion Spotify
+  const spotifyLogin = async () => {
+    try {
+      setSpotifyLoading(true);
+      // Rediriger vers la route d'authentification Spotify du backend
+      const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const spotifyAuthUrl = `${backendUrl}/api/auth/spotify/login`;
+      window.location.href = spotifyAuthUrl;
+    } catch (error) {
+      console.error('Erreur lors de la connexion Spotify:', error);
+      toast.error('Erreur lors de la connexion Spotify');
+    } finally {
+      setSpotifyLoading(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();

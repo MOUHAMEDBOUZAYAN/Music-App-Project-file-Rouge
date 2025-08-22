@@ -21,7 +21,7 @@ export const songService = {
   // Obtenir une chanson par ID
   getSongById: async (id) => {
     try {
-      const response = await apiClient.get(`${endpoints.songs.base}/${id}`);
+      const response = await apiClient.get(`/api/songs/${id}`);
       return {
         success: true,
         data: response.data
@@ -88,7 +88,7 @@ export const songService = {
   // Mettre à jour une chanson
   updateSong: async (id, songData) => {
     try {
-      const response = await apiClient.put(`${endpoints.songs.base}/${id}`, songData);
+      const response = await apiClient.put(`/api/songs/${id}`, songData);
       return {
         success: true,
         data: response.data
@@ -104,7 +104,7 @@ export const songService = {
   // Supprimer une chanson
   deleteSong: async (id) => {
     try {
-      await apiClient.delete(`${endpoints.songs.base}/${id}`);
+      await apiClient.delete(`/api/songs/${id}`);
       return {
         success: true,
         message: 'Chanson supprimée avec succès'
@@ -120,7 +120,7 @@ export const songService = {
   // Aimer/ne plus aimer une chanson
   likeSong: async (id) => {
     try {
-      const response = await apiClient.post(`${endpoints.songs.base}/${id}/like`);
+      const response = await apiClient.post(`/api/songs/${id}/like`);
       return {
         success: true,
         data: response.data
@@ -136,7 +136,7 @@ export const songService = {
   // Ajouter un commentaire
   addComment: async (id, comment) => {
     try {
-      const response = await apiClient.post(`${endpoints.songs.base}/${id}/comment`, {
+      const response = await apiClient.post(`/api/songs/${id}/comment`, {
         content: comment
       });
       return {
@@ -170,7 +170,7 @@ export const songService = {
   // Obtenir les chansons d'un artiste
   getArtistSongs: async (artistId, params = {}) => {
     try {
-      const response = await apiClient.get(`${endpoints.songs.base}/artist/${artistId}`, { params });
+      const response = await apiClient.get(`/api/songs/artist/${artistId}`, { params });
       return {
         success: true,
         data: response.data
@@ -202,11 +202,11 @@ export const songService = {
   // Obtenir les albums récents
   getRecentAlbums: async (params = {}) => {
     try {
-      const response = await apiClient.get('/songs/all', {
+      const response = await apiClient.get('/api/songs/all', {
         params: {
           ...params,
-          sort: 'releaseDate',
-          order: 'desc'
+          sortBy: 'releaseDate',
+          sortOrder: 'desc'
         }
       });
       
