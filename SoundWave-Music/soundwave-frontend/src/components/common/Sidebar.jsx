@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   Home, 
   Search, 
@@ -8,223 +8,192 @@ import {
   Heart, 
   Download, 
   User,
-  Settings,
-  LogOut,
-  ChevronDown,
   ChevronRight,
-  Menu,
-  X
+  ChevronDown,
+  Music2,
+  Disc3,
+  Users
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { useMusic } from '../../store/MusicContext';
+import { useSidebar } from '../../store/SidebarContext';
 
 const Sidebar = ({ isOpen, onToggle }) => {
-  const { user, logout } = useAuth();
-  const { likedTracks } = useMusic();
+  const { user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  const { isSidebarOpen } = useSidebar();
   const [isLibraryExpanded, setIsLibraryExpanded] = useState(true);
-  const [isUserExpanded, setIsUserExpanded] = useState(false);
+  const [isUserExpanded, setIsUserExpanded] = useState(true);
 
-  const navigationItems = [
-    { icon: Home, label: 'Accueil', path: '/' },
-    { icon: Search, label: 'Rechercher', path: '/search' },
-    { icon: Library, label: 'Votre Bibliothèque', path: '/library' }
-  ];
-
-  const libraryItems = [
-    { icon: Plus, label: 'Créer une playlist', path: '/create-playlist' },
-    { icon: Heart, label: 'Titres likés', path: '/liked-songs', count: likedTracks.length },
-    { icon: Download, label: 'Téléchargements', path: '/downloads' }
-  ];
-
-  const userItems = [
-    { icon: User, label: 'Profil', path: '/profile' },
-    { icon: Settings, label: 'Paramètres', path: '/settings' }
-  ];
+  const isActive = (path) => location.pathname === path;
 
   const handleLogout = () => {
-    logout();
+    // Logique de déconnexion
+    navigate('/login');
   };
 
   return (
-    <>
-      {/* Overlay pour mobile */}
-      {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={onToggle}
-        />
-      )}
-      
-             {/* Sidebar */}
-       <div className={`
-         fixed lg:static inset-y-0 left-0 z-50
-         w-64 bg-bemusic-secondary border-r border-bemusic-primary 
-         flex flex-col transform transition-transform duration-300 ease-in-out
-         h-screen overflow-y-auto
-         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-       `}>
-        {/* Header mobile avec bouton fermer */}
-        <div className="flex items-center justify-between p-4 lg:hidden">
-          <div className="text-xl font-bold text-bemusic-primary">
-            SoundWave
+    <div className={`
+      fixed lg:static inset-y-0 left-0 z-[9998] 
+      w-64 bg-black border-r border-gray-800/50
+      transform transition-transform duration-300 ease-in-out
+      ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+    `}>
+      <div className="flex flex-col h-full">
+        {/* Logo et navigation principale */}
+        <div className="p-6">
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold text-white">SoundWave</h1>
           </div>
-          <button
-            onClick={onToggle}
-            className="p-2 rounded-md text-bemusic-primary hover:bg-bemusic-tertiary"
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
-        
-        {/* Logo (caché sur mobile car déjà dans le header) */}
-        <div className="p-6 hidden lg:block">
-          <div className="text-2xl font-bold text-bemusic-primary">
-            SoundWave
-          </div>
-        </div>
-
-      {/* Navigation principale */}
-      <nav className="px-6 mb-6">
-        <ul className="space-y-2">
-          {navigationItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
-            
-            return (
-              <li key={item.path}>
-                <Link
-                  to={item.path}
-                  className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-bemusic ${
-                    isActive
-                      ? 'text-bemusic-primary bg-bemusic-tertiary'
-                      : 'text-bemusic-secondary hover:text-bemusic-primary hover:bg-bemusic-tertiary'
-                  }`}
-                >
-                  <Icon className="h-6 w-6" />
-                  <span className="font-medium">{item.label}</span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
-
-      {/* Bibliothèque */}
-      <div className="px-6 mb-6">
-        <button
-          onClick={() => setIsLibraryExpanded(!isLibraryExpanded)}
-          className="flex items-center justify-between w-full px-3 py-2 text-bemusic-secondary hover:text-bemusic-primary transition-bemusic"
-        >
-          <span className="font-medium">Bibliothèque</span>
-          {isLibraryExpanded ? (
-            <ChevronDown className="h-4 w-4" />
-          ) : (
-            <ChevronRight className="h-4 w-4" />
-          )}
-        </button>
-
-        {isLibraryExpanded && (
-          <ul className="mt-2 space-y-1">
-            {libraryItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = location.pathname === item.path;
-              
-              return (
-                <li key={item.path}>
-                  <Link
-                    to={item.path}
-                                      className={`flex items-center justify-between px-3 py-2 rounded-md transition-bemusic ${
-                    isActive
-                      ? 'text-bemusic-primary bg-bemusic-tertiary'
-                      : 'text-bemusic-secondary hover:text-bemusic-primary hover:bg-bemusic-tertiary'
-                  }`}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <Icon className="h-5 w-5" />
-                      <span className="text-sm">{item.label}</span>
-                    </div>
-                    {item.count !== undefined && (
-                      <span className="text-xs text-bemusic-tertiary">{item.count}</span>
-                    )}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </div>
-
-      {/* Section utilisateur */}
-      <div className="px-6 mb-6 mt-auto">
-        <button
-          onClick={() => setIsUserExpanded(!isUserExpanded)}
-          className="flex items-center justify-between w-full px-3 py-2 text-bemusic-secondary hover:text-bemusic-primary transition-bemusic"
-        >
-          <span className="font-medium">Utilisateur</span>
-          {isUserExpanded ? (
-            <ChevronDown className="h-4 w-4" />
-          ) : (
-            <ChevronRight className="h-4 w-4" />
-          )}
-        </button>
-
-        {isUserExpanded && (
-          <ul className="mt-2 space-y-1">
-            {userItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = location.pathname === item.path;
-              
-              return (
-                <li key={item.path}>
-                  <Link
-                    to={item.path}
-                    className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${
-                      isActive
-                        ? 'text-white bg-gray-800'
-                        : 'text-gray-400 hover:text-white hover:bg-gray-800'
-                    }`}
-                  >
-                    <Icon className="h-5 w-5" />
-                    <span className="text-sm">{item.label}</span>
-                  </Link>
-                </li>
-              );
-            })}
-            
-            <li>
-                          <button
-              onClick={handleLogout}
-              className="flex items-center space-x-3 w-full px-3 py-2 text-bemusic-secondary hover:text-bemusic-primary hover:bg-bemusic-tertiary rounded-md transition-bemusic"
+          
+          <nav className="space-y-2">
+            <Link
+              to="/"
+              className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
+                isActive('/') 
+                  ? 'bg-gray-800 text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+              }`}
             >
-              <LogOut className="h-5 w-5" />
-              <span className="text-sm">Déconnexion</span>
-            </button>
-            </li>
-          </ul>
-        )}
-      </div>
+              <Home className="h-5 w-5" />
+              <span>Accueil</span>
+            </Link>
+            
+            <Link
+              to="/search"
+              className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
+                isActive('/search') 
+                  ? 'bg-gray-800 text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+              }`}
+            >
+              <Search className="h-5 w-5" />
+              <span>Rechercher</span>
+            </Link>
+            
+            <Link
+              to="/library"
+              className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
+                isActive('/library') 
+                  ? 'bg-gray-800 text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+              }`}
+            >
+              <Library className="h-5 w-5" />
+              <span>Votre Bibliothèque</span>
+            </Link>
+          </nav>
+        </div>
 
-      {/* Informations utilisateur */}
-      <div className="px-6 py-4 border-t border-bemusic-primary pb-24">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gradient-to-r from-accent-bemusic to-blue-500 rounded-full flex items-center justify-center">
-            <span className="text-sm font-bold text-bemusic-primary">
-              {user?.username?.charAt(0) || 'U'}
-            </span>
+        {/* Section Bibliothèque */}
+        <div className="flex-1 px-6">
+          <div className="space-y-2">
+            <button
+              onClick={() => setIsLibraryExpanded(!isLibraryExpanded)}
+              className="flex items-center justify-between w-full px-3 py-2 text-gray-400 hover:text-white transition-colors"
+            >
+              <span className="font-medium">Bibliothèque</span>
+              {isLibraryExpanded ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
+            </button>
+            
+            {isLibraryExpanded && (
+              <div className="ml-4 space-y-2">
+                <Link
+                  to="/create-playlist"
+                  className="flex items-center space-x-3 px-3 py-2 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span className="text-sm">Créer une playlist</span>
+                </Link>
+                
+                <Link
+                  to="/liked-songs"
+                  className="flex items-center space-x-3 px-3 py-2 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors"
+                >
+                  <Heart className="h-4 w-4" />
+                  <span className="text-sm">Titres likés</span>
+                  <span className="ml-auto text-xs bg-gray-700 px-2 py-1 rounded-full">0</span>
+                </Link>
+                
+                <Link
+                  to="/downloads"
+                  className="flex items-center space-x-3 px-3 py-2 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors"
+                >
+                  <Download className="h-4 w-4" />
+                  <span className="text-sm">Téléchargements</span>
+                </Link>
+              </div>
+            )}
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium text-bemusic-primary truncate">
-              {user?.username || 'Utilisateur'}
-            </div>
-            <div className="text-xs text-bemusic-secondary truncate">
-              {user?.email || 'email@example.com'}
+        </div>
+
+        {/* Section Utilisateur */}
+        <div className="p-6 border-t border-gray-800/50">
+          <div className="space-y-2">
+            <button
+              onClick={() => setIsUserExpanded(!isUserExpanded)}
+              className="flex items-center justify-between w-full px-3 py-2 text-gray-400 hover:text-white transition-colors"
+            >
+              <span className="font-medium">Utilisateur</span>
+              {isUserExpanded ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
+            </button>
+            
+            {isUserExpanded && (
+              <div className="ml-4 space-y-2">
+                <Link
+                  to="/profile"
+                  className="flex items-center space-x-3 px-3 py-2 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors"
+                >
+                  <User className="h-4 w-4" />
+                  <span className="text-sm">Profil</span>
+                </Link>
+                
+                <Link
+                  to="/settings"
+                  className="flex items-center space-x-3 px-3 py-2 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors"
+                >
+                  <Music2 className="h-4 w-4" />
+                  <span className="text-sm">Paramètres</span>
+                </Link>
+              </div>
+            )}
+          </div>
+          
+          {/* Profil utilisateur */}
+          <div className="mt-4 p-3 bg-gray-800/50 rounded-lg">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-black font-bold text-sm">
+                  {user?.username?.charAt(0)?.toUpperCase() || 'U'}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white font-medium text-sm truncate">
+                  {user?.username || 'Utilisateur'}
+                </p>
+                <p className="text-gray-400 text-xs truncate">
+                  {user?.email ? user.email.substring(0, 20) + '...' : 'email@example.com'}
+                </p>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="text-gray-400 hover:text-white transition-colors flex-shrink-0"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
             </div>
           </div>
         </div>
       </div>
     </div>
-    </>
   );
 };
 

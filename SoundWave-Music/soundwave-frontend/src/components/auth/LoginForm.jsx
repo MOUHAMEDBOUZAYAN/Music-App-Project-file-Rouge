@@ -19,7 +19,7 @@ import {
   AnimatedLabel,
   AnimatedError,
   GentlePulse
-} from '../common/AnimatedWrapper';
+} from '../common/SimpleAnimations';
 
 const LoginForm = () => {
   const navigate = useNavigate();

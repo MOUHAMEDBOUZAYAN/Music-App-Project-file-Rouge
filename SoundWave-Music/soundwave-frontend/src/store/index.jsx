@@ -2,6 +2,7 @@ import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { AuthProvider, useAuth } from './AuthContext';
 import { MusicProvider, useMusic } from './MusicContext';
 import { DeezerProvider, useDeezer } from './DeezerContext';
+import { SidebarProvider } from './SidebarContext';
 
 // Global App State
 const AppStateContext = createContext();
@@ -577,7 +578,9 @@ export const AppProvider = ({ children }) => {
         <AuthProvider>
           <MusicProvider>
             <DeezerProvider>
-              {children}
+              <SidebarProvider>
+                {children}
+              </SidebarProvider>
             </DeezerProvider>
           </MusicProvider>
         </AuthProvider>

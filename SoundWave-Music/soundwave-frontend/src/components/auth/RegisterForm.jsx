@@ -18,7 +18,7 @@ import {
   AnimatedInput,
   AnimatedLabel,
   AnimatedError
-} from '../common/AnimatedWrapper';
+} from '../common/SimpleAnimations';
 
 const RegisterForm = ({ onRegister }) => {
   const [formData, setFormData] = useState({

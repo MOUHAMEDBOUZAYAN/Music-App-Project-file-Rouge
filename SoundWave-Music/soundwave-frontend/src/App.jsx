@@ -2,10 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
-// Contexts
-import { AuthProvider } from './store/AuthContext';
-import { MusicProvider } from './store/MusicContext';
-import { DeezerProvider } from './store/DeezerContext';
+// Store principal
+import AppProvider from './store';
 
 // Components
 import ProtectedRoute from './components/common/ProtectedRoute';
@@ -14,8 +12,6 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Pages
 import Home from './pages/Home';
-import DeezerHome from './components/home/DeezerHome';
-import SimpleHome from './components/home/SimpleHome';
 import SpotifyLogin from './components/auth/SpotifyLogin';
 import LoginForm from './components/auth/LoginForm';
 import Register from './components/auth/RegisterForm';
@@ -28,7 +24,6 @@ import Artist from './pages/Artist';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import SpotifyCallback from './pages/SpotifyCallback';
-import SpotifyTest from './components/test/SpotifyTest';
 
 // Styles
 import './styles/globals.css';
@@ -39,122 +34,117 @@ function App() {
   return (
     <ErrorBoundary>
       <Router>
-        <AuthProvider>
-          <MusicProvider>
-            <DeezerProvider>
-              <div className="App">
-                <Toaster 
-                  position="top-right"
-                  toastOptions={{
-                    duration: 4000,
-                    style: {
-                      background: '#1f2937',
-                      color: '#fff',
-                      border: '1px solid #374151'
-                    },
-                    success: {
-                      iconTheme: {
-                        primary: '#10b981',
-                        secondary: '#fff'
-                      }
-                    },
-                    error: {
-                      iconTheme: {
-                        primary: '#ef4444',
-                        secondary: '#fff'
-                      }
-                    }
-                  }}
-                />
-                
-                <Routes>
-                  {/* Routes publiques */}
-                  <Route path="/login" element={<LoginForm />} />
-                  <Route path="/register" element={<Register />} />
-                  <Route path="/spotify-login" element={<SpotifyLogin />} />
-                  <Route path="/spotify-callback" element={<SpotifyCallback />} />
-                  <Route path="/spotify-test" element={<SpotifyTest />} />
-                  
-                  {/* Routes protégées avec layout Spotify */}
-                  <Route path="/" element={
-                    <ProtectedRoute>
-                      <Layout>
-                        <Home />
-                      </Layout>
-                    </ProtectedRoute>
-                  } />
-                  
-                  <Route path="/search" element={
-                    <ProtectedRoute>
-                      <Layout>
-                        <SpotifySearch />
-                      </Layout>
-                    </ProtectedRoute>
-                  } />
-                  
-                  <Route path="/library" element={
-                    <ProtectedRoute>
-                      <Layout>
-                        <Library />
-                      </Layout>
-                    </ProtectedRoute>
-                  } />
-                  
-                  <Route path="/liked-songs" element={
-                    <ProtectedRoute>
-                      <Layout>
-                        <LikedSongs />
-                      </Layout>
-                    </ProtectedRoute>
-                  } />
-                  
-                  <Route path="/playlist/:id" element={
-                    <ProtectedRoute>
-                      <Layout>
-                        <Playlist />
-                      </Layout>
-                    </ProtectedRoute>
-                  } />
-                  
-                  <Route path="/artist/:id" element={
-                    <ProtectedRoute>
-                      <Layout>
-                        <Artist />
-                      </Layout>
-                    </ProtectedRoute>
-                  } />
-                  
-                  <Route path="/album/:id" element={
-                    <ProtectedRoute>
-                      <Layout>
-                        <Album />
-                      </Layout>
-                    </ProtectedRoute>
-                  } />
-                  
-                  <Route path="/profile" element={
-                    <ProtectedRoute>
-                      <Layout>
-                        <Profile />
-                      </Layout>
-                    </ProtectedRoute>
-                  } />
-                  
-                  <Route path="/settings" element={
-                    <ProtectedRoute>
-                      <Layout>
-                        <Settings />
-                      </Layout>
-                    </ProtectedRoute>
-                  } />
-                  
-                  {/* Redirection par défaut */}
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-              </div>
-            </DeezerProvider>
-          </MusicProvider>
-        </AuthProvider>
+        <AppProvider>
+          <div className="App">
+            <Toaster 
+              position="top-right"
+              toastOptions={{
+                duration: 4000,
+                style: {
+                  background: '#1f2937',
+                  color: '#fff',
+                  border: '1px solid #374151'
+                },
+                success: {
+                  iconTheme: {
+                    primary: '#10b981',
+                    secondary: '#fff'
+                  }
+                },
+                error: {
+                  iconTheme: {
+                    primary: '#ef4444',
+                    secondary: '#fff'
+                  }
+                }
+              }}
+            />
+            
+            <Routes>
+              {/* Routes publiques */}
+              <Route path="/login" element={<LoginForm />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/spotify-login" element={<SpotifyLogin />} />
+              <Route path="/spotify-callback" element={<SpotifyCallback />} />
+              
+              {/* Routes protégées avec layout Spotify */}
+              <Route path="/" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Home />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/search" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <SpotifySearch />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/library" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Library />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/liked-songs" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <LikedSongs />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/playlist/:id" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Playlist />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/artist/:id" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Artist />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/album/:id" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Album />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/profile" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Profile />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/settings" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Settings />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              {/* Redirection par défaut */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </div>
+        </AppProvider>
       </Router>
     </ErrorBoundary>
   );
