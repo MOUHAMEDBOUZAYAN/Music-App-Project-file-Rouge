@@ -32,9 +32,13 @@ const Layout = ({ children }) => {
         <Sidebar isOpen={isSidebarOpen} onToggle={toggleSidebar} />
         
         <div className="flex-1 flex flex-col min-w-0">
-          <Header />
-          {/* Ajouter un padding-bottom pour éviter que le contenu ne passe sous le player fixe */}
-          <main className="flex-1 overflow-y-auto bg-black pb-28">
+          {/* Header avec espacement approprié */}
+          <div className="flex-shrink-0">
+            <Header />
+          </div>
+          
+          {/* Contenu principal avec padding-top pour séparer du header */}
+          <main className="flex-1 overflow-y-auto bg-black pb-28 pt-4" style={{ margin: 0, paddingLeft: 0, paddingRight: 0 }}>
             {children}
           </main>
         </div>

@@ -15,7 +15,7 @@ import Home from './pages/Home';
 import SpotifyLogin from './components/auth/SpotifyLogin';
 import LoginForm from './components/auth/LoginForm';
 import Register from './components/auth/RegisterForm';
-import SpotifySearch from './components/search/SpotifySearch';
+import Search from './pages/Search';
 import Library from './pages/Library';
 import LikedSongs from './pages/LikedSongs';
 import Album from './pages/Album';
@@ -79,7 +79,7 @@ function App() {
               <Route path="/search" element={
                 <ProtectedRoute>
                   <Layout>
-                    <SpotifySearch />
+                    <Search />
                   </Layout>
                 </ProtectedRoute>
               } />

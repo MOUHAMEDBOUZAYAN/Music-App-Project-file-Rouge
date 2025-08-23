@@ -125,10 +125,10 @@ const Home = () => {
 
   return (
     <div className={`min-h-screen bg-gradient-to-b from-black via-gray-900 to-black text-white overflow-x-hidden transition-all duration-300 ${
-      isSidebarOpen ? 'lg:ml-64' : 'lg:ml-0'
+      isSidebarOpen ? '' : 'lg:ml-0'
     }`}>
       {/* Header avec recherche - Design Spotify */}
-      <div className="sticky top-0 z-10 bg-black/80 backdrop-blur-xl border-b border-gray-800/50">
+      <div className="">
         <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -140,17 +140,8 @@ const Home = () => {
               </button>
             </div>
             
-            <div className="flex-1 max-w-2xl mx-6">
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Que souhaitez-vous écouter ou regarder ?"
-                  className="w-full bg-gray-800 text-white placeholder-gray-400 rounded-full pl-12 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-gray-700 transition-all duration-200"
-                />
-              </div>
-            </div>
-
+            {/* Barre de recherche supprimée - maintenant seulement dans le header principal */}
+            
             <div className="flex items-center space-x-3">
               <button className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 transition-colors">
                 <Music2 className="h-5 w-5 text-gray-300" />
@@ -181,25 +172,29 @@ const Home = () => {
       </div>
 
       {/* Contenu principal - Design Spotify */}
-      <div className="px-6 py-8 space-y-10 pb-32">
+      <div className="space-y-10 pb-32" style={{ margin: 0, padding: 0, marginLeft: 0, marginRight: 0 }}>
         {/* Section Bienvenue - Style Spotify */}
-        <section>
-          <h1 className="text-4xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-            Bonjour, {user?.username || 'Utilisateur'} 🎵
-          </h1>
-          <p className="text-gray-400 text-xl">Découvrez la musique qui vous correspond sur SoundWave</p>
+        <section className="pt-8">
+          <div className="px-6">
+            <h1 className="text-4xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+              Bonjour, {user?.username || 'Utilisateur'} 🎵
+            </h1>
+            <p className="text-gray-400 text-xl">Découvrez la musique qui vous correspond sur SoundWave</p>
+          </div>
         </section>
 
         {/* Section Radio populaire avec flèches - Design Spotify */}
         <section>
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-3xl font-bold text-white flex items-center">
-              <Radio className="h-7 w-7 mr-3 text-green-500" />
-              Radio populaire
-            </h2>
-            <button className="text-sm text-gray-400 hover:text-white transition-colors flex items-center hover:underline">
-              Tout afficher <ArrowRight className="h-4 w-4 ml-1" />
-            </button>
+          <div className="px-6">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-3xl font-bold text-white flex items-center">
+                <Radio className="h-7 w-7 mr-3 text-green-500" />
+                Radio populaire
+              </h2>
+              <button className="text-sm text-gray-400 hover:text-white transition-colors flex items-center hover:underline">
+                Tout afficher <ArrowRight className="h-4 w-4 ml-1" />
+              </button>
+            </div>
           </div>
           
           <div className="relative">
@@ -267,14 +262,16 @@ const Home = () => {
         {/* Section Artistes populaires avec flèches - Design Spotify */}
         {popularArtists.length > 0 && (
           <section>
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-3xl font-bold text-white flex items-center">
-                <Mic className="h-7 w-7 mr-3 text-green-500" />
-                Artistes populaires
-              </h2>
-              <button className="text-sm text-gray-400 hover:text-white transition-colors flex items-center hover:underline">
-                Tout afficher <ArrowRight className="h-4 w-4 ml-1" />
-              </button>
+            <div className="px-6">
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-3xl font-bold text-white flex items-center">
+                  <Mic className="h-7 w-7 mr-3 text-green-500" />
+                  Artistes populaires
+                </h2>
+                <button className="text-sm text-gray-400 hover:text-white transition-colors flex items-center hover:underline">
+                  Tout afficher <ArrowRight className="h-4 w-4 ml-1" />
+                </button>
+              </div>
             </div>
             
             <div className="relative">
@@ -343,14 +340,16 @@ const Home = () => {
         {/* Section Albums et singles populaires avec flèches - Design Spotify */}
         {popularAlbums.length > 0 && (
           <section>
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-3xl font-bold text-white flex items-center">
-                <Headphones className="h-7 w-7 mr-3 text-green-500" />
-                Albums et singles populaires
-              </h2>
-              <button className="text-sm text-gray-400 hover:text-white transition-colors flex items-center hover:underline">
-                Tout afficher <ArrowRight className="h-4 w-4 ml-1" />
-              </button>
+            <div className="px-6">
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-3xl font-bold text-white flex items-center">
+                  <Headphones className="h-7 w-7 mr-3 text-green-500" />
+                  Albums et singles populaires
+                </h2>
+                <button className="text-sm text-gray-400 hover:text-white transition-colors flex items-center hover:underline">
+                  Tout afficher <ArrowRight className="h-4 w-4 ml-1" />
+                </button>
+              </div>
             </div>
             
             <div className="relative">
@@ -412,11 +411,13 @@ const Home = () => {
         {/* Section Summer season avec flèches - Design Spotify */}
         {newReleases.length > 0 && (
           <section>
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-3xl font-bold text-white">Summer season</h2>
-              <button className="text-sm text-gray-400 hover:text-white transition-colors flex items-center hover:underline">
-                Tout afficher <ArrowRight className="h-4 w-4 ml-1" />
-              </button>
+            <div className="px-6">
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-3xl font-bold text-white">Summer season</h2>
+                <button className="text-sm text-gray-400 hover:text-white transition-colors flex items-center hover:underline">
+                  Tout afficher <ArrowRight className="h-4 w-4 ml-1" />
+                </button>
+              </div>
             </div>
             
             <div className="relative">
@@ -478,14 +479,16 @@ const Home = () => {
         {/* Section Playlists en vedette avec flèches - Design Spotify */}
         {featuredPlaylists.length > 0 && (
           <section>
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-3xl font-bold text-white flex items-center">
-                <Music2 className="h-7 w-7 mr-3 text-green-500" />
-                Playlists en vedette
-              </h2>
-              <button className="text-sm text-gray-400 hover:text-white transition-colors flex items-center hover:underline">
-                Tout afficher <ArrowRight className="h-4 w-4 ml-1" />
-              </button>
+            <div className="px-6">
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-3xl font-bold text-white flex items-center">
+                  <Music2 className="h-7 w-7 mr-3 text-green-500" />
+                  Playlists en vedette
+                </h2>
+                <button className="text-sm text-gray-400 hover:text-white transition-colors flex items-center hover:underline">
+                  Tout afficher <ArrowRight className="h-4 w-4 ml-1" />
+                </button>
+              </div>
             </div>
             
             <div className="relative">

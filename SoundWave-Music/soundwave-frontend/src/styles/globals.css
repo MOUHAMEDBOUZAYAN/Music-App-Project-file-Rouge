@@ -1,1 +1,56 @@
-/* Global styles will be implemented here */ 
+/* Reset CSS pour supprimer tous les espaces */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  margin: 0;
+  padding: 0;
+}
+
+.App {
+  margin: 0;
+  padding: 0;
+}
+
+/* Supprimer l'espace entre sidebar et contenu principal */
+.flex-1 {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+main {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* Permettre l'espacement du header */
+header {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  /* Permettre le padding vertical */
+  padding-top: 20px !important;
+  padding-bottom: 20px !important;
+}
+
+/* Masquer la barre de défilement pour les filtres */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Safari and Chrome */
+}
+
+/* Styles existants */
+@tailwind base;
+@tailwind components;
+@tailwind utilities; 

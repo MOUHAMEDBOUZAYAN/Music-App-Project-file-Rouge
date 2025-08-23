@@ -32,16 +32,28 @@ const Sidebar = ({ isOpen, onToggle }) => {
     navigate('/login');
   };
 
+  const handleProfileClick = () => {
+    console.log('Profile clicked - navigating to /profile');
+    console.log('Current user:', user);
+    console.log('Current location:', location.pathname);
+    navigate('/profile');
+  };
+
+  const handleSettingsClick = () => {
+    console.log('Settings clicked - navigating to /settings');
+    navigate('/settings');
+  };
+
   return (
     <div className={`
       fixed lg:static inset-y-0 left-0 z-[9998] 
       w-64 bg-black border-r border-gray-800/50
       transform transition-transform duration-300 ease-in-out
       ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-    `}>
+    `} style={{ margin: 0, padding: 0, marginLeft: 0, marginRight: 0 }}>
       <div className="flex flex-col h-full">
         {/* Logo et navigation principale */}
-        <div className="p-6">
+        <div className="flex-shrink-0 p-6">
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-white">SoundWave</h1>
           </div>
@@ -85,8 +97,8 @@ const Sidebar = ({ isOpen, onToggle }) => {
           </nav>
         </div>
 
-        {/* Section Bibliothèque */}
-        <div className="flex-1 px-6">
+        {/* Section Bibliothèque - avec flex-1 pour occuper l'espace disponible */}
+        <div className="flex-1 px-6 overflow-y-auto">
           <div className="space-y-2">
             <button
               onClick={() => setIsLibraryExpanded(!isLibraryExpanded)}
@@ -131,44 +143,10 @@ const Sidebar = ({ isOpen, onToggle }) => {
           </div>
         </div>
 
-        {/* Section Utilisateur */}
-        <div className="p-6 border-t border-gray-800/50">
-          <div className="space-y-2">
-            <button
-              onClick={() => setIsUserExpanded(!isUserExpanded)}
-              className="flex items-center justify-between w-full px-3 py-2 text-gray-400 hover:text-white transition-colors"
-            >
-              <span className="font-medium">Utilisateur</span>
-              {isUserExpanded ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-            </button>
-            
-            {isUserExpanded && (
-              <div className="ml-4 space-y-2">
-                <Link
-                  to="/profile"
-                  className="flex items-center space-x-3 px-3 py-2 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors"
-                >
-                  <User className="h-4 w-4" />
-                  <span className="text-sm">Profil</span>
-                </Link>
-                
-                <Link
-                  to="/settings"
-                  className="flex items-center space-x-3 px-3 py-2 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors"
-                >
-                  <Music2 className="h-4 w-4" />
-                  <span className="text-sm">Paramètres</span>
-                </Link>
-              </div>
-            )}
-          </div>
-          
-          {/* Profil utilisateur */}
-          <div className="mt-4 p-3 bg-gray-800/50 rounded-lg">
+        {/* Section Utilisateur - simplifiée et toujours visible */}
+        <div className="flex-shrink-0 p-4 border-t border-gray-800/50">
+          {/* Profil utilisateur principal */}
+          <div className="p-3 bg-gray-800/50 rounded-lg mb-3">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
                 <span className="text-black font-bold text-sm">
@@ -190,6 +168,25 @@ const Sidebar = ({ isOpen, onToggle }) => {
                 <ChevronRight className="h-4 w-4" />
               </button>
             </div>
+          </div>
+
+          {/* Options utilisateur simples */}
+          <div className="space-y-2">
+            <button
+              onClick={handleProfileClick}
+              className="w-full flex items-center space-x-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors text-left"
+            >
+              <User className="h-4 w-4" />
+              <span className="text-sm">Profil</span>
+            </button>
+            
+            <button
+              onClick={handleSettingsClick}
+              className="w-full flex items-center space-x-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors text-left"
+            >
+              <Music2 className="h-4 w-4" />
+              <span className="text-sm">Paramètres</span>
+            </button>
           </div>
         </div>
       </div>

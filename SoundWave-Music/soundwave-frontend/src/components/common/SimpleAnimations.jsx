@@ -60,16 +60,14 @@ export const AnimatedIcon = ({ children, delay = 0, className = '', ...props }) 
   </div>
 );
 
-export const AnimatedInput = ({ children, className = '', ...props }) => (
-  <div className={`transition-all duration-300 ${className}`} {...props}>
-    {children}
-  </div>
+export const AnimatedInput = ({ className = '', ...props }) => (
+  <input className={`transition-all duration-300 ${className}`} {...props} />
 );
 
 export const AnimatedLabel = ({ children, className = '', ...props }) => (
-  <div className={`transition-all duration-300 ${className}`} {...props}>
+  <label className={`transition-all duration-300 ${className}`} {...props}>
     {children}
-  </div>
+  </label>
 );
 
 export const AnimatedError = ({ children, className = '', ...props }) => (

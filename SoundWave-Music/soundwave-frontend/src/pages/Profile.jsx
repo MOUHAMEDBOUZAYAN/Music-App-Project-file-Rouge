@@ -1,17 +1,35 @@
 import React from 'react';
-import { useAuth } from '../store/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { FaUser, FaEnvelope, FaCalendar, FaEdit } from 'react-icons/fa';
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
 
-  if (!user) {
+  console.log('Profile component - user:', user);
+  console.log('Profile component - isAuthenticated:', isAuthenticated);
+  console.log('Profile component - isLoading:', isLoading);
+
+  // Afficher un loader pendant le chargement
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 flex items-center justify-center">
+        <div className="text-center text-white">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
+          <p className="text-gray-400">Chargement du profil...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Vérifier si l'utilisateur est connecté
+  if (!isAuthenticated || !user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 flex items-center justify-center">
         <div className="text-center text-white">
           <div className="text-6xl mb-4">🔒</div>
           <h1 className="text-2xl font-bold mb-2">Accès refusé</h1>
           <p className="text-gray-400">Vous devez être connecté pour voir votre profil</p>
+          <p className="text-gray-500 text-sm mt-2">État: {isAuthenticated ? 'Connecté' : 'Non connecté'}</p>
         </div>
       </div>
     );
