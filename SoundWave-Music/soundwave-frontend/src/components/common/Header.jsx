@@ -113,9 +113,15 @@ const Header = () => {
           </button>
           
           {/* Notifications */}
-          <button className="p-2.5 rounded-full bg-gray-800/80 hover:bg-gray-700 transition-all duration-200 hover:scale-105">
+          <Link to="/new-releases" className="p-2 rounded-full bg-gray-800/80 hover:bg-gray-700 transition-all duration-200 hover:scale-105 relative group">
             <Bell className="h-5 w-5 text-white" />
-          </button>
+            {/* Notification Badge */}
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+            {/* Tooltip */}
+            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+              Nouveautés
+            </div>
+          </Link>
           
           {/* File d'attente */}
           <button className="p-2.5 rounded-full bg-gray-800/80 hover:bg-gray-700 transition-all duration-200 hover:scale-105">
@@ -194,11 +200,23 @@ const Header = () => {
                       </svg>
                     </div>
                   </Link>
+                  
+                  <Link to="/subscriptions" className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800/80 hover:text-white transition-all duration-200 group">
+                    <div className="flex items-center space-x-3">
+                      <Crown className="h-4 w-4 text-yellow-400" />
+                      <span>Abonnements</span>
+                    </div>
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </div>
+                  </Link>
                 </div>
                 
                 {/* Premium Section */}
                 <div className="border-t border-gray-700/50 pt-2">
-                  <button className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800/80 hover:text-white transition-all duration-200 group">
+                  <Link to="/subscriptions" className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800/80 hover:text-white transition-all duration-200 group">
                     <div className="flex items-center space-x-3">
                       <Crown className="h-4 w-4 text-yellow-400" />
                       <span>Passer à Premium</span>
@@ -208,7 +226,7 @@ const Header = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                       </svg>
                     </div>
-                  </button>
+                  </Link>
                 </div>
                 
                 {/* Logout Section */}

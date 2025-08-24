@@ -12,7 +12,8 @@ import {
   ChevronDown,
   Music2,
   Disc3,
-  Users
+  Users,
+  Crown
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useSidebar } from '../../store/SidebarContext';
@@ -93,6 +94,18 @@ const Sidebar = ({ isOpen, onToggle }) => {
             >
               <Library className="h-5 w-5" />
               <span>Votre Bibliothèque</span>
+            </Link>
+            
+            <Link
+              to="/subscriptions"
+              className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
+                isActive('/subscriptions') 
+                  ? 'bg-gray-800 text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+              }`}
+            >
+              <Crown className="h-5 w-5" />
+              <span>Abonnements</span>
             </Link>
           </nav>
         </div>

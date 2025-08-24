@@ -26,6 +26,7 @@ import Settings from './pages/Settings';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import NewReleases from './pages/NewReleases';
+import Subscriptions from './pages/Subscriptions';
 import SpotifyCallback from './pages/SpotifyCallback';
 import Footer from './components/common/Footer';
 
@@ -163,6 +164,14 @@ function App() {
               <Route path="/new-releases" element={
                 <ProtectedRoute>
                   <NewReleases />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/subscriptions" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Subscriptions />
+                  </Layout>
                 </ProtectedRoute>
               } />
               
