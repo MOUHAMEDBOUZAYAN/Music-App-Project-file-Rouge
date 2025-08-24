@@ -379,32 +379,35 @@ const Home = () => {
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
                 {popularAlbums.map((album) => (
-                  <div key={album.id} className="group cursor-pointer flex-shrink-0 w-40 hover:bg-gray-800 rounded-lg p-4 transition-all duration-300 overflow-hidden">
+                  <div key={album.id} className="group cursor-pointer flex-shrink-0 w-40 hover:bg-gray-800/60 p-4 transition-all duration-300 overflow-hidden">
                     <div className="relative mb-4 flex justify-center">
-                      <div className="w-40 h-40 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden border-2 border-gray-700 group-hover:border-green-500 transition-all duration-300 shadow-xl group-hover:shadow-green-500/25 flex items-center justify-center">
+                      <div className="w-40 h-40 bg-gradient-to-br from-gray-800 to-gray-900 overflow-hidden shadow-xl group-hover:shadow-2xl transition-all duration-300 flex items-center justify-center">
                         <img
                           src={album.cover || album.picture || `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop`}
                           alt={album.title || album.name}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                         
                         {/* Overlay sombre au hover pour meilleur contraste */}
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300"></div>
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-300"></div>
                       </div>
                       
                       {/* Bouton play - Style Spotify exact */}
                       <button 
-                        onClick={() => handlePlaySong(album)}
-                        className="absolute bottom-2 right-2 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 hover:bg-green-400 shadow-2xl transform translate-y-2 group-hover:translate-y-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePlaySong(album);
+                        }}
+                        className="absolute bottom-2 right-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 hover:bg-green-400 shadow-2xl transform translate-y-2 group-hover:translate-y-0 z-10"
                       >
-                        <Play className="h-5 w-5 text-black ml-0.5" />
+                        <Play className="h-6 w-6 text-black ml-0.5" />
                       </button>
                     </div>
                     
-                    <h3 className="font-bold text-base mb-1 truncate group-hover:text-green-400 transition-colors text-white">
+                    <h3 className="font-bold text-base mb-1 truncate group-hover:text-white transition-colors text-white">
                       {album.title || album.name}
                     </h3>
-                    <p className="text-sm text-gray-400 truncate">
+                    <p className="text-sm text-gray-400 truncate group-hover:text-gray-300 transition-colors">
                       {album.artist?.name || 'Artiste inconnu'}
                     </p>
                   </div>
@@ -450,9 +453,9 @@ const Home = () => {
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
                 {newReleases.map((release) => (
-                  <div key={release.id} className="group cursor-pointer flex-shrink-0 w-40 hover:bg-gray-800 rounded-lg p-4 transition-all duration-300 overflow-hidden">
+                  <div key={release.id} className="group cursor-pointer flex-shrink-0 w-40 hover:bg-gray-800 p-4 transition-all duration-300 overflow-hidden">
                     <div className="relative mb-4 flex justify-center">
-                      <div className="w-40 h-40 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden border-2 border-gray-700 group-hover:border-green-500 transition-all duration-300 shadow-xl group-hover:shadow-green-500/25 flex items-center justify-center">
+                      <div className="w-40 h-40 bg-gradient-to-br from-gray-800 to-gray-900 overflow-hidden border-2 border-gray-700 group-hover:border-green-500 transition-all duration-300 shadow-xl group-hover:shadow-green-500/25 flex items-center justify-center">
                         <img
                           src={release.cover || release.picture || `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop`}
                           alt={release.title || release.name}
@@ -524,9 +527,9 @@ const Home = () => {
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
                 {featuredPlaylists.map((playlist) => (
-                  <div key={playlist.id} className="group cursor-pointer flex-shrink-0 w-40 hover:bg-gray-800 rounded-lg p-4 transition-all duration-300 overflow-hidden">
+                  <div key={playlist.id} className="group cursor-pointer flex-shrink-0 w-40 hover:bg-gray-800 p-4 transition-all duration-300 overflow-hidden">
                     <div className="relative mb-4 flex justify-center">
-                      <div className="w-40 h-40 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden border-2 border-gray-700 group-hover:border-green-500 transition-all duration-300 shadow-xl group-hover:shadow-green-500/25 flex items-center justify-center">
+                      <div className="w-40 h-40 bg-gradient-to-br from-gray-800 to-gray-900 overflow-hidden border-2 border-gray-700 group-hover:border-green-500 transition-all duration-300 shadow-xl group-hover:shadow-green-500/25 flex items-center justify-center">
                         <img
                           src={playlist.picture || playlist.cover || `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop`}
                           alt={playlist.title || playlist.name}

@@ -8,7 +8,10 @@ import {
   Bell,
   User,
   Settings,
-  Grid3X3
+  Grid3X3,
+  Globe,
+  MessageSquare,
+  Crown
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -129,11 +132,12 @@ const Header = () => {
               </div>
             </button>
             
-            {/* Menu déroulant du profil */}
-            <div className="absolute right-0 top-full mt-2 w-48 bg-gray-800/95 backdrop-blur-xl border border-gray-700/50 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
-              <div className="py-2">
+            {/* Dropdown Menu */}
+            <div className="absolute right-0 top-full mt-2 w-56 bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+              <div className="py-3">
+                {/* User Info Section */}
                 <div className="px-4 py-3 border-b border-gray-700/50">
-                  <div className="text-sm font-medium text-white">
+                  <div className="text-sm font-medium text-white mb-1">
                     {user?.username || 'Utilisateur'}
                   </div>
                   <div className="text-xs text-gray-400">
@@ -141,21 +145,77 @@ const Header = () => {
                   </div>
                 </div>
                 
-                <div className="py-1">
-                  <Link to="/profile" className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-400 hover:bg-gray-700/50 hover:text-white transition-colors rounded-lg mx-2">
-                    <User className="h-4 w-4" />
-                    <span>Profil</span>
+                {/* Main Menu Items */}
+                <div className="py-2">
+                  <Link to="/profile" className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800/80 hover:text-white transition-all duration-200 group">
+                    <div className="flex items-center space-x-3">
+                      <User className="h-4 w-4" />
+                      <span>Profil</span>
+                    </div>
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </div>
                   </Link>
-                  <Link to="/settings" className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-400 hover:bg-gray-700/50 hover:text-white transition-colors rounded-lg mx-2">
-                    <Settings className="h-4 w-4" />
-                    <span>Paramètres</span>
+                  
+                  <Link to="/about" className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800/80 hover:text-white transition-all duration-200 group">
+                    <div className="flex items-center space-x-3">
+                      <Globe className="h-4 w-4" />
+                      <span>À propos</span>
+                    </div>
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </div>
+                  </Link>
+                  
+                  <Link to="/contact" className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800/80 hover:text-white transition-all duration-200 group">
+                    <div className="flex items-center space-x-3">
+                      <MessageSquare className="h-4 w-4" />
+                      <span>Contact</span>
+                    </div>
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </div>
+                  </Link>
+                  
+                  <Link to="/settings" className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800/80 hover:text-white transition-all duration-200 group">
+                    <div className="flex items-center space-x-3">
+                      <Settings className="h-4 w-4" />
+                      <span>Paramètres</span>
+                    </div>
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </div>
                   </Link>
                 </div>
                 
-                <div className="border-t border-gray-700/50 pt-1">
+                {/* Premium Section */}
+                <div className="border-t border-gray-700/50 pt-2">
+                  <button className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800/80 hover:text-white transition-all duration-200 group">
+                    <div className="flex items-center space-x-3">
+                      <Crown className="h-4 w-4 text-yellow-400" />
+                      <span>Passer à Premium</span>
+                    </div>
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </div>
+                  </button>
+                </div>
+                
+                {/* Logout Section */}
+                <div className="border-t border-gray-700/50 pt-2">
                   <button 
                     onClick={() => { logout(); navigate('/login'); }}
-                    className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-400 hover:bg-gray-700/50 hover:text-white transition-colors rounded-lg mx-2"
+                    className="w-full flex items-center px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800/80 hover:text-white transition-all duration-200"
                   >
                     <span>Déconnexion</span>
                   </button>

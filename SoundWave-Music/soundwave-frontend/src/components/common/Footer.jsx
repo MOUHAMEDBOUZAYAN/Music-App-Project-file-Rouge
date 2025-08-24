@@ -6,6 +6,7 @@ import {
   Globe,
   Heart
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -57,9 +58,14 @@ const Footer = () => {
             </h3>
             <ul className="space-y-1.5 xs:space-y-2 sm:space-y-3">
               <li>
-                <a href="#" className="text-gray-400 hover:text-emerald-700 transition-colors text-xs xs:text-sm">
+                <Link to="/about" className="text-gray-400 hover:text-emerald-700 transition-colors text-xs xs:text-sm">
                   À propos
-                </a>
+                </Link>
+              </li>
+              <li>
+                <Link to="/contact" className="text-gray-400 hover:text-emerald-700 transition-colors text-xs xs:text-sm">
+                  Contact
+                </Link>
               </li>
               <li>
                 <a href="#" className="text-gray-400 hover:text-emerald-700 transition-colors text-xs xs:text-sm">
@@ -69,11 +75,6 @@ const Footer = () => {
               <li>
                 <a href="#" className="text-gray-400 hover:text-emerald-700 transition-colors text-xs xs:text-sm">
                   For the Record
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-400 hover:text-emerald-700 transition-colors text-xs xs:text-sm">
-                  Contact
                 </a>
               </li>
             </ul>

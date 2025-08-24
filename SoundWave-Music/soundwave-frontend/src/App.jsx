@@ -23,7 +23,11 @@ import Playlist from './pages/Playlist';
 import Artist from './pages/Artist';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
+import About from './pages/About';
+import Contact from './pages/Contact';
+import NewReleases from './pages/NewReleases';
 import SpotifyCallback from './pages/SpotifyCallback';
+import Footer from './components/common/Footer';
 
 // Styles
 import './styles/globals.css';
@@ -137,6 +141,28 @@ function App() {
                   <Layout>
                     <Settings />
                   </Layout>
+                </ProtectedRoute>
+              } />
+
+              <Route path="/about" element={
+                <ProtectedRoute>
+                  <div className="min-h-screen bg-black">
+                    <About />
+                    <Footer />
+                  </div>
+                </ProtectedRoute>
+              } />
+              <Route path="/contact" element={
+                <ProtectedRoute>
+                  <div className="min-h-screen bg-black">
+                    <Contact />
+                    <Footer />
+                  </div>
+                </ProtectedRoute>
+              } />
+              <Route path="/new-releases" element={
+                <ProtectedRoute>
+                  <NewReleases />
                 </ProtectedRoute>
               } />
               
