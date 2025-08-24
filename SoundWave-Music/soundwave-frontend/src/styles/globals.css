@@ -35,7 +35,6 @@ main {
 header {
   margin-left: 0 !important;
   margin-right: 0 !important;
-  /* Permettre le padding vertical */
   padding-top: 20px !important;
   padding-bottom: 20px !important;
 }
@@ -48,6 +47,18 @@ header {
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;  /* Safari and Chrome */
+}
+
+/* Assurer que le footer s'affiche correctement */
+footer {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  width: 100% !important;
+}
+
+/* Layout principal */
+.min-h-screen {
+  min-height: 100vh;
 }
 
 /* Styles existants */

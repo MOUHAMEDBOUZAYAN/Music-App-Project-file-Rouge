@@ -124,7 +124,7 @@ const Home = () => {
   }
 
   return (
-    <div className={`min-h-screen bg-gradient-to-b from-black via-gray-900 to-black text-white overflow-x-hidden transition-all duration-300 ${
+    <div className={`min-h-screen bg-black text-white overflow-x-hidden transition-all duration-300 ${
       isSidebarOpen ? '' : 'lg:ml-0'
     }`}>
       {/* Header avec recherche - Design Spotify */}
@@ -223,15 +223,15 @@ const Home = () => {
               {popularArtists.slice(0, 8).map((artist) => (
                 <div 
                   key={artist.id} 
-                  className="group cursor-pointer text-center flex-shrink-0 w-40"
+                  className="group cursor-pointer text-center flex-shrink-0 w-40 hover:bg-gray-800 rounded-lg p-4 transition-all duration-300 overflow-hidden"
                   onClick={() => handleArtistClick(artist)}
                 >
-                  <div className="relative mb-4">
-                    <div className="w-40 h-40 mx-auto bg-gradient-to-br from-gray-800 to-gray-900 rounded-full overflow-hidden border-2 border-gray-700 group-hover:border-green-500 transition-all duration-300 shadow-xl group-hover:shadow-green-500/25">
+                  <div className="relative mb-4 flex justify-center">
+                    <div className="w-40 h-40 bg-gradient-to-br from-gray-800 to-gray-900 rounded-full overflow-hidden border-2 border-gray-700 group-hover:border-green-500 transition-all duration-300 shadow-xl group-hover:shadow-green-500/25 flex items-center justify-center">
                       <img
                         src={artist.picture || artist.cover || `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop`}
                         alt={artist.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        className="w-full h-full object-cover"
                       />
                     </div>
                     
@@ -241,9 +241,9 @@ const Home = () => {
                         e.stopPropagation();
                         handlePlaySong(artist);
                       }}
-                      className="absolute bottom-3 right-3 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 hover:bg-green-400 shadow-2xl"
+                      className="absolute bottom-2 right-2 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 hover:bg-green-400 shadow-2xl transform translate-y-2 group-hover:translate-y-0"
                     >
-                      <Play className="h-6 w-6 text-black ml-0.5" />
+                      <Play className="h-5 w-5 text-black ml-0.5" />
                     </button>
                   </div>
                   
@@ -300,27 +300,30 @@ const Home = () => {
                 {popularArtists.map((artist) => (
                   <div 
                     key={artist.id} 
-                    className="group cursor-pointer text-center flex-shrink-0 w-40"
+                    className="group cursor-pointer text-center flex-shrink-0 w-40 hover:bg-gray-800 rounded-lg p-4 transition-all duration-300 overflow-hidden"
                     onClick={() => handleArtistClick(artist)}
                   >
-                    <div className="relative mb-4">
-                      <div className="w-40 h-40 mx-auto bg-gradient-to-br from-gray-800 to-gray-900 rounded-full overflow-hidden border-2 border-gray-700 group-hover:border-green-500 transition-all duration-300 shadow-xl group-hover:shadow-green-500/25">
+                    <div className="relative mb-4 flex justify-center">
+                      <div className="w-40 h-40 bg-gradient-to-br from-gray-800 to-gray-900 rounded-full overflow-hidden border-2 border-gray-700 group-hover:border-green-500 transition-all duration-300 shadow-xl group-hover:shadow-green-500/25 flex items-center justify-center">
                         <img
                           src={artist.picture || artist.cover || `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop`}
                           alt={artist.name}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                          className="w-full h-full object-cover"
                         />
+                        
+                        {/* Overlay sombre au hover pour meilleur contraste */}
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300"></div>
                       </div>
                       
-                      {/* Bouton play - Style Spotify */}
+                      {/* Bouton play - Style Spotify exact */}
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
                           handlePlaySong(artist);
                         }}
-                        className="absolute bottom-3 right-3 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 hover:bg-green-400 shadow-2xl"
+                        className="absolute bottom-2 right-2 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 hover:bg-green-400 shadow-2xl transform translate-y-2 group-hover:translate-y-0"
                       >
-                        <Play className="h-6 w-6 text-black ml-0.5" />
+                        <Play className="h-5 w-5 text-black ml-0.5" />
                       </button>
                     </div>
                     
@@ -376,22 +379,25 @@ const Home = () => {
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
                 {popularAlbums.map((album) => (
-                  <div key={album.id} className="group cursor-pointer flex-shrink-0 w-40">
-                    <div className="relative mb-4">
-                      <div className="w-40 h-40 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden border-2 border-gray-700 group-hover:border-green-500 transition-all duration-300 shadow-xl group-hover:shadow-green-500/25">
+                  <div key={album.id} className="group cursor-pointer flex-shrink-0 w-40 hover:bg-gray-800 rounded-lg p-4 transition-all duration-300 overflow-hidden">
+                    <div className="relative mb-4 flex justify-center">
+                      <div className="w-40 h-40 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden border-2 border-gray-700 group-hover:border-green-500 transition-all duration-300 shadow-xl group-hover:shadow-green-500/25 flex items-center justify-center">
                         <img
                           src={album.cover || album.picture || `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop`}
                           alt={album.title || album.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          className="w-full h-full object-cover"
                         />
+                        
+                        {/* Overlay sombre au hover pour meilleur contraste */}
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300"></div>
                       </div>
                       
-                      {/* Bouton play - Style Spotify */}
+                      {/* Bouton play - Style Spotify exact */}
                       <button 
                         onClick={() => handlePlaySong(album)}
-                        className="absolute bottom-3 right-3 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 hover:bg-green-400 shadow-2xl"
+                        className="absolute bottom-2 right-2 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 hover:bg-green-400 shadow-2xl transform translate-y-2 group-hover:translate-y-0"
                       >
-                        <Play className="h-6 w-6 text-black ml-0.5" />
+                        <Play className="h-5 w-5 text-black ml-0.5" />
                       </button>
                     </div>
                     
@@ -444,22 +450,25 @@ const Home = () => {
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
                 {newReleases.map((release) => (
-                  <div key={release.id} className="group cursor-pointer flex-shrink-0 w-40">
-                    <div className="relative mb-4">
-                      <div className="w-40 h-40 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden border-2 border-gray-700 group-hover:border-green-500 transition-all duration-300 shadow-xl group-hover:shadow-green-500/25">
+                  <div key={release.id} className="group cursor-pointer flex-shrink-0 w-40 hover:bg-gray-800 rounded-lg p-4 transition-all duration-300 overflow-hidden">
+                    <div className="relative mb-4 flex justify-center">
+                      <div className="w-40 h-40 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden border-2 border-gray-700 group-hover:border-green-500 transition-all duration-300 shadow-xl group-hover:shadow-green-500/25 flex items-center justify-center">
                         <img
                           src={release.cover || release.picture || `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop`}
                           alt={release.title || release.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          className="w-full h-full object-cover"
                         />
+                        
+                        {/* Overlay sombre au hover pour meilleur contraste */}
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300"></div>
                       </div>
                       
-                      {/* Bouton play - Style Spotify */}
+                      {/* Bouton play - Style Spotify exact */}
                       <button 
                         onClick={() => handlePlaySong(release)}
-                        className="absolute bottom-3 right-3 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 hover:bg-green-400 shadow-2xl"
+                        className="absolute bottom-2 right-2 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 hover:bg-green-400 shadow-2xl transform translate-y-2 group-hover:translate-y-0"
                       >
-                        <Play className="h-6 w-6 text-black ml-0.5" />
+                        <Play className="h-5 w-5 text-black ml-0.5" />
                       </button>
                     </div>
                     
@@ -515,22 +524,25 @@ const Home = () => {
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
                 {featuredPlaylists.map((playlist) => (
-                  <div key={playlist.id} className="group cursor-pointer flex-shrink-0 w-40">
-                    <div className="relative mb-4">
-                      <div className="w-40 h-40 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden border-2 border-gray-700 group-hover:border-green-500 transition-all duration-300 shadow-xl group-hover:shadow-green-500/25">
+                  <div key={playlist.id} className="group cursor-pointer flex-shrink-0 w-40 hover:bg-gray-800 rounded-lg p-4 transition-all duration-300 overflow-hidden">
+                    <div className="relative mb-4 flex justify-center">
+                      <div className="w-40 h-40 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden border-2 border-gray-700 group-hover:border-green-500 transition-all duration-300 shadow-xl group-hover:shadow-green-500/25 flex items-center justify-center">
                         <img
                           src={playlist.picture || playlist.cover || `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop`}
                           alt={playlist.title || playlist.name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
+                        
+                        {/* Overlay sombre au hover pour meilleur contraste */}
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300"></div>
                       </div>
                       
-                      {/* Bouton play - Style Spotify */}
+                      {/* Bouton play - Style Spotify exact */}
                       <button 
                         onClick={() => handlePlaySong(playlist)}
-                        className="absolute bottom-3 right-3 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 hover:bg-green-400 shadow-2xl"
+                        className="absolute bottom-2 right-2 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 hover:bg-green-400 shadow-2xl transform translate-y-2 group-hover:translate-y-0"
                       >
-                        <Play className="h-6 w-6 text-black ml-0.5" />
+                        <Play className="h-5 w-5 text-black ml-0.5" />
                       </button>
                     </div>
                     

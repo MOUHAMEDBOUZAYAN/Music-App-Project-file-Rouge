@@ -1,6 +1,7 @@
 import React from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import Footer from './Footer';
 import AudioPlayer from '../player/AudioPlayer';
 import { Menu } from 'lucide-react';
 import { useSidebar } from '../../store/SidebarContext';
@@ -9,7 +10,7 @@ const Layout = ({ children }) => {
   const { isSidebarOpen, toggleSidebar, openSidebar } = useSidebar();
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-black text-white flex">
       {/* Bouton hamburger pour mobile */}
       <button
         onClick={toggleSidebar}
@@ -28,22 +29,28 @@ const Layout = ({ children }) => {
         </button>
       )}
 
-      <div className="flex h-screen">
-        <Sidebar isOpen={isSidebarOpen} onToggle={toggleSidebar} />
+      {/* Sidebar */}
+      <Sidebar isOpen={isSidebarOpen} onToggle={toggleSidebar} />
+      
+      {/* Contenu principal avec header, contenu et footer - Couleur uniforme */}
+      <div className="flex-1 flex flex-col min-w-0 bg-black">
+        {/* Header fixe en haut */}
+        <div className="flex-shrink-0 z-50 bg-black">
+          <Header />
+        </div>
         
-        <div className="flex-1 flex flex-col min-w-0">
-          {/* Header avec espacement approprié */}
-          <div className="flex-shrink-0">
-            <Header />
-          </div>
-          
-          {/* Contenu principal avec padding-top pour séparer du header */}
-          <main className="flex-1 overflow-y-auto bg-black pb-28 pt-4" style={{ margin: 0, paddingLeft: 0, paddingRight: 0 }}>
-            {children}
-          </main>
+        {/* Contenu principal avec scroll et espacement professionnel - Couleur uniforme */}
+        <main className="flex-1 overflow-y-auto bg-black pb-28 pt-4 pl-8" style={{ margin: 0, paddingRight: 0 }}>
+          {children}
+        </main>
+        
+        {/* Footer à la fin de la page */}
+        <div className="flex-shrink-0 bg-black">
+          <Footer />
         </div>
       </div>
       
+      {/* Player audio fixe en bas */}
       <AudioPlayer />
     </div>
   );

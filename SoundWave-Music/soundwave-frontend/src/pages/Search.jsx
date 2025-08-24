@@ -456,56 +456,56 @@ const Search = () => {
       <div className="space-y-1">
         {searchResults.songs.map((song, index) => (
           <div key={song._id} className="flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-800/50 transition-colors group">
-            <div className="w-12 h-12 bg-gray-700 rounded flex-shrink-0">
-              {song.cover && (
-                <img src={song.cover} alt={song.title} className="w-full h-full object-cover rounded" />
-              )}
+          <div className="w-12 h-12 bg-gray-700 rounded flex-shrink-0">
+            {song.cover && (
+              <img src={song.cover} alt={song.title} className="w-full h-full object-cover rounded" />
+            )}
+          </div>
+          
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-medium text-white truncate">
+              {song.title}
             </div>
-            
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium text-white truncate">
-                {song.title}
-              </div>
-              <div className="text-xs text-gray-400 truncate">
-                {song.artist}
-              </div>
+            <div className="text-xs text-gray-400 truncate">
+              {song.artist}
             </div>
+          </div>
             
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-400 min-w-[2.5rem] text-right">
                 {formatDuration(song.duration)}
               </span>
-              
-              <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button 
-                  onClick={() => handleToggleLike(song._id)}
-                  className={`p-2 rounded-full transition-colors ${
-                    likedTracks.includes(song._id) 
-                      ? 'text-green-500' 
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  <Heart className="h-4 w-4" fill={likedTracks.includes(song._id) ? 'currentColor' : 'none'} />
-                </button>
-                
-                <button 
-                  onClick={() => handleAddToQueue(song)}
-                  className="p-2 rounded-full text-gray-400 hover:text-white transition-colors"
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
-                
-                <button 
-                  onClick={() => handlePlaySong(song)}
-                  className="p-2 rounded-full bg-green-500 text-black hover:bg-green-400 transition-colors"
-                >
-                  <Play className="h-4 w-4 ml-0.5" />
-                </button>
+          
+          <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button 
+              onClick={() => handleToggleLike(song._id)}
+              className={`p-2 rounded-full transition-colors ${
+                likedTracks.includes(song._id) 
+                  ? 'text-green-500' 
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <Heart className="h-4 w-4" fill={likedTracks.includes(song._id) ? 'currentColor' : 'none'} />
+            </button>
+            
+            <button 
+              onClick={() => handleAddToQueue(song)}
+              className="p-2 rounded-full text-gray-400 hover:text-white transition-colors"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+            
+            <button 
+              onClick={() => handlePlaySong(song)}
+              className="p-2 rounded-full bg-green-500 text-black hover:bg-green-400 transition-colors"
+            >
+              <Play className="h-4 w-4 ml-0.5" />
+            </button>
               </div>
-            </div>
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
+    </div>
     </section>
   );
 
@@ -513,32 +513,32 @@ const Search = () => {
     <section className="mb-10">
       <h2 className="text-2xl font-bold mb-6 text-white">Artistes</h2>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-        {searchResults.artists.map((artist) => (
-          <div key={artist._id || artist.id} className="text-center group cursor-pointer">
-            <div className="relative mb-3">
+      {searchResults.artists.map((artist) => (
+        <div key={artist._id || artist.id} className="text-center group cursor-pointer">
+          <div className="relative mb-3">
               <div className="w-full aspect-square bg-gray-800 rounded-full overflow-hidden mx-auto shadow-lg">
-                <img
-                  src={artist.avatar || artist.image || `https://images.unsplash.com/photo-1494790108755-2616b612b786?w=200&h=200&fit=crop&crop=face`}
-                  alt={artist.username || artist.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              
-              <button 
-                onClick={() => handlePlayArtist(artist)}
-                className="absolute bottom-3 right-3 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 shadow-lg"
-              >
-                <Play className="h-5 w-5 text-black ml-1" />
-              </button>
+              <img
+                src={artist.avatar || artist.image || `https://images.unsplash.com/photo-1494790108755-2616b612b786?w=200&h=200&fit=crop&crop=face`}
+                alt={artist.username || artist.name}
+                className="w-full h-full object-cover"
+              />
             </div>
             
-            <h3 className="font-semibold text-sm group-hover:text-green-400 transition-colors text-white">
-              {artist.username || artist.name}
-            </h3>
-            <p className="text-xs text-gray-400">Artiste</p>
+            <button 
+              onClick={() => handlePlayArtist(artist)}
+                className="absolute bottom-3 right-3 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 shadow-lg"
+            >
+              <Play className="h-5 w-5 text-black ml-1" />
+            </button>
           </div>
-        ))}
-      </div>
+          
+            <h3 className="font-semibold text-sm group-hover:text-green-400 transition-colors text-white">
+            {artist.username || artist.name}
+          </h3>
+          <p className="text-xs text-gray-400">Artiste</p>
+        </div>
+      ))}
+    </div>
     </section>
   );
 
@@ -546,39 +546,39 @@ const Search = () => {
     <section className="mb-10">
       <h2 className="text-2xl font-bold mb-6 text-white">Avec {searchResults.artists[0]?.username || 'ElGrandeToto'}</h2>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-        {searchResults.playlists.map((playlist) => (
-          <div key={playlist._id || playlist.id} className="group cursor-pointer">
-            <div className="relative mb-3">
+      {searchResults.playlists.map((playlist) => (
+        <div key={playlist._id || playlist.id} className="group cursor-pointer">
+          <div className="relative mb-3">
               <div className="aspect-square bg-gray-800 rounded-lg overflow-hidden shadow-lg">
-                <img
-                  src={playlist.coverUrl || playlist.cover || `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop`}
-                  alt={playlist.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                />
-              </div>
-              
-              <button 
-                onClick={() => handlePlayPlaylist(playlist)}
-                className="absolute bottom-2 right-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 hover:bg-green-400 shadow-lg"
-              >
-                <Play className="h-6 w-6 text-black ml-1" />
-              </button>
+              <img
+                src={playlist.coverUrl || playlist.cover || `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop`}
+                alt={playlist.name}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+              />
             </div>
             
-            <h3 className="font-semibold text-sm mb-1 truncate group-hover:text-green-400 transition-colors text-white">
-              {playlist.name}
-            </h3>
-            <p className="text-xs text-gray-400 truncate">
-              {playlist.description || 'Playlist personnalisée'}
-            </p>
-            {playlist.songCount && (
-              <p className="text-xs text-gray-500 mt-1">
-                {playlist.songCount} chansons
-              </p>
-            )}
+            <button 
+              onClick={() => handlePlayPlaylist(playlist)}
+              className="absolute bottom-2 right-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 hover:bg-green-400 shadow-lg"
+            >
+              <Play className="h-6 w-6 text-black ml-1" />
+            </button>
           </div>
-        ))}
-      </div>
+          
+            <h3 className="font-semibold text-sm mb-1 truncate group-hover:text-green-400 transition-colors text-white">
+            {playlist.name}
+          </h3>
+          <p className="text-xs text-gray-400 truncate">
+            {playlist.description || 'Playlist personnalisée'}
+          </p>
+          {playlist.songCount && (
+            <p className="text-xs text-gray-500 mt-1">
+              {playlist.songCount} chansons
+            </p>
+          )}
+        </div>
+      ))}
+    </div>
     </section>
   );
 
@@ -611,19 +611,19 @@ const Search = () => {
 
         {/* Filtres - Style Spotify exact */}
         <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide">
-          {filters.map((filter) => (
-            <button
-              key={filter}
-              onClick={() => setActiveFilter(filter)}
+            {filters.map((filter) => (
+              <button
+                key={filter}
+                onClick={() => setActiveFilter(filter)}
               className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap flex-shrink-0 ${
-                activeFilter === filter
+                  activeFilter === filter
                   ? 'bg-white text-black shadow-lg'
                   : 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white'
-              }`}
-            >
-              {filter}
-            </button>
-          ))}
+                }`}
+              >
+                {filter}
+              </button>
+            ))}
         </div>
       </div>
 

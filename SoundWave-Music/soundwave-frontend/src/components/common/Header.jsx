@@ -46,8 +46,8 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-black/90 backdrop-blur-xl border-b border-gray-800/50 py-6 sticky top-0 z-50" style={{ margin: 0, padding: 0, marginLeft: 0, marginRight: 0 }}>
-      <div className="flex items-center justify-between px-8">
+    <header className="bg-black border-b border-gray-800/50 py-6 sticky top-0 z-50" style={{ margin: 0, padding: 0, marginLeft: 0, marginRight: 0 }}>
+      <div className="flex items-center justify-between px-8 pl-8">
         {/* Navigation et recherche */}
         <div className="flex items-center space-x-8 flex-1">
           {/* Boutons de navigation avec espacement augmenté */}
@@ -84,7 +84,7 @@ const Header = () => {
                 <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
                   <button
                     type="button"
-                    className="p-2 rounded-full bg-gray-700/50 hover:bg-gray-600/70 transition-all duration-200 hover:scale-110 group-hover:bg-gray-600/70"
+                    className="p-2 rounded-full bg-gray-700/50 hover:bg-gray-600/70 transition-colors duration-200 hover:scale-110 group-hover:bg-gray-600/70"
                     onClick={(e) => {
                       e.stopPropagation();
                       // Logique pour l'icône de découverte
