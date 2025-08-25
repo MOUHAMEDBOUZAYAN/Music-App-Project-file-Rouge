@@ -184,7 +184,8 @@ router.get('/artist/:id/top',
   async (req, res) => {
     try {
       const { id } = req.params;
-      const response = await axios.get(`${DEEZER_API_BASE}/artist/${id}/top`);
+      const { limit = 50 } = req.query; // Augmenter la limite par défaut à 50
+      const response = await axios.get(`${DEEZER_API_BASE}/artist/${id}/top?limit=${limit}`);
       
       res.json({
         success: true,
@@ -195,6 +196,33 @@ router.get('/artist/:id/top',
       res.status(500).json({
         success: false,
         error: 'Erreur lors de la récupération des meilleurs titres',
+        details: error.message
+      });
+    }
+  }
+);
+
+// @route   GET api/deezer/artist/:id/albums
+// @desc    Obtenir les albums d'un artiste depuis Deezer
+// @access  Public
+router.get('/artist/:id/albums', 
+  corsAuth,
+  activityLogger('deezer_get_artist_albums'), 
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { limit = 50 } = req.query;
+      const response = await axios.get(`${DEEZER_API_BASE}/artist/${id}/albums?limit=${limit}`);
+      
+      res.json({
+        success: true,
+        data: response.data
+      });
+    } catch (error) {
+      console.error('Erreur lors de la récupération des albums de l\'artiste Deezer:', error.message);
+      res.status(500).json({
+        success: false,
+        error: 'Erreur lors de la récupération des albums',
         details: error.message
       });
     }

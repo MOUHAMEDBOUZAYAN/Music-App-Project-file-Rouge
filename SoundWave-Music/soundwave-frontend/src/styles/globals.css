@@ -21,10 +21,10 @@ body {
 }
 
 /* Supprimer l'espace entre sidebar et contenu principal */
-.flex-1 {
+/* .flex-1 {
   margin-left: 0 !important;
   margin-right: 0 !important;
-}
+} */
 
 main {
   margin-left: 0 !important;

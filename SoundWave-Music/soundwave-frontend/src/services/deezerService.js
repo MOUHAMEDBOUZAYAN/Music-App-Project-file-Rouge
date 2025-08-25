@@ -60,8 +60,14 @@ const DeezerService = {
   },
 
   // Top tracks d'un artiste
-  async getArtistTopTracks(id) {
-    const data = await this.call(`/artist/${id}/top`);
+  async getArtistTopTracks(id, limit = 50) {
+    const data = await this.call(`/artist/${id}/top?limit=${limit}`);
+    return { data };
+  },
+
+  // Albums d'un artiste
+  async getArtistAlbums(id, limit = 50) {
+    const data = await this.call(`/artist/${id}/albums?limit=${limit}`);
     return { data };
   },
 
