@@ -203,9 +203,9 @@ const NewReleases = () => {
           
           {/* User Menu (retained from global Header) */}
           <div className="flex items-center space-x-4">
-            <button className="px-4 py-2 bg-green-500 text-black rounded-full font-semibold hover:scale-105 transition-all duration-200 hover:bg-green-400 text-sm">
+            <Link to="/subscriptions" className="px-4 py-2 bg-green-500 text-black rounded-full font-semibold hover:scale-105 transition-all duration-200 hover:bg-green-400 text-sm">
               Découverte Premium
-            </button>
+            </Link>
             
             <div className="relative group">
               <button className="flex items-center space-x-2 p-2 rounded-full bg-gray-800/80 hover:bg-gray-700 transition-all duration-200 hover:scale-105">

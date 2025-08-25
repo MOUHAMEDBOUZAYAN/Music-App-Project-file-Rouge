@@ -315,7 +315,7 @@ const Contact = () => {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-white mb-2">Téléphone</h3>
-                    <p className="text-gray-300 mb-1">+212 6 XX XX XX XX</p>
+                    <p className="text-gray-300 mb-1">+212 6 90 81 56 05</p>
                     <p className="text-gray-400 text-sm">Lun-Ven: 9h-18h (GMT+1)</p>
                   </div>
                 </div>
@@ -327,7 +327,7 @@ const Contact = () => {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-white mb-2">Adresse</h3>
-                    <p className="text-gray-300 mb-1">Casablanca, Maroc</p>
+                    <p className="text-gray-300 mb-1">Beni Mellal, Maroc</p>
                     <p className="text-gray-400 text-sm">Siège social et bureaux principaux</p>
                   </div>
                 </div>
