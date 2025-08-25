@@ -20,85 +20,98 @@ const Artist = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { playTrack, addToQueue, toggleLike, likedTracks } = useMusic();
-  const { popularArtists, loading: deezerLoading } = useDeezer();
+  const { popularArtists, loading: deezerLoading, service } = useDeezer();
   
   const [artist, setArtist] = useState(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [topTracks, setTopTracks] = useState([]);
+  const [tracksLoading, setTracksLoading] = useState(false);
 
+  // Format mm:ss
+  const formatDuration = (seconds) => {
+    if (!seconds && seconds !== 0) return '0:00';
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${String(s).padStart(2, '0')}`;
+  };
+
+  // Charger infos artiste (depuis cache popularArtists sinon API) + top tracks
   useEffect(() => {
-    if (id && popularArtists.length > 0) {
-      const foundArtist = popularArtists.find(a => a.id == id);
-      if (foundArtist) {
-        setArtist(foundArtist);
-      }
-    }
-  }, [id, popularArtists]);
+    const loadArtist = async () => {
+      if (!id) return;
+      try {
+        // 1) Infos artiste
+        let found = popularArtists?.find(a => String(a.id) === String(id));
+        if (!found) {
+          const result = await service.getArtist(id);
+          found = result?.data || result; // selon service
+        }
+        if (found) setArtist(found);
 
-  // Données fictives pour les chansons populaires - utiliser les données de l'artiste
-  const popularTracks = [
-    {
-      id: 1,
-      title: "Ma Jolie",
-      album: "Album 1",
-      duration: "2:24",
-      plays: "10286331",
-      cover: artist?.picture || artist?.cover || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop"
-    },
-    {
-      id: 2,
-      title: "Melina",
-      album: "Album 2",
-      duration: "3:21",
-      plays: "2309192",
-      cover: artist?.picture || artist?.cover || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop",
-      explicit: true
-    },
-    {
-      id: 3,
-      title: "Nouvelle Chanson",
-      album: "Album 3",
-      duration: "2:58",
-      plays: "1892347",
-      cover: artist?.picture || artist?.cover || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop"
-    },
-    {
-      id: 4,
-      title: "Hit du Moment",
-      album: "Album 4",
-      duration: "3:45",
-      plays: "4567891",
-      cover: artist?.picture || artist?.cover || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop"
-    }
-  ];
+        // 2) Top tracks
+        setTracksLoading(true);
+        const top = await service.getArtistTopTracks(id);
+        const deezerData = top?.data?.data || top?.data || top || [];
+        const mapped = (deezerData || []).map(t => ({
+          id: t.id,
+          title: t.title,
+          album: t.album?.title || '',
+          duration: formatDuration(t.duration),
+          rawDuration: t.duration || 0,
+          plays: t.rank ? t.rank.toLocaleString('fr-FR') : '',
+          cover: t.album?.cover_medium || t.album?.cover || artist?.picture || artist?.cover,
+          preview: t.preview || null,
+          explicit: !!t.explicit_lyrics,
+          artistName: t.artist?.name || found?.name || 'Artiste inconnu'
+        }));
+        setTopTracks(mapped);
+      } catch (e) {
+        console.error('Erreur chargement artiste/top tracks:', e);
+        toast.error("Impossible de charger les titres de l'artiste");
+      } finally {
+        setTracksLoading(false);
+      }
+    };
+
+    loadArtist();
+  }, [id, popularArtists, service]);
 
   const handlePlaySong = (track) => {
+    if (!track?.preview) {
+      toast.error("Aperçu non disponible pour cette piste");
+      return;
+    }
     const song = {
       _id: track.id,
       title: track.title,
-      artist: artist?.name || 'Artiste inconnu',
+      artist: track.artistName || artist?.name || 'Artiste inconnu',
       cover: track.cover,
       album: track.album,
-      duration: track.duration,
+      duration: track.rawDuration,
+      audioUrl: track.preview,
       isDeezer: true
     };
-    
     playTrack(song);
     setIsPlaying(true);
     toast.success(`Lecture de ${track.title}`);
   };
 
   const handleAddToQueue = (track) => {
+    if (!track?.preview) {
+      toast.error("Aperçu non disponible pour cette piste");
+      return;
+    }
     const song = {
       _id: track.id,
       title: track.title,
-      artist: artist?.name || 'Artiste inconnu',
+      artist: track.artistName || artist?.name || 'Artiste inconnu',
       cover: track.cover,
       album: track.album,
-      duration: track.duration,
+      duration: track.rawDuration,
+      audioUrl: track.preview,
       isDeezer: true
     };
-    
     addToQueue(song);
     toast.success('Ajouté à la file d\'attente');
   };
@@ -109,8 +122,10 @@ const Artist = () => {
   };
 
   const handlePlayArtist = () => {
-    if (popularTracks.length > 0) {
-      handlePlaySong(popularTracks[0]);
+    if (topTracks.length > 0) {
+      handlePlaySong(topTracks[0]);
+    } else {
+      toast.error("Pas de titres disponibles pour cet artiste");
     }
   };
 
@@ -157,7 +172,7 @@ const Artist = () => {
         {/* Informations de l'artiste */}
         <div className="absolute bottom-6 left-6 right-6">
           <h1 className="text-5xl font-bold mb-2">{artist.name}</h1>
-          <p className="text-gray-300 text-lg">408 419 auditeurs mensuels</p>
+          <p className="text-gray-300 text-lg">{artist.nb_fan ? artist.nb_fan.toLocaleString('fr-FR') : '—'} auditeurs mensuels</p>
         </div>
       </div>
 
@@ -198,80 +213,86 @@ const Artist = () => {
         {/* Section Chansons populaires */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold mb-6">Populaires</h2>
-          
-          <div className="space-y-2">
-            {popularTracks.map((track, index) => (
-              <div 
-                key={track.id} 
-                className="group flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-800/50 transition-colors cursor-pointer"
-              >
-                <div className="w-12 h-12 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden flex-shrink-0">
-                  <img
-                    src={track.cover}
-                    alt={track.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center space-x-2">
-                    <h3 className="font-medium text-white truncate">{track.title}</h3>
-                    {track.explicit && (
-                      <span className="bg-gray-700 text-white text-xs px-1 py-0.5 rounded">E</span>
-                    )}
+          {tracksLoading ? (
+            <div className="text-gray-400">Chargement des titres…</div>
+          ) : (
+            <div className="space-y-2">
+              {topTracks.map((track) => (
+                <div 
+                  key={track.id} 
+                  className="group flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-800/50 transition-colors cursor-pointer"
+                >
+                  <div className="w-12 h-12 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden flex-shrink-0">
+                    <img
+                      src={track.cover}
+                      alt={track.title}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                  <p className="text-sm text-gray-400 truncate">{track.album}</p>
-                </div>
 
-                <div className="flex items-center space-x-4 text-sm text-gray-400">
-                  <span className="hidden md:block">{track.plays}</span>
-                  <span>{track.duration}</span>
-                  
-                  {/* Boutons d'action - visibles au survol */}
-                  <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handlePlaySong(track);
-                      }}
-                      className="p-2 rounded-full bg-green-500 hover:bg-green-400 transition-colors"
-                    >
-                      <Play className="h-4 w-4 text-black ml-0.5" />
-                    </button>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-2">
+                      <h3 className="font-medium text-white truncate">{track.title}</h3>
+                      {track.explicit && (
+                        <span className="bg-gray-700 text-white text-xs px-1 py-0.5 rounded">E</span>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-400 truncate">{track.album}</p>
+                  </div>
+
+                  <div className="flex items-center space-x-4 text-sm text-gray-400">
+                    {track.plays && <span className="hidden md:block">{track.plays}</span>}
+                    <span>{track.duration}</span>
                     
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAddToQueue(track);
-                      }}
-                      className="p-2 rounded-full bg-gray-700 hover:bg-gray-600 transition-colors"
-                    >
-                      <Music2 className="h-4 w-4 text-white" />
-                    </button>
-                    
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleLike(track.id);
-                      }}
-                      className={`p-2 rounded-full transition-colors ${
-                        likedTracks.includes(track.id) 
-                          ? 'bg-red-500 hover:bg-red-400' 
-                          : 'bg-gray-700 hover:bg-gray-600'
-                      }`}
-                    >
-                      <Heart className={`h-4 w-4 ${
-                        likedTracks.includes(track.id) ? 'text-white fill-white' : 'text-white'
-                      }`} />
-                    </button>
+                    {/* Boutons d'action - visibles au survol */}
+                    <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePlaySong(track);
+                        }}
+                        className="p-2 rounded-full bg-green-500 hover:bg-green-400 transition-colors"
+                      >
+                        <Play className="h-4 w-4 text-black ml-0.5" />
+                      </button>
+                      
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAddToQueue(track);
+                        }}
+                        className="p-2 rounded-full bg-gray-700 hover:bg-gray-600 transition-colors"
+                      >
+                        <Music2 className="h-4 w-4 text-white" />
+                      </button>
+                      
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleLike(track.id);
+                        }}
+                        className={`p-2 rounded-full transition-colors ${
+                          likedTracks.includes(track.id) 
+                            ? 'bg-red-500 hover:bg-red-400' 
+                            : 'bg-gray-700 hover:bg-gray-600'
+                        }`}
+                      >
+                        <Heart className={`h-4 w-4 ${
+                          likedTracks.includes(track.id) ? 'text-white fill-white' : 'text-white'
+                        }`} />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+              {topTracks.length === 0 && (
+                <div className="text-gray-400">Aucun titre disponible.</div>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Section Albums */}
+        {/* Section Albums (placeholder visuel) */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold mb-6">Albums</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
@@ -288,7 +309,7 @@ const Artist = () => {
                   
                   {/* Bouton play - Style Spotify */}
                   <button 
-                    onClick={() => handlePlaySong({ id: album, title: `Album ${album}` })}
+                    onClick={() => handlePlaySong({ id: album, title: `Album ${album}`, preview: null })}
                     className="absolute bottom-3 right-3 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 hover:bg-green-400 shadow-2xl"
                   >
                     <Play className="h-6 w-6 text-black ml-0.5" />
