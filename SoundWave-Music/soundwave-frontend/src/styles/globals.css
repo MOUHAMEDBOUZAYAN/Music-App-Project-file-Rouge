@@ -56,6 +56,14 @@ footer {
   width: 100% !important;
 }
 
+/* Fix white gap on mobile when sidebar is off-canvas */
+.lg\\:static ~ main {
+  background: #000;
+}
+
+/* Ensure body background always black */
+html, body, #root { background: #000; }
+
 /* Layout principal */
 .min-h-screen {
   min-height: 100vh;

@@ -596,11 +596,11 @@ const Home = () => {
       `}</style>
 
       {/* Barre de lecture de musique fixe - Design Spotify */}
-      <div className={`fixed bottom-0 bg-black border-t border-gray-800 z-[9999] transition-all duration-300 ${
+      <div className={`fixed hidden bottom-0 bg-black border-t border-gray-800 z-[9999] transition-all  duration-300 ${
         isSidebarOpen ? 'left-64 right-0' : 'left-0 right-0'
       }`}>
         <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between ">
             {/* Informations de la piste actuelle */}
             <div className="flex items-center space-x-4 min-w-0 flex-1">
               <div className="w-14 h-14 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg flex items-center justify-center border border-gray-700">

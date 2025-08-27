@@ -14,6 +14,7 @@ import {
   Crown
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import Logo from './Logo';
 
 const Header = () => {
   const { user, logout } = useAuth();
@@ -49,10 +50,14 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-black border-b border-gray-800/50 py-6 sticky top-0 z-50" style={{ margin: 0, padding: 0, marginLeft: 0, marginRight: 0 }}>
+    <header className="bg-black border-b border-gray-800/50 py-6 sticky top-0 z-50 hidden lg:block" style={{ margin: 0, padding: 0, marginLeft: 0, marginRight: 0 }}>
       <div className="flex items-center justify-between px-8 pl-8">
         {/* Navigation et recherche */}
         <div className="flex items-center space-x-8 flex-1">
+          {/* Logo */}
+          <div className="hidden xl:block">
+            <Logo size={40} withText={true} />
+          </div>
           {/* Boutons de navigation avec espacement augmenté */}
           <div className="flex space-x-3 ml-10">
             <button className="p-2.5 rounded-full bg-gray-800/80 hover:bg-gray-700 transition-all duration-200 hover:scale-105">

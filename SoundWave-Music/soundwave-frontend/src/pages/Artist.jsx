@@ -16,7 +16,8 @@ import {
   Music,
   MapPin,
   Disc,
-  Calendar
+  Calendar,
+  Phone
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useMusic } from '../store/MusicContext';
@@ -246,7 +247,7 @@ const Artist = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-black text-white pb-48 md:pb-32">
       {/* Header avec bouton retour seulement - Style Spotify */}
       <div className="sticky top-0 z-10 bg-black/80 backdrop-blur-xl border-b border-gray-800/50">
         <div className="px-6 py-4">
@@ -283,6 +284,81 @@ const Artist = () => {
         </div>
       </div>
 
+      {/* Actions (favori comme Spotify) */}
+      <div className="px-6 pt-3">
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={handleToggleFollow}
+            className={`p-3 rounded-full transition-colors ${
+              isFollowing ? 'bg-green-500 text-black' : 'bg-gray-800 text-white hover:bg-gray-700'
+            }`}
+            aria-label={isFollowing ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+            title={isFollowing ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+          >
+            <Heart className={`h-5 w-5 ${isFollowing ? 'fill-current' : ''}`} />
+          </button>
+          <button className="p-3 rounded-full bg-gray-800 text-white hover:bg-gray-700" aria-label="Partager">
+            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17V7h2v7.17l3.59-3.59L17 10l-5 5z"/>
+            </svg>
+          </button>
+          <button className="p-3 rounded-full bg-gray-800 text-white hover:bg-gray-700" aria-label="Plus d'options">
+            <MoreHorizontal className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Bouton de lecture principal - Style Spotify exact */}
+      <div className="px-6 pt-4">
+        <button
+          onClick={handlePlayArtist}
+          className="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center shadow-xl hover:scale-105 hover:bg-green-400 transition-all duration-200"
+          aria-label="Lecture aléatoire"
+        >
+          <Play className="h-8 w-8 text-black ml-1" />
+        </button>
+      </div>
+
+      {/* Logo de l'app */}
+      <div className="px-6 pt-3">
+        <div className="flex items-center space-x-2">
+          <img src="/icons/LogoS.svg" alt="SoundWave" className="w-6 h-6" />
+          <span className="text-gray-400 text-sm">SoundWave</span>
+        </div>
+      </div>
+
+      {/* Description de l'artiste - Style Spotify */}
+      <div className="px-6 pt-2">
+        <p className="text-gray-300 text-sm leading-relaxed">
+          {artist.name} est un artiste urbain marocain qui mélange avec brio le rap traditionnel et les sonorités modernes. 
+          Ses textes percutants et ses mélodies entraînantes ont conquis des millions d'auditeurs à travers le monde.
+        </p>
+      </div>
+
+      {/* Statistiques de l'artiste - Style Spotify */}
+      <div className="px-6 pt-4">
+        <div className="flex items-center space-x-6 text-sm">
+          <div className="flex items-center space-x-2">
+            <Users className="w-4 h-4 text-gray-400" />
+            <span className="text-gray-400">
+              {artist.nb_fan ? artist.nb_fan.toLocaleString('fr-FR') : '944 008'} auditeurs mensuels
+            </span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Music className="w-4 h-4 text-gray-400" />
+            <span className="text-gray-400">
+              {topTracks.length} titres populaires
+            </span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Disc className="w-4 h-4 text-gray-400" />
+            <span className="text-gray-400">
+              {albums.length} albums
+            </span>
+          </div>
+        </div>
+      </div>
+
       {/* Section Chansons populaires - Style Spotify exact avec numérotation 1-5 */}
       <div className="px-6 py-6">
         <div className="mb-8">
@@ -290,99 +366,78 @@ const Artist = () => {
           {tracksLoading ? (
             <div className="text-gray-400">Chargement des titres…</div>
           ) : (
-            <div className="space-y-1">
-              {topTracks.slice(0, displayedTracks).map((track, index) => (
-                <div 
-                  key={track.id} 
-                  className="group flex items-center p-4 rounded-lg hover:bg-gray-800/50 transition-colors cursor-pointer"
-                >
-                  {/* Numéro de la piste - Style Spotify */}
-                  <div className="w-8 h-8 flex items-center justify-center text-gray-400 group-hover:text-white transition-colors font-medium flex-shrink-0 mr-8">
-                    {index + 1}
-                  </div>
-
-                  {/* Image de la piste - Utilise la vraie image de l'album */}
-                  <div className="w-12 h-12 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden flex-shrink-0 mr-12">
-                    <img
-                      src={track.cover || `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=${index + 1}`}
-                      alt={track.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-
-                  {/* Informations de la piste avec espacement */}
-                  <div className="flex-1 min-w-0 mr-8">
-                    <div className="flex items-center space-x-2">
-                      <h3 className="font-medium text-white truncate">{track.title}</h3>
-                      {track.explicit && (
-                        <span className="bg-gray-700 text-white text-xs px-1 py-0.5 rounded">E</span>
-                      )}
+            <>
+              {/* Liste compacte mobile comme Spotify */}
+              <div className="md:hidden divide-y divide-gray-800 rounded-lg overflow-hidden bg-transparent">
+                {topTracks.slice(0, displayedTracks).map((track, index) => (
+                  <div key={track.id} className="flex items-center px-3 py-3 hover:bg-gray-800/50 transition-colors">
+                    <span className="w-6 text-gray-400 mr-3 text-sm font-medium">{index + 1}</span>
+                    <div className="w-12 h-12 rounded bg-gray-800 overflow-hidden mr-3 flex-shrink-0">
+                      <img src={track.cover} alt={track.title} className="w-full h-full object-cover" />
                     </div>
-                    <p className="text-sm text-gray-400 truncate">{track.album}</p>
-                  </div>
-
-                  {/* Statistiques et actions - Style Spotify exact */}
-                  <div className="flex items-center space-x-8 text-sm text-gray-400 flex-shrink-0">
-                    {/* Nombre d'écoutes */}
-                    <span className="hidden lg:block w-24 text-right mr-8">{track.plays || '—'}</span>
-                    
-                    {/* Durée */}
-                    <span className="w-16 text-right mr-8">{track.duration}</span>
-                    
-                    {/* Boutons d'action - visibles au survol */}
-                    <div className="flex items-center space-x-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handlePlaySong(track);
-                        }}
-                        className="p-2 rounded-full bg-green-500 hover:bg-green-400 transition-colors"
-                      >
-                        <Play className="h-4 w-4 text-black ml-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-white text-sm font-medium truncate">{track.title}</div>
+                      <div className="text-gray-400 text-xs truncate">{track.album}</div>
+                    </div>
+                    <div className="ml-3 flex items-center space-x-3">
+                      <button onClick={() => toggleLike(track.id)} className="text-gray-300 hover:text-white transition-colors">
+                        <Heart className="h-4 w-4" />
                       </button>
-                      
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAddToQueue(track);
-                        }}
-                        className="p-2 rounded-full bg-gray-700 hover:bg-gray-600 transition-colors"
-                      >
-                        <Music2 className="h-4 w-4 text-white" />
-                      </button>
-                      
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleLike(track.id);
-                        }}
-                        className={`p-2 rounded-full transition-colors ${
-                          likedTracks.includes(track.id) 
-                            ? 'bg-red-500 hover:bg-red-400' 
-                            : 'bg-gray-700 hover:bg-gray-600'
-                        }`}
-                      >
-                        <Heart className={`h-4 w-4 ${
-                          likedTracks.includes(track.id) ? 'text-white fill-white' : 'text-white'
-                        }`} />
+                      <button onClick={() => handlePlaySong(track)} className="w-8 h-8 rounded-full bg-green-500 text-black flex items-center justify-center hover:scale-105 transition-transform">
+                        <Play className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
-                </div>
-              ))}
-              {topTracks.length === 0 && (
-                <div className="text-gray-400">Aucun titre disponible.</div>
-              )}
+                ))}
+              </div>
+
+              {/* Liste desktop actuelle */}
+              <div className="hidden md:block space-y-1">
+                {topTracks.slice(0, displayedTracks).map((track, index) => (
+                  <div 
+                    key={track.id} 
+                    className="group flex items-center p-4 rounded-lg hover:bg-gray-800/50 transition-colors cursor-pointer"
+                  >
+                    <div className="w-8 h-8 flex items-center justify-center text-gray-400 group-hover:text-white transition-colors font-medium flex-shrink-0 mr-8">
+                      {index + 1}
+                    </div>
+                    <div className="w-12 h-12 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden flex-shrink-0 mr-12">
+                      <img src={track.cover} alt={track.title} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-1 min-w-0 mr-8">
+                      <div className="flex items-center space-x-2">
+                        <h3 className="font-medium text-white truncate">{track.title}</h3>
+                        {track.explicit && (<span className="bg-gray-700 text-white text-xs px-1 py-0.5 rounded">E</span>)}
+                      </div>
+                      <p className="text-sm text-gray-400 truncate">{track.album}</p>
+                    </div>
+                    <div className="flex items-center space-x-8 text-sm text-gray-400 flex-shrink-0">
+                      <span className="hidden lg:block w-24 text-right mr-8">{track.plays || '—'}</span>
+                      <span className="w-16 text-right mr-8">{track.duration}</span>
+                      <div className="flex items-center space-x-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={(e) => { e.stopPropagation(); handlePlaySong(track); }} className="p-2 rounded-full bg-green-500 hover:bg-green-400 transition-colors">
+                          <Play className="h-4 w-4 text-black ml-0.5" />
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); handleAddToQueue(track); }} className="p-2 rounded-full bg-gray-700 hover:bg-gray-600 transition-colors">
+                          <Music2 className="h-4 w-4 text-white" />
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); toggleLike(track.id); }} className={`p-2 rounded-full transition-colors ${likedTracks.includes(track.id) ? 'bg-red-500 hover:bg-red-400' : 'bg-gray-700 hover:bg-gray-600'}`}>
+                          <Heart className={`h-4 w-4 ${likedTracks.includes(track.id) ? 'text-white fill-white' : 'text-white'}`} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {topTracks.length === 0 && (<div className="text-gray-400">Aucun titre disponible.</div>)}
               {topTracks.length > displayedTracks && (
-                <button 
-                  onClick={handleShowMore}
-                  className="text-gray-400 hover:text-white text-sm font-medium mt-4 px-4 py-2 rounded-lg hover:bg-gray-800/50 transition-all duration-200 flex items-center space-x-2"
-                >
+                <button onClick={handleShowMore} className="text-gray-400 hover:text-white text-sm font-medium mt-4 px-4 py-2 rounded-lg hover:bg-gray-800/50 transition-all duration-200 flex items-center space-x-2">
                   <span>Afficher plus</span>
                   <ChevronRight className="h-4 w-4" />
                 </button>
               )}
-            </div>
+            </>
           )}
         </div>
 
@@ -508,56 +563,56 @@ const Artist = () => {
                 id: '1',
                 title: `This Is ${artist.name}`, 
                 subtitle: `${artist.name}. Les titres incontournables, réunis...`, 
-                cover: 'https://picsum.photos/300/300?random=1',
+                cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=80',
                 type: 'Playlist'
               },
               { 
                 id: '2',
                 title: `Radio ${artist.name}`, 
                 subtitle: 'Avec Inkonnu, Shaw, Snor et bien d\'autres...', 
-                cover: 'https://picsum.photos/300/300?random=2',
+                cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=81',
                 type: 'Playlist'
               },
               { 
                 id: '3',
                 title: 'Hit Maghribi', 
                 subtitle: 'From Morocco to the world. Cover: 7ari,..', 
-                cover: 'https://picsum.photos/300/300?random=3',
+                cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=82',
                 type: 'Playlist'
               },
               { 
                 id: '4',
                 title: 'ABATERA', 
                 subtitle: `Cover: ${artist.name}`, 
-                cover: 'https://picsum.photos/300/300?random=4',
+                cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=83',
                 type: 'Playlist'
               },
               { 
                 id: '5',
                 title: 'Hot Hits Morocco', 
                 subtitle: 'Les hits du moment. Cover: TIF, ElGrandeToto', 
-                cover: 'https://picsum.photos/300/300?random=5',
+                cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=84',
                 type: 'Playlist'
               },
               { 
                 id: '6',
                 title: 'SEHD', 
                 subtitle: 'Vibrez au rythme des morceaux urbains et Af..', 
-                cover: 'https://picsum.photos/300/300?random=6',
+                cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=85',
                 type: 'Playlist'
               },
               { 
                 id: '7',
                 title: 'Moroccan Rap Essentials', 
                 subtitle: 'Les titres cultes du Hip-Hop Marocain...', 
-                cover: 'https://picsum.photos/300/300?random=7',
+                cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=86',
                 type: 'Playlist'
               },
               { 
                 id: '8',
                 title: 'Urban Vibes Morocco', 
                 subtitle: 'Le meilleur du rap urbain marocain...', 
-                cover: 'https://picsum.photos/300/300?random=8',
+                cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=87',
                 type: 'Playlist'
               }
             ].map((playlist, index) => (
@@ -688,56 +743,56 @@ const Artist = () => {
         {/* Section "Découvert sur" - Style Spotify amélioré */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold mb-6">Découvert sur</h2>
-          <div className="flex space-x-4 overflow-x-auto pb-4 scrollbar-hide">
+          <div className="flex space-x-4 overflow-x-auto pb-4">
             {[
               { 
                 title: 'Ek Tha Raja', 
                 subtitle: '2024 • Album', 
-                cover: 'https://i.scdn.co/image/ab67616d0000b273c8a11e48c91e8f66b6c4b0c4',
+                cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=60',
                 type: 'Album'
               },
               { 
                 title: 'ICEBERG', 
                 subtitle: '2024 • Album', 
-                cover: 'https://i.scdn.co/image/ab67616d0000b273b0fe48d6f2e2481d54be8f0b5',
+                cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=61',
                 type: 'Album'
               },
               { 
                 title: '101', 
                 subtitle: '2025 • Album', 
-                cover: 'https://i.scdn.co/image/ab67616d0000b273c414e7daf34690c9f983f76e2',
+                cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=62',
                 type: 'Album'
               },
               { 
                 title: 'Hybrid', 
                 subtitle: '2024 • Album', 
-                cover: 'https://i.scdn.co/image/ab67616d0000b273c8a11e48c91e8f66b6c4b0c4',
+                cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=63',
                 type: 'Album',
                 explicit: true
               },
               { 
                 title: 'PIZZA KEBAB Vol. 1', 
                 subtitle: '2023 • Album', 
-                cover: 'https://i.scdn.co/image/ab67616d0000b273b0fe48d6f2e2481d54be8f0b5',
+                cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=64',
                 type: 'Album',
                 explicit: true
               },
               { 
                 title: 'Moroccan Dream', 
                 subtitle: '2020 • Album', 
-                cover: 'https://i.scdn.co/image/ab67616d0000b273c414e7daf34690c9f983f76e2',
+                cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=65',
                 type: 'Album'
               },
               { 
                 title: 'Urban Vibes', 
                 subtitle: '2023 • EP', 
-                cover: 'https://i.scdn.co/image/ab67616d0000b273c8a11e48c91e8f66b6c4b0c4',
+                cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=66',
                 type: 'EP'
               },
               { 
                 title: 'Street Poetry', 
                 subtitle: '2022 • Album', 
-                cover: 'https://i.scdn.co/image/ab67616d0000b273b0fe48d6f2e2481d54be8f0b5',
+                cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=67',
                 type: 'Album'
               }
             ].map((release, index) => (
@@ -806,23 +861,119 @@ const Artist = () => {
           </button>
         </div>
 
-        {/* Section "Apparaît sur" - Style Spotify */}
+        {/* Section "Playlists recommandées" - Style Spotify */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-6">Playlists recommandées</h2>
+          <div className="flex space-x-4 overflow-x-auto pb-4 scrollbar-hide">
+            {[
+              { 
+                title: 'Moroccan Hip-Hop Mix', 
+                subtitle: 'Le meilleur du rap marocain', 
+                cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=90',
+                type: 'Playlist'
+              },
+              { 
+                title: 'Urban Morocco', 
+                subtitle: 'Vibes urbaines du Maroc', 
+                cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=91',
+                type: 'Playlist'
+              },
+              { 
+                title: 'Rap Essentials', 
+                subtitle: 'Les classiques du rap', 
+                cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=92',
+                type: 'Playlist'
+              },
+              { 
+                title: 'Moroccan Vibes', 
+                subtitle: 'Culture et musique du Maroc', 
+                cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=93',
+                type: 'Playlist'
+              }
+            ].map((playlist, index) => (
+              <div key={index} className="flex-shrink-0 w-48 group cursor-pointer">
+                <div className="relative mb-3">
+                  <div className="aspect-square bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden border border-gray-700 group-hover:border-green-500 transition-all duration-300 shadow-xl group-hover:shadow-green-500/25">
+                    <img
+                      src={playlist.cover}
+                      alt={playlist.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                  
+                  <button className="absolute bottom-3 right-3 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 hover:bg-green-400 shadow-2xl">
+                    <Play className="h-6 w-6 text-black ml-0.5" />
+                  </button>
+                </div>
+                
+                <h3 className="font-bold text-sm mb-1 truncate group-hover:text-green-400 transition-colors text-white">
+                  {playlist.title}
+                </h3>
+                <p className="text-sm text-gray-400 truncate leading-tight">
+                  {playlist.subtitle}
+                </p>
+              </div>
+            ))}
+          </div>
+          
+          <button className="text-gray-400 hover:text-white text-sm font-medium mt-4 flex items-center">
+            Tout afficher <ChevronRight className="h-4 w-4 ml-1" />
+          </button>
+        </div>
+
+        {/* Section "Apparaît sur" - Style Spotify amélioré */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold mb-6">Apparaît sur</h2>
           <div className="flex space-x-4 overflow-x-auto pb-4">
             {[
-              { title: 'Colors', year: '2021', type: 'Album', cover: 'colors' },
-              { title: 'Moroccan Dream', year: '2020', type: 'Album', cover: 'moroccan' },
-              { title: 'VENOM', year: '2022', type: 'Album', cover: 'venom' },
-              { title: 'BALA W FAS', year: '2025', type: 'Album', cover: 'bala' },
-              { title: 'Ghandirha', year: '2020', type: 'Single', cover: 'ghandirha' },
-              { title: '6 Fi9', year: '2023', type: 'Single', cover: '6fi9' }
+              { 
+                title: 'Colors', 
+                year: '2021', 
+                type: 'Album', 
+                cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=70',
+                artist: 'Various Artists'
+              },
+              { 
+                title: 'Moroccan Dream', 
+                year: '2020', 
+                type: 'Album', 
+                cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=71',
+                artist: 'Morocco Collective'
+              },
+              { 
+                title: 'VENOM', 
+                year: '2022', 
+                type: 'Album', 
+                cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=72',
+                artist: 'Urban Records'
+              },
+              { 
+                title: 'BALA W FAS', 
+                year: '2025', 
+                type: 'Album', 
+                cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=73',
+                artist: 'Moroccan Vibes'
+              },
+              { 
+                title: 'Ghandirha', 
+                year: '2020', 
+                type: 'Single', 
+                cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=74',
+                artist: 'Hip-Hop Morocco'
+              },
+              { 
+                title: '6 Fi9', 
+                year: '2023', 
+                type: 'Single', 
+                cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=75',
+                artist: 'Urban Morocco'
+              }
             ].map((release, index) => (
               <div key={index} className="flex-shrink-0 w-48 group cursor-pointer">
                 <div className="relative mb-3">
                   <div className="aspect-square bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden border border-gray-700 group-hover:border-green-500 transition-all duration-300">
                     <img
-                      src={`https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=${index + 40}`}
+                      src={release.cover}
                       alt={release.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
@@ -837,7 +988,7 @@ const Artist = () => {
                   {release.title}
                 </h3>
                 <p className="text-sm text-gray-400 truncate">
-                  {release.year} • {release.type}
+                  {release.artist} • {release.year} • {release.type}
                 </p>
               </div>
             ))}
@@ -847,6 +998,109 @@ const Artist = () => {
             Tout afficher <ChevronRight className="h-4 w-4 ml-1" />
           </button>
         </div>
+
+        {/* Section finale - Informations supplémentaires */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-6">Informations</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-gray-800/30 rounded-lg p-6 border border-gray-700/50">
+              <h3 className="text-lg font-semibold mb-4 text-white">Biographie</h3>
+              <p className="text-gray-300 text-sm leading-relaxed">
+                {artist.name} est né au Maroc et a commencé sa carrière musicale en 2018. 
+                Il s'est fait connaître grâce à son style unique qui mélange le rap traditionnel 
+                avec des influences modernes et internationales.
+              </p>
+            </div>
+            
+            <div className="bg-gray-800/30 rounded-lg p-6 border border-gray-700/50">
+              <h3 className="text-lg font-semibold mb-4 text-white">Récompenses</h3>
+              <div className="space-y-2 text-sm text-gray-300">
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="w-4 h-4 text-green-400" />
+                  <span>Meilleur artiste urbain 2024</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="w-4 h-4 text-green-400" />
+                  <span>Album de l'année - ICEBERG</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="w-4 h-4 text-green-400" />
+                  <span>Révélation de l'année 2020</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Section finale - Liens sociaux et contact */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-6">Liens et contact</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-gray-800/30 rounded-lg p-6 border border-gray-700/50">
+              <h3 className="text-lg font-semibold mb-4 text-white">Réseaux sociaux</h3>
+              <div className="space-y-3 text-sm">
+                <div className="flex items-center space-x-3 text-gray-300 hover:text-white transition-colors cursor-pointer">
+                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">f</span>
+                  </div>
+                  <span>Facebook</span>
+                </div>
+                <div className="flex items-center space-x-3 text-gray-300 hover:text-white transition-colors cursor-pointer">
+                  <div className="w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">t</span>
+                  </div>
+                  <span>Twitter</span>
+                </div>
+                <div className="flex items-center space-x-3 text-gray-300 hover:text-white transition-colors cursor-pointer">
+                  <div className="w-8 h-8 bg-pink-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">ig</span>
+                  </div>
+                  <span>Instagram</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-gray-800/30 rounded-lg p-6 border border-gray-700/50">
+              <h3 className="text-lg font-semibold mb-4 text-white">Contact professionnel</h3>
+              <div className="space-y-3 text-sm text-gray-300">
+                <div className="flex items-center space-x-3">
+                  <Mail className="w-4 h-4 text-green-400" />
+                  <span>contact@{artist.name?.toLowerCase()}.com</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Phone className="w-4 h-4 text-green-400" />
+                  <span>+212 6 XX XX XX XX</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <MapPin className="w-4 h-4 text-green-400" />
+                  <span>Casablanca, Maroc</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-gray-800/30 rounded-lg p-6 border border-gray-700/50">
+              <h3 className="text-lg font-semibold mb-4 text-white">Statistiques</h3>
+              <div className="space-y-3 text-sm text-gray-300">
+                <div className="flex justify-between">
+                  <span>Écoutes totales</span>
+                  <span className="font-semibold">2.5M+</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Abonnés</span>
+                  <span className="font-semibold">150K+</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Pays</span>
+                  <span className="font-semibold">45+</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        
+
+
       </div>
     </div>
   );

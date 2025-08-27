@@ -2,9 +2,18 @@ import React from 'react';
 import { 
   Instagram, 
   Twitter, 
+  Linkedin,
   Facebook, 
   Globe,
-  Heart
+  Heart,
+  Play,
+  Music,
+  Users,
+  Mail,
+  Phone,
+  MapPin,
+  ExternalLink,
+  ChevronRight
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -12,202 +21,225 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-black text-white border-t border-gray-800 pb-32">
-      <div className="max-w-7xl mx-auto px-3 xs:px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
-        {/* Logo et liens principaux */}
-        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 xs:gap-5 sm:gap-6 lg:gap-8 mb-6 sm:mb-8">
-          {/* Logo SoundWave */}
-          <div className="xs:col-span-2 sm:col-span-2 lg:col-span-1">
-            <div className="mb-4 sm:mb-6">
-              <h2 className="text-lg xs:text-xl sm:text-2xl font-bold text-white">SoundWave</h2>
-              <p className="text-gray-400 text-xs xs:text-sm mt-2 leading-relaxed">
-                Découvrez, écoutez et partagez votre musique
-              </p>
+    <footer className="bg-black text-white border-t border-gray-800/50 mb-16">
+      <div className="max-w-7xl mx-auto px-6 py-16">
+        {/* Section principale avec grille 4 colonnes - Style Spotify */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+          {/* SoundWave - Logo et description */}
+          <div className="lg:col-span-1">
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                <span className="text-white text-lg font-bold">S</span>
+              </div>
+              <span className="text-white text-2xl font-bold">SoundWave</span>
             </div>
+            <p className="text-gray-400 text-sm leading-relaxed mb-6">
+              Découvrez, écoutez et partagez la musique que vous aimez. 
+              Rejoignez des millions d'auditeurs à travers le monde.
+            </p>
             
-            {/* Icônes réseaux sociaux */}
-            <div className="flex space-x-2 xs:space-x-3 sm:space-x-4">
+            {/* Réseaux sociaux avec design moderne */}
+            <div className="flex space-x-4">
               <a 
                 href="#" 
-                className="w-7 h-7 xs:w-8 xs:h-8 sm:w-10 sm:h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-pink-700 transition-colors"
+                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-pink-600 transition-all duration-300 hover:scale-110"
                 aria-label="Instagram"
               >
-                <Instagram className="h-3.5 w-3.5 xs:h-4 xs:w-4 sm:h-5 sm:w-5 text-white" />
+                <Instagram className="h-5 w-5 text-white" />
               </a>
               <a 
                 href="#" 
-                className="w-7 h-7 xs:w-8 xs:h-8 sm:w-10 sm:h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-gray-950 transition-colors"
+                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-blue-500 transition-all duration-300 hover:scale-110"
                 aria-label="Twitter"
               >
-                <Twitter className="h-3.5 w-3.5 xs:h-4 xs:w-4 sm:h-5 sm:w-5 text-white" />
+                <Twitter className="h-5 w-5 text-white" />
               </a>
               <a 
                 href="#" 
-                className="w-7 h-7 xs:w-8 xs:h-8 sm:w-10 sm:h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-sky-700 transition-colors"
+                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-blue-700 transition-all duration-300 hover:scale-110"
                 aria-label="Facebook"
               >
-                <Facebook className="h-3.5 w-3.5 xs:h-4 xs:w-4 sm:h-5 sm:w-5 text-white" />
+                <Facebook className="h-5 w-5 text-white" />
+              </a>
+              <a 
+                href="#" 
+                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-blue-600 transition-all duration-300 hover:scale-110"
+                aria-label="LinkedIn"
+              >
+                <Linkedin className="h-5 w-5 text-white" />
               </a>
             </div>
           </div>
 
-          {/* SOCIÉTÉ */}
-          <div className="xs:col-span-1 sm:col-span-1">
-            <h3 className="text-xs xs:text-sm font-semibold text-gray-300 uppercase tracking-wider mb-2 xs:mb-3 sm:mb-4">
-              Société
-            </h3>
-            <ul className="space-y-1.5 xs:space-y-2 sm:space-y-3">
-              <li>
-                <Link to="/about" className="text-gray-400 hover:text-emerald-700 transition-colors text-xs xs:text-sm">
-                  À propos
-                </Link>
-              </li>
-              <li>
-                <Link to="/contact" className="text-gray-400 hover:text-emerald-700 transition-colors text-xs xs:text-sm">
-                  Contact
-                </Link>
-              </li>
-              <li>
-                <a href="#" className="text-gray-400 hover:text-emerald-700 transition-colors text-xs xs:text-sm">
-                  Offres d'emploi
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-400 hover:text-emerald-700 transition-colors text-xs xs:text-sm">
-                  For the Record
-                </a>
-              </li>
-            </ul>
+          {/* Produits */}
+          <div>
+            <h3 className="text-white font-semibold mb-6 text-lg">Produits</h3>
+            <div className="space-y-3">
+              <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200 flex items-center group">
+                <span>SoundWave Free</span>
+                <ExternalLink className="h-3 w-3 ml-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </a>
+              <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200 flex items-center group">
+                <span>SoundWave Premium</span>
+                <ExternalLink className="h-3 w-3 ml-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </a>
+              <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200 flex items-center group">
+                <span>SoundWave Family</span>
+                <ExternalLink className="h-3 w-3 ml-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </a>
+              <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200 flex items-center group">
+                <span>SoundWave Student</span>
+                <ExternalLink className="h-3 w-3 ml-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </a>
+              <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200 flex items-center group">
+                <span>SoundWave Duo</span>
+                <ExternalLink className="h-3 w-3 ml-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </a>
+            </div>
           </div>
 
-          {/* COMMUNAUTÉS */}
-          <div className="xs:col-span-1 sm:col-span-1">
-            <h3 className="text-xs xs:text-sm font-semibold text-gray-300 uppercase tracking-wider mb-2 xs:mb-3 sm:mb-4">
-              Communautés
-            </h3>
-            <ul className="space-y-1.5 xs:space-y-2 sm:space-y-3">
-              <li>
-                <a href="#" className="text-gray-400 hover:text-emerald-700 transition-colors text-xs xs:text-sm">
-                  Espace artistes
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-400 hover:text-emerald-700 transition-colors text-xs xs:text-sm">
-                  Développeurs
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-400 hover:text-emerald-700 transition-colors text-xs xs:text-sm">
-                  Campagnes publicitaires
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-400 hover:text-emerald-700 transition-colors text-xs xs:text-sm">
-                  Investisseurs
-                </a>
-              </li>
-            </ul>
+          {/* Entreprise */}
+          <div>
+            <h3 className="text-white font-semibold mb-6 text-lg">Entreprise</h3>
+            <div className="space-y-3">
+              <Link to="/about" className="text-gray-400 hover:text-white transition-colors duration-200 flex items-center group">
+                <span>À propos</span>
+                <ChevronRight className="h-3 w-3 ml-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </Link>
+              <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200 flex items-center group">
+                <span>Offres d'emploi</span>
+                <ExternalLink className="h-3 w-3 ml-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </a>
+              <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200 flex items-center group">
+                <span>Pour les marques</span>
+                <ExternalLink className="h-3 w-3 ml-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </a>
+              <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200 flex items-center group">
+                <span>Presse</span>
+                <ExternalLink className="h-3 w-3 ml-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </a>
+              <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200 flex items-center group">
+                <span>Investisseurs</span>
+                <ExternalLink className="h-3 w-3 ml-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </a>
+            </div>
           </div>
 
-          {/* LIENS UTILES */}
-          <div className="xs:col-span-1 sm:col-span-1">
-            <h3 className="text-xs xs:text-sm font-semibold text-gray-300 uppercase tracking-wider mb-2 xs:mb-3 sm:mb-4">
-              Liens utiles
-            </h3>
-            <ul className="space-y-1.5 xs:space-y-2 sm:space-y-3">
-              <li>
-                <a href="#" className="text-gray-400 hover:text-emerald-700 transition-colors text-xs xs:text-sm">
-                  Assistance
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-400 hover:text-emerald-700 transition-colors text-xs xs:text-sm">
-                  Lecteur Web
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-400 hover:text-emerald-700 transition-colors text-xs xs:text-sm">
-                  Appli mobile gratuite
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-400 hover:text-emerald-700 transition-colors text-xs xs:text-sm">
-                  Importer votre musique
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* ABONNEMENTS */}
-          <div className="xs:col-span-1 sm:col-span-1">
-            <h3 className="text-xs xs:text-sm font-semibold text-gray-300 uppercase tracking-wider mb-2 xs:mb-3 sm:mb-4">
-              Abonnements
-            </h3>
-            <ul className="space-y-1.5 xs:space-y-2 sm:space-y-3">
-              <li>
-                <a href="#" className="text-gray-400 hover:text-emerald-700 transition-colors text-xs xs:text-sm">
-                  Premium Personnel
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-400 hover:text-emerald-700 transition-colors text-xs xs:text-sm">
-                  Premium Duo
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-400 hover:text-emerald-700 transition-colors text-xs xs:text-sm">
-                  Premium Famille
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-400 hover:text-emerald-700 transition-colors text-xs xs:text-sm">
-                  Premium Étudiants
-                </a>
-              </li>
-            </ul>
+          {/* Communautés */}
+          <div>
+            <h3 className="text-white font-semibold mb-6 text-lg">Communautés</h3>
+            <div className="space-y-3">
+              <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200 flex items-center group">
+                <span>Pour les artistes</span>
+                <ExternalLink className="h-3 w-3 ml-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </a>
+              <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200 flex items-center group">
+                <span>Développeurs</span>
+                <ExternalLink className="h-3 w-3 ml-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </a>
+              <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200 flex items-center group">
+                <span>Publicité</span>
+                <ExternalLink className="h-3 w-3 ml-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </a>
+              <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200 flex items-center group">
+                <span>Investisseurs</span>
+                <ExternalLink className="h-3 w-3 ml-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </a>
+              <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200 flex items-center group">
+                <span>Fournisseurs</span>
+                <ExternalLink className="h-3 w-3 ml-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </a>
+            </div>
           </div>
         </div>
 
-        {/* Séparateur */}
-        <div className="border-t border-gray-800 pt-4 xs:pt-5 sm:pt-6 lg:pt-8">
-          <div className="flex flex-col lg:flex-row justify-between items-center space-y-3 xs:space-y-4 lg:space-y-0">
-            {/* Liens légaux */}
-            <div className="flex flex-wrap justify-center lg:justify-start gap-2 xs:gap-3 sm:gap-4 lg:gap-6 text-xs">
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                Légal
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                Centre de sécurité et de confidentialité
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                Protection des données
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                Cookies
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                À propos des pubs
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                Accessibilité
-              </a>
+        {/* Section contact et informations - Style professionnel */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+          {/* Contact */}
+          <div className="bg-gray-800/30 rounded-lg p-6 border border-gray-700/50">
+            <h3 className="text-white font-semibold mb-4 flex items-center">
+              <Mail className="h-5 w-5 text-green-400 mr-2" />
+              Contact
+            </h3>
+            <div className="space-y-3 text-sm text-gray-300">
+              <div className="flex items-center space-x-3">
+                <Mail className="h-4 w-4 text-green-400" />
+                <span>contact@soundwave.ma</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <Phone className="h-4 w-4 text-green-400" />
+                <span>+212 6 90 81 56 05</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <MapPin className="h-4 w-4 text-green-400" />
+                <span>Beni Mellal, Maroc</span>
+              </div>
             </div>
+          </div>
 
+          {/* Statistiques */}
+          <div className="bg-gray-800/30 rounded-lg p-6 border border-gray-700/50">
+            <h3 className="text-white font-semibold mb-4 flex items-center">
+              <Users className="h-5 w-5 text-blue-400 mr-2" />
+              Statistiques
+            </h3>
+            <div className="space-y-3 text-sm text-gray-300">
+              <div className="flex justify-between">
+                <span>Utilisateurs actifs</span>
+                <span className="font-semibold text-white">2.5M+</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Pays couverts</span>
+                <span className="font-semibold text-white">45+</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Artistes</span>
+                <span className="font-semibold text-white">100K+</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Support */}
+          <div className="bg-gray-800/30 rounded-lg p-6 border border-gray-700/50">
+            <h3 className="text-white font-semibold mb-4 flex items-center">
+              <Music className="h-5 w-5 text-purple-400 mr-2" />
+              Support
+            </h3>
+            <div className="space-y-3 text-sm text-gray-300">
+              <a href="#" className="block hover:text-white transition-colors">Centre d'aide</a>
+              <a href="#" className="block hover:text-white transition-colors">Communauté</a>
+              <a href="#" className="block hover:text-white transition-colors">Statut du service</a>
+              <a href="#" className="block hover:text-white transition-colors">Contact support</a>
+            </div>
+          </div>
+        </div>
+
+        {/* Section finale avec liens légaux et copyright */}
+        <div className="border-t border-gray-800/50 pt-8">
+          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            {/* Liens légaux */}
+            <div className="flex flex-wrap justify-center md:justify-start gap-6 text-sm text-gray-400">
+              <a href="#" className="hover:text-white cursor-pointer transition-colors">Légal</a>
+              <a href="#" className="hover:text-white cursor-pointer transition-colors">Politique de confidentialité</a>
+              <a href="#" className="hover:text-white cursor-pointer transition-colors">Cookies</a>
+              <a href="#" className="hover:text-white cursor-pointer transition-colors">Aide</a>
+              <a href="#" className="hover:text-white cursor-pointer transition-colors">Accessibilité</a>
+            </div>
+            
             {/* Sélecteur de langue et copyright */}
-            <div className="flex flex-col items-center lg:items-end space-y-2 text-center lg:text-right">
+            <div className="flex items-center space-x-6">
               {/* Sélecteur de langue */}
               <div className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors cursor-pointer">
-                <Globe className="h-3.5 w-3.5 xs:h-4 xs:w-4" />
-                <span className="text-xs xs:text-sm">Maroc (français)</span>
+                <Globe className="h-4 w-4" />
+                <span className="text-sm">Maroc (français)</span>
               </div>
               
-              {/* Copyright */}
-              <div className="flex flex-wrap items-center justify-center lg:justify-end gap-1.5 xs:gap-2 text-gray-400 text-xs">
-                <span>© {currentYear} SoundWave AB</span>
-                <span>•</span>
-                <span>Fait avec</span>
-                <Heart className="h-3.5 w-3.5 xs:h-4 xs:w-4 text-red-500" />
-                <span>au Maroc</span>
+              {/* Copyright avec logo */}
+              <div className="flex items-center space-x-3">
+                <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">S</span>
+                </div>
+                <span className="text-gray-400 text-sm">© {currentYear} SoundWave AB</span>
               </div>
             </div>
           </div>

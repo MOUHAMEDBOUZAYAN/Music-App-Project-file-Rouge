@@ -46,12 +46,13 @@ const Sidebar = ({ isOpen, onToggle }) => {
   };
 
   return (
+    <>
     <div className={`
       fixed lg:static inset-y-0 left-0 z-[9998] 
       w-64 bg-black border-r border-gray-800/50
       transform transition-transform duration-300 ease-in-out
       ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-    `} style={{ margin: 0, padding: 0, marginLeft: 0, marginRight: 0 }}>
+    `} style={{ margin: 0, padding: 0, marginLeft: 0, marginRight: 0 , height: '100%' }}>
       <div className="flex flex-col h-full">
         {/* Logo et navigation principale */}
         <div className="flex-shrink-0 p-6">
@@ -156,8 +157,8 @@ const Sidebar = ({ isOpen, onToggle }) => {
           </div>
         </div>
 
-        {/* Section Utilisateur - simplifiée et toujours visible */}
-        <div className="flex-shrink-0 p-4 border-t border-gray-800/50">
+        {/* Section Utilisateur - collée en bas (sticky) */}
+        <div className="mt-auto sticky bottom-0 bg-black p-4 pb-2 border-t border-gray-800/50">
           {/* Profil utilisateur principal */}
           <div className="p-3 bg-gray-800/50 rounded-lg mb-3">
             <div className="flex items-center space-x-3">
@@ -204,6 +205,8 @@ const Sidebar = ({ isOpen, onToggle }) => {
         </div>
       </div>
     </div>
+    {/* Mobile bottom navigation removed per user request */}
+    </>
   );
 };
 

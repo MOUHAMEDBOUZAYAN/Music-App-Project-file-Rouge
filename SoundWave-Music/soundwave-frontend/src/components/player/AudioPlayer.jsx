@@ -14,6 +14,7 @@ import {
   Maximize2,
   Mic2
 } from 'lucide-react';
+import NowPlayingSheet from './NowPlayingSheet';
 import { toast } from 'react-hot-toast';
 import { useMusic } from '../../store/MusicContext';
 
@@ -35,6 +36,7 @@ const AudioPlayer = () => {
   const [isLiked, setIsLiked] = useState(false);
   const [showQueue, setShowQueue] = useState(false);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
   
   const audioRef = useRef(null);
   const progressRef = useRef(null);
@@ -209,12 +211,12 @@ const AudioPlayer = () => {
       />
 
              {/* Barre de lecture (style Spotify) */}
-       <div className="fixed bottom-0 left-64 right-0 bg-black border-t border-gray-800 z-40 lg:left-64">
+       <div className="fixed bottom-12 md:bottom-0 left-0 right-0 bg-black border-t border-gray-800 z-[35] lg:left-64 lg:z-40">
         <div className="px-4 py-2">
-          {/* Barre de progression */}
+          {/* Barre de progression (desktop/tablette) */}
           <div 
             ref={progressRef}
-            className="w-full h-1 bg-gray-600 cursor-pointer hover:h-1.5 transition-all duration-200"
+            className="hidden md:block w-full h-1 bg-gray-600 cursor-pointer hover:h-1.5 transition-all duration-200"
             onClick={handleProgressClick}
           >
             <div 
@@ -223,8 +225,8 @@ const AudioPlayer = () => {
             />
           </div>
 
-          {/* Contrôles principaux */}
-          <div className="flex items-center justify-between h-16">
+          {/* Contrôles principaux (desktop) */}
+          <div className="hidden md:flex items-center justify-between h-16">
             {/* Informations de la piste */}
             <div className="flex items-center space-x-4 flex-1 min-w-0">
               <div className="w-14 h-14 bg-gray-800 rounded flex-shrink-0">
@@ -365,6 +367,23 @@ const AudioPlayer = () => {
               </button>
             </div>
           </div>
+          {/* Barre compacte mobile */}
+          <div className="md:hidden mt-2">
+            <button onClick={() => setIsSheetOpen(true)} className="w-full flex items-center justify-between">
+              <div className="min-w-0">
+                <div className="text-white text-sm font-medium truncate max-w-[12rem]">{currentTrack.title}</div>
+                <div className="text-gray-400 text-xs truncate max-w-[12rem]">{currentTrack.artist}</div>
+              </div>
+              <div className="flex items-center space-x-2 ml-3">
+                <button type="button" onClick={(e) => { e.stopPropagation(); setIsLiked(!isLiked); }} className="p-2 text-gray-300">
+                  <Heart className="h-4 w-4" fill={isLiked ? 'currentColor' : 'none'} />
+                </button>
+                <button type="button" onClick={(e) => { e.stopPropagation(); togglePlayPause(); }} className="w-9 h-9 bg-white text-black rounded-full flex items-center justify-center">
+                  {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+                </button>
+              </div>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -415,6 +434,17 @@ const AudioPlayer = () => {
           </div>
         </div>
       )}
+      {/* Now Playing bottom sheet (mobile) */}
+      <NowPlayingSheet
+        track={currentTrack}
+        isOpen={isSheetOpen}
+        onClose={() => setIsSheetOpen(false)}
+        onPlayPause={togglePlayPause}
+        isPlaying={isPlaying}
+        onNext={nextTrack}
+        onPrevious={previousTrack}
+        onToggleLike={() => setIsLiked(!isLiked)}
+      />
     </>
   );
 };
