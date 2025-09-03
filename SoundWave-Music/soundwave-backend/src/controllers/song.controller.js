@@ -1,7 +1,7 @@
 const Song = require('../models/Song');
 const User = require('../models/User');
 const { AppError } = require('../middleware/error.middleware');
-const { uploadToCloudinary } = require('../services/cloudinary.service');
+// const { uploadToCloudinary } = require('../services/cloudinary.service'); // not used with local storage
 
 // @desc    Rechercher des chansons
 // @route   GET /api/songs
@@ -96,6 +96,8 @@ const getSongById = async (req, res, next) => {
     
     const song = await Song.findById(id)
       .populate('uploader', 'username avatar bio')
+      .populate('artist', 'username name avatar')
+      .populate('album', 'title name cover artwork')
       .populate({
         path: 'comments',
         populate: {
@@ -109,7 +111,7 @@ const getSongById = async (req, res, next) => {
     }
     
     // Incrémenter le nombre de vues
-    song.views += 1;
+    song.views = (song.views || 0) + 1;
     await song.save();
     
     res.json({
@@ -129,13 +131,10 @@ const uploadSong = async (req, res, next) => {
     const { title, artist, album, genre, duration, spotifyId, description } = req.body;
     const uploaderId = req.user._id;
     
-    // Le middleware 'artist' s'assure déjà que l'utilisateur est un artiste ou admin
-    
-    // Upload du fichier audio si présent
+    // Upload du fichier audio si présent (stockage local)
     let audioUrl = null;
-    if (req.file) {
-      const uploadResult = await uploadToCloudinary(req.file, 'songs');
-      audioUrl = uploadResult.secure_url;
+    if (req.file && req.file.filename) {
+      audioUrl = `/uploads/audio/${req.file.filename}`;
     }
     
     const song = await Song.create({
@@ -143,7 +142,7 @@ const uploadSong = async (req, res, next) => {
       artist,
       album,
       genre,
-      duration: parseInt(duration),
+      duration: duration ? parseInt(duration) : undefined,
       spotifyId,
       description,
       audioUrl,
@@ -248,16 +247,14 @@ const likeUnlikeSong = async (req, res, next) => {
       return next(new AppError('Chanson non trouvée', 404));
     }
     
-    const isLiked = song.likes.includes(userId);
+    const isLiked = song.likes.map(id => id.toString()).includes(userId.toString());
     
     if (isLiked) {
       // Ne plus aimer
       song.likes = song.likes.filter(likeId => likeId.toString() !== userId.toString());
-      song.likesCount -= 1;
     } else {
       // Aimer
       song.likes.push(userId);
-      song.likesCount += 1;
     }
     
     await song.save();
@@ -266,11 +263,59 @@ const likeUnlikeSong = async (req, res, next) => {
       success: true,
       data: {
         liked: !isLiked,
-        likesCount: song.likesCount
+        likesCount: song.likes.length
       }
     });
   } catch (error) {
     next(new AppError('Erreur lors de l\'action like', 500));
+  }
+};
+
+// @desc    Obtenir les chansons likées par l'utilisateur connecté
+// @route   GET /api/songs/liked
+// @access  Private
+const getLikedSongs = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const ExternalFavorite = require('../models/ExternalFavorite');
+
+    const songs = await Song.find({ likes: userId })
+      .populate('artist', 'username name')
+      .populate('album', 'title name cover');
+
+    // Fetch external favorites (e.g., Deezer) and return as lightweight entries
+    const externals = await ExternalFavorite.find({ user: userId });
+
+    const response = [
+      ...songs.map(s => ({
+        type: 'local',
+        _id: s._id,
+        title: s.title,
+        artist: s.artist?.name || s.artist?.username,
+        album: s.album?.title || s.album?.name,
+        cover: s.coverImage || s.album?.cover,
+        duration: s.duration,
+        createdAt: s.createdAt
+      })),
+      ...externals.map(e => ({
+        type: 'external',
+        provider: e.provider,
+        externalId: e.externalId,
+        title: e.title,
+        artist: e.artist,
+        album: e.album,
+        cover: e.cover,
+        duration: e.duration,
+        createdAt: e.createdAt
+      }))
+    ];
+
+    res.json({
+      success: true,
+      data: response
+    });
+  } catch (error) {
+    next(new AppError('Erreur lors de la récupération des chansons likées', 500));
   }
 };
 
@@ -424,6 +469,7 @@ module.exports = {
   updateSong,
   deleteSong,
   likeUnlikeSong,
+  getLikedSongs,
   addComment,
   getTrendingSongs,
   getAllSongs

@@ -2,10 +2,15 @@
 import { apiClient, endpoints } from './api.js';
 
 export const songService = {
-  // Rechercher des chansons
+  // Rechercher des chansons (via /api/search/songs)
   searchSongs: async (params = {}) => {
     try {
-      const response = await apiClient.get(endpoints.songs.search, { params });
+      const normalized = { ...params };
+      if (normalized.search && !normalized.q) {
+        normalized.q = normalized.search;
+        delete normalized.search;
+      }
+      const response = await apiClient.get(endpoints.search.songs, { params: normalized });
       return {
         success: true,
         data: response.data

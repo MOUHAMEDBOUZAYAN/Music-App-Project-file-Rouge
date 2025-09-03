@@ -22,38 +22,31 @@ import {
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { useDeezer } from '../store/DeezerContext';
+// import { useDeezer } from '../store/DeezerContext'; // removed
 
 const NewReleases = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const { getNewReleases, loading, error } = useDeezer();
+  // const { getNewReleases, loading, error } = useDeezer(); // removed
   const [isVisible, setIsVisible] = useState(false);
   const [selectedTab, setSelectedTab] = useState('music');
   const [newReleases, setNewReleases] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     setIsVisible(true);
     fetchNewReleases();
   }, []);
 
-  // Fonction pour récupérer les nouvelles sorties depuis l'API Deezer
+  // Remplacer par récupération interne (placeholder pour l’instant)
   const fetchNewReleases = async () => {
     try {
       setIsLoading(true);
-      
-      // Utiliser le service Deezer existant
-      const result = await getNewReleases(20);
-      if (result && result.data) {
-        setNewReleases(result.data);
-      } else {
-        // Si pas de données, afficher un message
-        setNewReleases([]);
-      }
-    } catch (error) {
-      console.error('Erreur lors de la récupération des nouvelles sorties Deezer:', error);
-      // En cas d'erreur, afficher un message d'erreur
+      setError(null);
+      setNewReleases([]);
+    } catch (e) {
+      setError('Erreur lors du chargement');
       setNewReleases([]);
     } finally {
       setIsLoading(false);

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { USER_ROLES } from '../utils/constants.js';
 import { 
   User, 
   Mail, 
@@ -212,9 +213,30 @@ const Profile = () => {
                 <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4">
                   {user.username || 'Utilisateur'}
                 </h1>
-                <p className="text-xl text-gray-300 mb-6">
+                <p className="text-xl text-gray-300 mb-4">
                   Membre SoundWave • {user.email || 'email@example.com'}
                 </p>
+                <div className="mb-6 flex items-center gap-3">
+                  <span className="text-gray-400 text-sm">Rôle:</span>
+                  {user.role === USER_ROLES.ADMIN && (
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-500/20 text-red-400 border border-red-500/30">
+                      <Crown className="h-4 w-4 mr-2" />
+                      Admin
+                    </span>
+                  )}
+                  {user.role === USER_ROLES.ARTIST && (
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                      <Music className="h-4 w-4 mr-2" />
+                      Artiste
+                    </span>
+                  )}
+                  {(!user.role || user.role === USER_ROLES.LISTENER) && (
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-500/20 text-green-400 border border-green-500/30">
+                      <Play className="h-4 w-4 mr-2" />
+                      Listener
+                    </span>
+                  )}
+                </div>
                 <div className="flex items-center space-x-4">
                   <button 
                     onClick={handleEditClick}

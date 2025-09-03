@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { songService } from '../services/songService';
 
 // Actions
 const ACTIONS = {
@@ -16,6 +17,7 @@ const ACTIONS = {
   SET_CURRENT_TIME: 'SET_CURRENT_TIME',
   SET_DURATION: 'SET_DURATION',
   TOGGLE_LIKE: 'TOGGLE_LIKE',
+  SET_LIKED_TRACKS: 'SET_LIKED_TRACKS',
   SET_PLAYLIST: 'SET_PLAYLIST',
   ADD_TO_HISTORY: 'ADD_TO_HISTORY',
   SET_ALBUM: 'SET_ALBUM',
@@ -156,6 +158,12 @@ const musicReducer = (state, action) => {
           : [...state.likedTracks, trackId]
       };
 
+    case ACTIONS.SET_LIKED_TRACKS:
+      return {
+        ...state,
+        likedTracks: Array.isArray(action.payload) ? action.payload : []
+      };
+
     case ACTIONS.SET_PLAYLIST:
       return {
         ...state,
@@ -272,8 +280,25 @@ export const MusicProvider = ({ children }) => {
       dispatch({ type: ACTIONS.SET_DURATION, payload: duration });
     },
 
-    toggleLike: (trackId) => {
-      dispatch({ type: ACTIONS.TOGGLE_LIKE, payload: trackId });
+    toggleLike: async (track) => {
+      const rawId = typeof track === 'object' ? (track._id || track.id) : track;
+      const idStr = String(rawId || '').trim();
+      const isMongoId = /^[a-f\d]{24}$/i.test(idStr);
+
+      // Toujours basculer l'UI localement
+      dispatch({ type: ACTIONS.TOGGLE_LIKE, payload: idStr });
+
+      try {
+        if (isMongoId) {
+          await songService.likeSong(idStr);
+        } else {
+          // Ancien support des favoris externes supprimé
+          throw new Error('Unsupported track id');
+        }
+      } catch (e) {
+        // rollback en cas d'échec API
+        dispatch({ type: ACTIONS.TOGGLE_LIKE, payload: idStr });
+      }
     },
 
     addToQueue: (track) => {
@@ -299,40 +324,40 @@ export const MusicProvider = ({ children }) => {
     }
   };
 
-  // Sauvegarder l'état dans le localStorage
+  // Ne plus persister les likes dans localStorage; garder seulement volume/historique si besoin
   useEffect(() => {
     localStorage.setItem('musicState', JSON.stringify({
       volume: state.volume,
-      likedTracks: state.likedTracks,
       playHistory: state.playHistory
     }));
-  }, [state.volume, state.likedTracks, state.playHistory]);
+  }, [state.volume, state.playHistory]);
 
-  // Charger l'état depuis le localStorage
+  // Charger likes depuis l'API au montage
   useEffect(() => {
-    const savedState = localStorage.getItem('musicState');
-    if (savedState) {
+    const init = async () => {
       try {
-        const parsed = JSON.parse(savedState);
-        if (parsed.volume !== undefined) {
-          actions.setVolume(parsed.volume);
+        const savedState = localStorage.getItem('musicState');
+        if (savedState) {
+          const parsed = JSON.parse(savedState);
+          if (parsed.volume !== undefined) {
+            actions.setVolume(parsed.volume);
+          }
+          if (parsed.playHistory) {
+            parsed.playHistory.forEach(track => {
+              dispatch({ type: ACTIONS.ADD_TO_HISTORY, payload: track });
+            });
+          }
         }
-        if (parsed.likedTracks) {
-          // Restaurer les tracks likés
-          parsed.likedTracks.forEach(trackId => {
-            dispatch({ type: ACTIONS.TOGGLE_LIKE, payload: trackId });
-          });
-        }
-        if (parsed.playHistory) {
-          // Restaurer l'historique
-          parsed.playHistory.forEach(track => {
-            dispatch({ type: ACTIONS.ADD_TO_HISTORY, payload: track });
-          });
-        }
-      } catch (error) {
-        console.error('Erreur lors du chargement de l\'état:', error);
+        const res = await songService.getLikedSongs();
+        const likedIds = Array.isArray(res?.data?.data)
+          ? res.data.data.map(s => s._id)
+          : [];
+        dispatch({ type: ACTIONS.SET_LIKED_TRACKS, payload: likedIds });
+      } catch (e) {
+        dispatch({ type: ACTIONS.SET_LIKED_TRACKS, payload: [] });
       }
-    }
+    };
+    init();
   }, []);
 
   const value = {

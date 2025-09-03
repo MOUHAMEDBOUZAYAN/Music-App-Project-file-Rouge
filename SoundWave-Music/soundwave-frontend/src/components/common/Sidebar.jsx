@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   Home, 
@@ -25,8 +25,36 @@ const Sidebar = ({ isOpen, onToggle }) => {
   const { isSidebarOpen } = useSidebar();
   const [isLibraryExpanded, setIsLibraryExpanded] = useState(true);
   const [isUserExpanded, setIsUserExpanded] = useState(true);
+  const [subscribedArtists, setSubscribedArtists] = useState([]);
 
   const isActive = (path) => location.pathname === path;
+
+  // Charger les artistes abonnés
+  useEffect(() => {
+    const loadSubscribedArtists = () => {
+      try {
+        const artists = JSON.parse(localStorage.getItem('subscribedArtists') || '[]');
+        setSubscribedArtists(artists);
+      } catch (error) {
+        console.error('Erreur lors du chargement des artistes abonnés:', error);
+      }
+    };
+
+    loadSubscribedArtists();
+    
+    // Écouter les changements dans localStorage
+    const handleStorageChange = () => {
+      loadSubscribedArtists();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('localStorageChange', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('localStorageChange', handleStorageChange);
+    };
+  }, []);
 
   const handleLogout = () => {
     // Logique de déconnexion
@@ -142,7 +170,9 @@ const Sidebar = ({ isOpen, onToggle }) => {
                 >
                   <Heart className="h-4 w-4" />
                   <span className="text-sm">Titres likés</span>
-                  <span className="ml-auto text-xs bg-gray-700 px-2 py-1 rounded-full">0</span>
+                  <span className="ml-auto text-xs bg-gray-700 px-2 py-1 rounded-full">
+                    {JSON.parse(localStorage.getItem('likedTracks') || '[]').length}
+                  </span>
                 </Link>
                 
                 <Link

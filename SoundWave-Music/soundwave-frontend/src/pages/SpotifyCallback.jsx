@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useDeezer } from '../store/DeezerContext';
+// import { useDeezer } from '../store/DeezerContext'; // removed
 import { FaSpotify, FaCheck, FaTimes, FaSpinner } from 'react-icons/fa';
 
 const SpotifyCallback = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { loading } = useDeezer();
+  // const { loading } = useDeezer(); // removed
   const [status, setStatus] = useState('processing');
   const [message, setMessage] = useState('Traitement de votre connexion Spotify...');
 
@@ -26,18 +26,14 @@ const SpotifyCallback = () => {
 
         if (!code) {
           setStatus('error');
-          setMessage('Code d\'autorisation manquant');
+          setMessage("Code d'autorisation manquant");
           setTimeout(() => navigate('/login'), 3000);
           return;
         }
 
-        // TODO: Traiter le callback avec le contexte Deezer
         console.log('Code reçu:', code);
-        
         setStatus('success');
         setMessage('Connexion Spotify réussie ! Redirection...');
-        
-        // Rediriger vers la page d'accueil après 2 secondes
         setTimeout(() => navigate('/'), 2000);
         
       } catch (error) {

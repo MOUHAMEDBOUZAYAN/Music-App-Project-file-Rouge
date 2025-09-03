@@ -15,7 +15,6 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useMusic } from '../store/MusicContext';
-import { useDeezer } from '../store/DeezerContext';
 import { useSidebar } from '../store/SidebarContext';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -23,18 +22,18 @@ import toast from 'react-hot-toast';
 const Home = () => {
   const { user } = useAuth();
   const { playTrack, addToQueue, toggleLike, likedTracks } = useMusic();
-  const { 
-    newReleases, 
-    featuredPlaylists, 
-    popularAlbums, 
-    popularArtists, 
-    loading: deezerLoading, 
-    error: deezerError 
-  } = useDeezer();
   const { isSidebarOpen } = useSidebar();
   const navigate = useNavigate();
   
   const [currentFilter, setCurrentFilter] = useState('Tout');
+  
+  // Données locales (placeholder) remplaçant l'ancien contexte Deezer
+  const [popularArtists, setPopularArtists] = useState([]);
+  const [popularAlbums, setPopularAlbums] = useState([]);
+  const [newReleases, setNewReleases] = useState([]);
+  const [featuredPlaylists, setFeaturedPlaylists] = useState([]);
+  const deezerLoading = false;
+  const deezerError = null;
   
   // Refs pour le défilement horizontal
   const radioScrollRef = useRef(null);
@@ -42,17 +41,6 @@ const Home = () => {
   const albumsScrollRef = useRef(null);
   const newReleasesScrollRef = useRef(null);
 
-  useEffect(() => {
-    console.log('🔍 Home - État des données Deezer:');
-    console.log('📀 newReleases:', newReleases);
-    console.log('🎵 featuredPlaylists:', featuredPlaylists);
-    console.log('💿 popularAlbums:', popularAlbums);
-    console.log('👤 popularArtists:', popularArtists);
-    console.log('⏳ loading:', deezerLoading);
-    console.log('❌ error:', deezerError);
-  }, [newReleases, featuredPlaylists, popularAlbums, popularArtists, deezerLoading, deezerError]);
-
-  // Debug sidebar state
   useEffect(() => {
     console.log('🏠 Home - État de la sidebar:', isSidebarOpen);
   }, [isSidebarOpen]);
@@ -79,8 +67,8 @@ const Home = () => {
       audioUrl: song.preview || song.preview_url,
       duration: song.duration || song.duration_ms,
       album: song.album?.title || song.album?.name,
-      deezerId: song.id,
-      isDeezer: true
+      // deezerId: song.id,
+      // isDeezer: true
     };
     
     playTrack(deezerSong);
@@ -100,16 +88,16 @@ const Home = () => {
       audioUrl: song.preview || song.preview_url,
       duration: song.duration || song.duration_ms,
       album: song.album?.title || song.album?.name,
-      deezerId: song.id,
-      isDeezer: true
+      // deezerId: song.id,
+      // isDeezer: true
     };
     
     addToQueue(deezerSong);
     toast.success('Ajouté à la file d\'attente');
   };
 
-  const handleToggleLike = (songId) => {
-    toggleLike(songId);
+  const handleToggleLike = (song) => {
+    toggleLike(song);
   };
 
   if (deezerLoading) {
@@ -154,7 +142,7 @@ const Home = () => {
 
           {/* Filtres - Style Spotify */}
           <div className="flex space-x-3 mt-4 overflow-x-auto pb-2">
-            {['Tout', 'Musique', 'Podcasts', 'Deezer'].map((filter) => (
+            {['Tout', 'Musique', 'Podcasts'].map((filter) => (
               <button
                 key={filter}
                 onClick={() => setCurrentFilter(filter)}
@@ -571,13 +559,13 @@ const Home = () => {
                 Aucune musique disponible
               </h3>
               <p className="text-bemusic-tertiary mb-6">
-                Connectez-vous à Deezer pour découvrir de la musique personnalisée
+                Ajoutez des artistes et des sorties internes pour commencer
               </p>
               <button 
-                onClick={() => navigate('/spotify-login')}
+                onClick={() => navigate('/create')}
                 className="bg-accent-bemusic text-white px-6 py-3 rounded-full font-medium hover:bg-accent-bemusic/80 transition-colors"
               >
-                Se connecter à Deezer
+                Ajouter du contenu
               </button>
             </div>
           </section>
@@ -585,7 +573,7 @@ const Home = () => {
       </div>
 
       {/* CSS pour masquer la scrollbar */}
-      <style jsx>{`
+      <style>{`
         .scrollbar-hide {
           -ms-overflow-style: none;
           scrollbar-width: none;

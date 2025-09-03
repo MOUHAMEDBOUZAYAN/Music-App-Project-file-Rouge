@@ -41,6 +41,9 @@ app.use(performanceLogger);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Static serving for uploads (audio/images)
+app.use('/uploads', express.static(require('path').join(__dirname, '../uploads')));
+
 // Test route
 app.get('/api/health', (req, res) => {
   res.json({
@@ -55,7 +58,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/auth/spotify', require('./routes/spotify.routes'));
 app.use('/api/spotify', require('./routes/spotify.routes')); // Routes Spotify publiques
-app.use('/api/deezer', require('./routes/deezer.routes')); // Routes Deezer proxy
+// app.use('/api/deezer', require('./routes/deezer.routes')); // Routes Deezer proxy (removed)
 app.use('/api/users', require('./routes/user.routes'));
 app.use('/api/songs', require('./routes/song.routes'));
 app.use('/api/playlists', require('./routes/playlist.routes'));
@@ -64,6 +67,7 @@ app.use('/api/artists', require('./routes/artist.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
 app.use('/api/search', require('./routes/search.routes'));
 app.use('/api/social', require('./routes/social.routes'));
+app.use('/api/favorites', require('./routes/favorites.routes'));
 
 // Routes 404 - doit être placé avant le middleware d'erreur
 app.use(notFound);

@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { AuthProvider, useAuth } from './AuthContext';
 import { MusicProvider, useMusic } from './MusicContext';
-import { DeezerProvider, useDeezer } from './DeezerContext';
 import { SidebarProvider } from './SidebarContext';
 
 // Global App State
@@ -577,11 +576,9 @@ export const AppProvider = ({ children }) => {
       <AppDispatchContext.Provider value={dispatch}>
         <AuthProvider>
           <MusicProvider>
-            <DeezerProvider>
-              <SidebarProvider>
-                {children}
-              </SidebarProvider>
-            </DeezerProvider>
+            <SidebarProvider>
+              {children}
+            </SidebarProvider>
           </MusicProvider>
         </AuthProvider>
       </AppDispatchContext.Provider>
@@ -612,14 +609,14 @@ export const useApp = () => {
   const dispatch = useAppDispatch();
   const auth = useAuth();
   const music = useMusic();
-  const deezer = useDeezer();
+  // const deezer = useDeezer(); // removed Deezer
 
   return {
     state,
     dispatch,
     auth,
     music,
-    deezer,
+    // deezer, // removed Deezer
     
     // Convenience methods
     actions: {

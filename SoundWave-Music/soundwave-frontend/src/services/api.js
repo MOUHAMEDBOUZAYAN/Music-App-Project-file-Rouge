@@ -133,9 +133,9 @@ export const endpoints = {
     create: '/api/songs',
     update: (id) => `/api/songs/${id}`,
     delete: (id) => `/api/songs/${id}`,
-    upload: '/api/songs/upload',
+    upload: '/api/songs',
     like: (id) => `/api/songs/${id}/like`,
-    unlike: (id) => `/api/songs/${id}/unlike`,
+    liked: '/api/songs/liked',
     search: '/api/songs/search',
     trending: '/api/songs/trending',
     recommendations: '/api/songs/recommendations'
@@ -192,6 +192,12 @@ export const endpoints = {
     userStats: '/api/analytics/user',
     trending: '/api/analytics/trending'
   }
+};
+
+// Favorites (externes)
+endpoints.favorites = {
+  external: '/api/favorites/external',
+  removeExternal: (provider, externalId) => `/api/favorites/external/${provider}/${externalId}`
 };
 
 // Fonctions utilitaires pour les requêtes API

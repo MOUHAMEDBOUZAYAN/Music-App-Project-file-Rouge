@@ -1,73 +1,59 @@
 import React, { useState, useEffect } from 'react';
 import { Heart, Play, Shuffle, MoreVertical, Clock, User } from 'lucide-react';
 import TrackList from '../components/music/TrackList';
+import { useMusic } from '../store/MusicContext';
+import { songService } from '../services/songService';
 
 const LikedSongs = () => {
   const [likedSongs, setLikedSongs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [sortBy, setSortBy] = useState('dateAdded'); // dateAdded, title, artist, duration
-
-  // Mock data for liked songs
-  const mockLikedSongs = [
-    {
-      id: 1,
-      title: 'Bohemian Rhapsody',
-      artist: 'Queen',
-      album: 'A Night at the Opera',
-      duration: 354,
-      cover: 'https://via.placeholder.com/56/1DB954/FFFFFF?text=Q',
-      dateAdded: '2024-01-15',
-      isLiked: true
-    },
-    {
-      id: 2,
-      title: 'Hotel California',
-      artist: 'Eagles',
-      album: 'Hotel California',
-      duration: 391,
-      cover: 'https://via.placeholder.com/56/1DB954/FFFFFF?text=E',
-      dateAdded: '2024-01-10',
-      isLiked: true
-    },
-    {
-      id: 3,
-      title: 'Stairway to Heaven',
-      artist: 'Led Zeppelin',
-      album: 'Led Zeppelin IV',
-      duration: 482,
-      cover: 'https://via.placeholder.com/56/1DB954/FFFFFF?text=L',
-      dateAdded: '2024-01-08',
-      isLiked: true
-    },
-    {
-      id: 4,
-      title: 'Imagine',
-      artist: 'John Lennon',
-      album: 'Imagine',
-      duration: 183,
-      cover: 'https://via.placeholder.com/56/1DB954/FFFFFF?text=J',
-      dateAdded: '2024-01-05',
-      isLiked: true
-    },
-    {
-      id: 5,
-      title: 'Hey Jude',
-      artist: 'The Beatles',
-      album: 'The Beatles 1967-1970',
-      duration: 431,
-      cover: 'https://via.placeholder.com/56/1DB954/FFFFFF?text=B',
-      dateAdded: '2024-01-03',
-      isLiked: true
-    }
-  ];
+  const { likedTracks, toggleLike } = useMusic();
 
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setLikedSongs(mockLikedSongs);
-      setIsLoading(false);
-    }, 1000);
-  }, []);
+    const loadLikedSongs = async () => {
+      try {
+        // Charger directement depuis l'API
+        const res = await songService.getLikedSongs();
+        const apiSongs = Array.isArray(res?.data?.data) ? res.data.data : [];
+        const results = apiSongs.map(s => {
+          if (s.type === 'external') {
+            return {
+              id: s.externalId,
+              title: s.title || `Titre ${s.externalId}`,
+              artist: s.artist || 'Artiste inconnu',
+              album: s.album || '—',
+              duration: s.duration || 180,
+              cover: s.cover || 'https://via.placeholder.com/40/1DB954/FFFFFF?text=🎵',
+              dateAdded: (s.createdAt ? new Date(s.createdAt) : new Date()).toISOString().split('T')[0],
+              isLiked: true
+            };
+          }
+          return {
+            id: s._id,
+            title: s.title,
+            artist: s.artist || 'Artiste inconnu',
+            album: s.album || '—',
+            duration: s.duration || 180,
+            cover: s.cover || 'https://via.placeholder.com/40/1DB954/FFFFFF?text=🎵',
+            dateAdded: (s.createdAt ? new Date(s.createdAt) : new Date()).toISOString().split('T')[0],
+            isLiked: true
+          };
+        });
+
+        setLikedSongs(results);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Erreur lors du chargement des musiques likées:', error);
+        setLikedSongs([]);
+        setIsLoading(false);
+      }
+    };
+
+    loadLikedSongs();
+    
+    return () => {};
+  }, [likedTracks]);
 
   // Sort songs based on selected criteria
   const sortedSongs = [...likedSongs].sort((a, b) => {
@@ -95,7 +81,16 @@ const LikedSongs = () => {
   };
 
   const handleRemoveFromLiked = (songId) => {
-    setLikedSongs(prev => prev.filter(song => song.id !== songId));
+    try {
+      // Mettre à jour le contexte (source de vérité)
+      toggleLike(songId);
+      // Mettre à jour l'état local
+      setLikedSongs(prev => prev.filter(song => song.id !== songId));
+      
+      console.log(`Musique ${songId} retirée des favoris`);
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+    }
   };
 
   const formatDuration = (seconds) => {

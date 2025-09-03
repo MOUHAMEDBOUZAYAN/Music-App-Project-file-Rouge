@@ -3,7 +3,6 @@ import { ArrowLeft, Search, MoreVertical, Mail, Lock, User, Music, CheckCircle, 
 import { FaSpotify } from 'react-icons/fa';
 import { authService } from '../../services/authService';
 import { useAuth } from '../../hooks/useAuth';
-import { useDeezer } from '../../store/DeezerContext';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -37,7 +36,7 @@ const RegisterForm = ({ onRegister }) => {
   const [spotifyLoading, setSpotifyLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
-  const { loading: deezerLoading } = useDeezer();
+  // const { loading: deezerLoading } = useDeezer(); // removed
 
   // Fonction pour la connexion Spotify
   const spotifyLogin = async () => {

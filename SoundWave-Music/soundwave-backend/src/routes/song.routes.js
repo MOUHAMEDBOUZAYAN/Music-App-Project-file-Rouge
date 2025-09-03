@@ -18,7 +18,7 @@ const {
   socialActionLimiter,
   activityLogger 
 } = require('../middleware');
-// const { uploadAudio } = require('../middleware/upload.middleware'); // Middleware pour l'upload
+const { uploadAudio } = require('../services/cloudinary.service');
 
 // @route   GET api/songs
 // @desc    Rechercher des chansons
@@ -46,6 +46,14 @@ router.get('/trending',
   songController.getTrendingSongs
 );
 
+// @route   GET api/songs/liked
+// @desc    Obtenir les chansons likées par l'utilisateur connecté
+// @access  Private
+router.get('/liked',
+  protect,
+  songController.getLikedSongs
+);
+
 // @route   GET api/songs/:id
 // @desc    Obtenir les détails d'une chanson
 // @access  Public
@@ -61,6 +69,7 @@ router.post('/',
   protect, 
   artist,
   uploadLimiter, 
+  uploadAudio.single('audio'),
   validateSong, 
   activityLogger('upload_song'), 
   songController.uploadSong
@@ -99,6 +108,11 @@ router.post('/:id/like',
   activityLogger('like_song'), 
   songController.likeUnlikeSong
 );
+
+// @route   GET api/songs/liked
+// @desc    Obtenir les chansons likées par l'utilisateur connecté
+// @access  Private
+// (déplacé plus haut avant ":id")
 
 // @route   POST api/songs/:id/comment
 // @desc    Ajouter un commentaire à une chanson

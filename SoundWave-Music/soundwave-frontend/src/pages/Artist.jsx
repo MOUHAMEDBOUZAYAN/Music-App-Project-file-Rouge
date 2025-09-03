@@ -21,7 +21,6 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useMusic } from '../store/MusicContext';
-import { useDeezer } from '../store/DeezerContext';
 import toast from 'react-hot-toast';
 
 const Artist = () => {
@@ -29,7 +28,6 @@ const Artist = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { playTrack, addToQueue, toggleLike, likedTracks } = useMusic();
-  const { popularArtists, loading: deezerLoading, service } = useDeezer();
   
   const [artist, setArtist] = useState(null);
   const [isFollowing, setIsFollowing] = useState(false);
@@ -43,6 +41,14 @@ const Artist = () => {
   const [albumsLoading, setAlbumsLoading] = useState(false);
   const [activeFilter, setActiveFilter] = useState('popular'); // Filtre actif pour la discographie
   const [showMoreInfo, setShowMoreInfo] = useState(false); // State for "Plus d'infos" expanded view
+  const [isSubscribed, setIsSubscribed] = useState(false); // State for subscription status
+
+  // Vérifier si l'artiste est déjà abonné au chargement
+  useEffect(() => {
+    const subscribedArtists = JSON.parse(localStorage.getItem('subscribedArtists') || '[]');
+    const isAlreadySubscribed = subscribedArtists.some(a => a.id === id);
+    setIsSubscribed(isAlreadySubscribed);
+  }, [id]);
 
   // Format mm:ss
   const formatDuration = (seconds) => {
@@ -57,112 +63,18 @@ const Artist = () => {
     const loadArtist = async () => {
       if (!id) return;
       try {
-        // 1) Infos artiste
-        let found = popularArtists?.find(a => String(a.id) === String(id));
-        if (!found) {
-          const result = await service.getArtist(id);
-          found = result?.data || result;
-        }
+        // TODO: Remplacer par chargement depuis votre backend interne
+        const found = null;
         if (found) setArtist(found);
 
-        // 2) Top tracks
-        setTracksLoading(true);
-        const top = await service.getArtistTopTracks(id, 50); // Demander 50 pistes au lieu de la limite par défaut
-        const deezerData = top?.data?.data || top?.data || top || [];
-        console.log('Deezer API response for artist top tracks:', top);
-        console.log('Number of tracks received:', deezerData.length);
-        
-        const mapped = (deezerData || []).map(t => ({
-          id: t.id,
-          title: t.title,
-          album: t.album?.title || '',
-          duration: formatDuration(t.duration),
-          rawDuration: t.duration || 0,
-          plays: t.rank ? t.rank.toLocaleString('fr-FR') : '',
-          cover: t.album?.cover_medium || t.album?.cover || artist?.picture || artist?.cover,
-          preview: t.preview || null,
-          explicit: !!t.explicit_lyrics,
-          artistName: t.artist?.name || found?.name || 'Artiste inconnu'
-        }));
-        
-        console.log('Final mapped tracks:', mapped.length);
-        setTopTracks(mapped);
+        // TODO: Remplacer par top tracks internes
+        setTopTracks([]);
 
-        // 3) Albums de l'artiste
-        setAlbumsLoading(true);
-        try {
-          const albumsResponse = await service.getArtistAlbums(id);
-          const albumsData = albumsResponse?.data?.data || albumsResponse?.data || albumsResponse || [];
-          console.log('Raw albums response:', albumsResponse);
-          console.log('Albums data from API:', albumsData);
-          
-          if (albumsData.length === 0) {
-            console.log('No albums from API, using fallback');
-            throw new Error('No albums from API');
-          }
-          
-          const mappedAlbums = albumsData.map(album => ({
-            id: album.id,
-            title: album.title,
-            type: album.record_type || 'Album',
-            year: new Date(album.release_date).getFullYear(),
-            cover: album.cover_medium || album.cover,
-            tracks: album.nb_tracks || 0,
-            explicit: !!album.explicit_lyrics
-          }));
-          setAlbums(mappedAlbums);
-          console.log('Albums loaded from API:', mappedAlbums.length);
-          console.log('Album types from API:', mappedAlbums.map(a => a.type));
-        } catch (albumError) {
-          console.error('Erreur chargement albums:', albumError);
-          console.log('Using fallback albums due to API error');
-          // Fallback avec des albums fictifs si l'API échoue
-          const fallbackAlbums = [
-            { id: '1', title: 'DARIJA', type: 'Single', year: '2024', cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=1', tracks: 1, explicit: false },
-            { id: '2', title: 'ICEBERG', type: 'Album', year: '2024', cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=2', tracks: 12, explicit: false },
-            { id: '3', title: 'OMEGA', type: 'EP', year: '2025', cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=3', tracks: 6, explicit: true },
-            { id: '4', title: 'Mizane', type: 'Single', year: '2021', cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=4', tracks: 1, explicit: false },
-            { id: '5', title: 'Jackpot', type: 'Album', year: '2021', cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=5', tracks: 15, explicit: true },
-            { id: '6', title: 'Si tu savais', type: 'Single', year: '2020', cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=6', tracks: 1, explicit: false },
-            { id: '7', title: 'MARADONA (Remix)', type: 'Single', year: '2024', cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=7', tracks: 1, explicit: false },
-            { id: '8', title: 'SALINA', type: 'Single', year: '2024', cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=8', tracks: 1, explicit: true },
-            { id: '9', title: 'killa', type: 'Single', year: '2024', cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=9', tracks: 1, explicit: false },
-            { id: '10', title: 'NIKEY', type: 'Single', year: '2024', cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=10', tracks: 1, explicit: false },
-            { id: '11', title: 'KHOYA', type: 'Single', year: '2024', cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=11', tracks: 1, explicit: false },
-            { id: '12', title: 'RALLY DAKAR', type: 'Single', year: '2024', cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=12', tracks: 1, explicit: false },
-            { id: '13', title: 'ELVIS', type: 'Single', year: '2024', cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=13', tracks: 1, explicit: false },
-            { id: '14', title: 'POPO', type: 'Single', year: '2024', cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=14', tracks: 1, explicit: false },
-            { id: '15', title: 'Fawda', type: 'Single', year: '2024', cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=15', tracks: 1, explicit: true },
-            { id: '16', title: 'Moroccan Dream', type: 'Album', year: '2023', cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=16', tracks: 18, explicit: false },
-            { id: '17', title: 'Urban Vibes', type: 'EP', year: '2023', cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=17', tracks: 8, explicit: true },
-            { id: '18', title: 'Street Poetry', type: 'Album', year: '2022', cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=18', tracks: 14, explicit: false },
-            { id: '19', title: 'Colors', type: 'Album', year: '2021', cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=19', tracks: 16, explicit: false },
-            { id: '20', title: 'VENOM', type: 'Album', year: '2022', cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=20', tracks: 13, explicit: true },
-            { id: '21', title: 'BALA W FAS', type: 'Album', year: '2025', cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=21', tracks: 20, explicit: false },
-            { id: '22', title: 'Ghandirha', type: 'Single', year: '2020', cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=22', tracks: 1, explicit: false },
-            { id: '23', title: '6 Fi9', type: 'Single', year: '2023', cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&v=23', tracks: 1, explicit: true }
-          ];
-          setAlbums(fallbackAlbums);
-          console.log('Using fallback albums:', fallbackAlbums.length);
-          console.log('Fallback album types:', fallbackAlbums.map(a => a.type));
-          console.log('Albums count in fallback:', fallbackAlbums.filter(a => a.type === 'Album').length);
-        } finally {
-          setAlbumsLoading(false);
-        }
+        // TODO: Remplacer par albums internes
+        setAlbums([]);
 
-        // 4) Artistes similaires (simulation avec des artistes populaires)
-        if (popularArtists.length > 0) {
-          const similar = popularArtists
-            .filter(a => a.id !== found?.id)
-            .slice(0, 6)
-            .map(a => ({
-              id: a.id,
-              name: a.name,
-              picture: a.picture || a.cover,
-              nb_fan: a.nb_fan
-            }));
-          setRelatedArtists(similar);
-        }
+        // TODO: Remplacer par artistes similaires internes
+        setRelatedArtists([]);
 
       } catch (e) {
         console.error('Erreur chargement artiste/top tracks:', e);
@@ -173,7 +85,7 @@ const Artist = () => {
     };
 
     loadArtist();
-  }, [id, popularArtists, service]);
+  }, [id]);
 
   const handlePlaySong = (track) => {
     if (!track?.preview) {
@@ -188,7 +100,7 @@ const Artist = () => {
       album: track.album,
       duration: track.rawDuration,
       audioUrl: track.preview,
-      isDeezer: true
+      // isDeezer: true // removed
     };
     playTrack(song);
     setIsPlaying(true);
@@ -208,7 +120,7 @@ const Artist = () => {
       album: track.album,
       duration: track.rawDuration,
       audioUrl: track.preview,
-      isDeezer: true
+      // isDeezer: true // removed
     };
     addToQueue(song);
     toast.success('Ajouté à la file d\'attente');
@@ -217,6 +129,33 @@ const Artist = () => {
   const handleToggleFollow = () => {
     setIsFollowing(!isFollowing);
     toast.success(isFollowing ? 'Désabonné' : 'Abonné');
+  };
+
+  const handleSubscribe = () => {
+    if (!artist) return;
+    
+    const subscribedArtists = JSON.parse(localStorage.getItem('subscribedArtists') || '[]');
+    
+    if (isSubscribed) {
+      // Désabonner
+      const updatedArtists = subscribedArtists.filter(a => a.id !== artist.id);
+      localStorage.setItem('subscribedArtists', JSON.stringify(updatedArtists));
+      setIsSubscribed(false);
+      toast.success(`Désabonné de ${artist.name}`);
+    } else {
+      // S'abonner
+      const newSubscribedArtist = {
+        id: artist.id,
+        name: artist.name,
+        picture: artist.picture || artist.cover,
+        nb_fan: artist.nb_fan,
+        date: new Date().toISOString()
+      };
+      const updatedArtists = [...subscribedArtists, newSubscribedArtist];
+      localStorage.setItem('subscribedArtists', JSON.stringify(updatedArtists));
+      setIsSubscribed(true);
+      toast.success(`Abonné à ${artist.name} ! Vous recevrez les notifications.`);
+    }
   };
 
   const handlePlayArtist = () => {
@@ -235,7 +174,7 @@ const Artist = () => {
     }
   };
 
-  if (deezerLoading || !artist) {
+  if (!artist) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
@@ -297,6 +236,19 @@ const Artist = () => {
           >
             <Heart className={`h-5 w-5 ${isFollowing ? 'fill-current' : ''}`} />
           </button>
+          
+          {/* Nouveau bouton S'abonner */}
+          <button
+            onClick={handleSubscribe}
+            className={`px-4 py-3 rounded-full transition-colors ${
+              isSubscribed ? 'bg-red-500 text-white hover:bg-red-400' : 'bg-green-500 text-black font-medium hover:bg-green-400'
+            }`}
+            aria-label={isSubscribed ? 'Désabonner' : 'S\'abonner'}
+            title={isSubscribed ? 'Désabonner' : 'S\'abonner'}
+          >
+            {isSubscribed ? 'Désabonner' : 'S\'abonner'}
+          </button>
+          
           <button className="p-3 rounded-full bg-gray-800 text-white hover:bg-gray-700" aria-label="Partager">
             <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17V7h2v7.17l3.59-3.59L17 10l-5 5z"/>
@@ -380,7 +332,7 @@ const Artist = () => {
                       <div className="text-gray-400 text-xs truncate">{track.album}</div>
                     </div>
                     <div className="ml-3 flex items-center space-x-3">
-                      <button onClick={() => toggleLike(track.id)} className="text-gray-300 hover:text-white transition-colors">
+                      <button onClick={() => toggleLike(track)} className="text-gray-300 hover:text-white transition-colors">
                         <Heart className="h-4 w-4" />
                       </button>
                       <button onClick={() => handlePlaySong(track)} className="w-8 h-8 rounded-full bg-green-500 text-black flex items-center justify-center hover:scale-105 transition-transform">
@@ -421,8 +373,8 @@ const Artist = () => {
                         <button onClick={(e) => { e.stopPropagation(); handleAddToQueue(track); }} className="p-2 rounded-full bg-gray-700 hover:bg-gray-600 transition-colors">
                           <Music2 className="h-4 w-4 text-white" />
                         </button>
-                        <button onClick={(e) => { e.stopPropagation(); toggleLike(track.id); }} className={`p-2 rounded-full transition-colors ${likedTracks.includes(track.id) ? 'bg-red-500 hover:bg-red-400' : 'bg-gray-700 hover:bg-gray-600'}`}>
-                          <Heart className={`h-4 w-4 ${likedTracks.includes(track.id) ? 'text-white fill-white' : 'text-white'}`} />
+                        <button onClick={(e) => { e.stopPropagation(); toggleLike(track); }} className={`p-2 rounded-full transition-colors ${likedTracks.includes(String(track.id)) ? 'bg-red-500 hover:bg-red-400' : 'bg-gray-700 hover:bg-gray-600'}`}>
+                          <Heart className={`h-4 w-4 ${likedTracks.includes(String(track.id)) ? 'text-white fill-white' : 'text-white'}`} />
                         </button>
                       </div>
                     </div>

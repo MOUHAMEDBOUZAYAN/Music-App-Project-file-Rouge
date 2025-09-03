@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useDeezer } from '../../store/DeezerContext';
+// import { useDeezer } from '../../store/DeezerContext'; // removed
 import { FaSearch, FaFilter, FaTimes, FaMusic, FaUser, FaCompactDisc, FaList } from 'react-icons/fa';
 import { debounce } from 'lodash';
 
 const SpotifySearch = () => {
-  const { search, loading, error } = useDeezer();
+  // const { search, loading, error } = useDeezer(); // removed
   const [query, setQuery] = useState('');
   const [searchType, setSearchType] = useState('track,artist,album,playlist');
   const [filters, setFilters] = useState({
@@ -12,15 +12,27 @@ const SpotifySearch = () => {
     limit: 20
   });
   const [showFilters, setShowFilters] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [searchResults, setSearchResults] = useState(null);
 
-  // Debounce la recherche pour éviter trop d'appels API
+  // Debounce la "recherche" locale
   const debouncedSearch = useCallback(
     debounce((searchQuery, type, limit) => {
-      if (searchQuery.trim()) {
-        search(searchQuery, type, limit);
+      setLoading(true);
+      try {
+        if (searchQuery.trim()) {
+          // Placeholder: aucun résultat externe
+          setSearchResults({ tracks: { items: [] }, artists: { items: [] }, albums: { items: [] }, playlists: { items: [] } });
+        } else {
+          setSearchResults(null);
+        }
+        setError(null);
+      } finally {
+        setLoading(false);
       }
     }, 500),
-    [search]
+    []
   );
 
   useEffect(() => {
@@ -77,14 +89,14 @@ const SpotifySearch = () => {
                 >
                   <div className="flex items-center gap-3">
                     <img
-                      src={track.album.images[0]?.url || '/placeholder-album.jpg'}
+                      src={track.album?.images?.[0]?.url || '/placeholder-album.jpg'}
                       alt={track.name}
                       className="w-12 h-12 rounded object-cover"
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-white font-medium truncate">{track.name}</p>
                       <p className="text-gray-400 text-sm truncate">
-                        {track.artists.map(a => a.name).join(', ')}
+                        {(track.artists || []).map(a => a.name).join(', ')}
                       </p>
                     </div>
                   </div>
@@ -108,14 +120,12 @@ const SpotifySearch = () => {
                   className="text-center cursor-pointer hover:bg-white/5 rounded-lg p-3 transition-colors"
                 >
                   <img
-                    src={artist.images[0]?.url || '/placeholder-artist.jpg'}
+                    src={artist.images?.[0]?.url || '/placeholder-artist.jpg'}
                     alt={artist.name}
                     className="w-20 h-20 rounded-full object-cover mx-auto mb-2"
                   />
                   <p className="text-white text-sm font-medium truncate">{artist.name}</p>
-                  <p className="text-gray-400 text-xs">
-                    {artist.followers?.total ? `${(artist.followers.total / 1000).toFixed(0)}K followers` : 'Artiste'}
-                  </p>
+                  <p className="text-gray-400 text-xs">Artiste</p>
                 </div>
               ))}
             </div>
@@ -136,13 +146,13 @@ const SpotifySearch = () => {
                   className="cursor-pointer hover:bg-white/5 rounded-lg p-3 transition-colors"
                 >
                   <img
-                    src={album.images[0]?.url || '/placeholder-album.jpg'}
+                    src={album.images?.[0]?.url || '/placeholder-album.jpg'}
                     alt={album.name}
                     className="w-full aspect-square rounded object-cover mb-2"
                   />
                   <p className="text-white text-sm font-medium truncate">{album.name}</p>
                   <p className="text-gray-400 text-xs truncate">
-                    {album.artists.map(a => a.name).join(', ')}
+                    {(album.artists || []).map(a => a.name).join(', ')}
                   </p>
                   <p className="text-gray-500 text-xs">{album.release_date?.split('-')[0]}</p>
                 </div>
@@ -166,18 +176,13 @@ const SpotifySearch = () => {
                 >
                   <div className="flex items-center gap-3">
                     <img
-                      src={playlist.images[0]?.url || '/placeholder-playlist.jpg'}
+                      src={playlist.images?.[0]?.url || '/placeholder-playlist.jpg'}
                       alt={playlist.name}
                       className="w-12 h-12 rounded object-cover"
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-white font-medium truncate">{playlist.name}</p>
-                      <p className="text-gray-400 text-sm truncate">
-                        Par {playlist.owner.display_name}
-                      </p>
-                      <p className="text-gray-500 text-xs">
-                        {playlist.tracks.total} morceaux
-                      </p>
+                      <p className="text-gray-400 text-sm truncate">Playlist</p>
                     </div>
                   </div>
                 </div>

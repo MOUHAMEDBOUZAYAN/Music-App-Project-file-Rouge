@@ -108,8 +108,8 @@ const Album = () => {
     toast.success('Ajouté à la file d\'attente');
   };
 
-  const handleToggleLike = (trackId) => {
-    toggleLike(trackId);
+  const handleToggleLike = (track) => {
+    toggleLike(track);
   };
 
   const formatTime = (seconds) => {
@@ -268,7 +268,7 @@ const Album = () => {
               
               <div className="flex items-center justify-center space-x-2">
                 <button 
-                  onClick={() => handleToggleLike(track.id)}
+                  onClick={() => handleToggleLike(track)}
                   className={`p-2 rounded-full transition-colors ${
                     likedTracks.includes(track.id) 
                       ? 'text-green-500' 

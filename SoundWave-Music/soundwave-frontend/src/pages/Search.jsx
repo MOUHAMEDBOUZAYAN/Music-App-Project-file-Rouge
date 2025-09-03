@@ -383,8 +383,9 @@ const Search = () => {
     toast.success('Ajouté à la file d\'attente');
   };
 
-  const handleToggleLike = (songId) => {
-    toggleLike(songId);
+  const handleToggleLike = (song) => {
+    // Pass whole object so context can decide backend vs external
+    toggleLike(song);
   };
 
   // Recherche automatique quand la page se charge avec un paramètre de requête
@@ -478,7 +479,7 @@ const Search = () => {
           
           <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <button 
-              onClick={() => handleToggleLike(song._id)}
+              onClick={() => handleToggleLike(song)}
               className={`p-2 rounded-full transition-colors ${
                 likedTracks.includes(song._id) 
                   ? 'text-green-500' 

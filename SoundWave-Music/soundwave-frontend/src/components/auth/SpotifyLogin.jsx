@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { useDeezer } from '../../store/DeezerContext';
+// import { useDeezer } from '../../store/DeezerContext'; // removed
 import { FaSpotify, FaMusic, FaHeadphones, FaPlay, FaUser, FaSignInAlt } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 
 const SpotifyLogin = () => {
-  const { loading, error } = useDeezer();
+  // const { loading, error } = useDeezer(); // removed
   const [isHovered, setIsHovered] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     // Vérifier si l'utilisateur est déjà connecté
@@ -14,10 +16,14 @@ const SpotifyLogin = () => {
 
   const handleSpotifyLogin = async () => {
     try {
+      setLoading(true);
       console.log('Tentative de connexion Spotify...');
       // TODO: Implémenter la logique de connexion
     } catch (error) {
       console.error('Erreur de connexion Spotify:', error);
+      setError('Erreur de connexion Spotify');
+    } finally {
+      setLoading(false);
     }
   };
 

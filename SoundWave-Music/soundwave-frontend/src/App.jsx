@@ -20,6 +20,7 @@ import Library from './pages/Library';
 import LikedSongs from './pages/LikedSongs';
 import Album from './pages/Album';
 import Playlist from './pages/Playlist';
+import CreatePlaylist from './pages/CreatePlaylist';
 import Artist from './pages/Artist';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
@@ -105,6 +106,22 @@ function App() {
                 </ProtectedRoute>
               } />
               
+              <Route path="/playlists" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Playlist />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+
+              <Route path="/create-playlist" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <CreatePlaylist />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+
               <Route path="/playlist/:id" element={
                 <ProtectedRoute>
                   <Layout>

@@ -4,7 +4,7 @@ import { ArrowLeft, Search, MoreVertical, Mail, Lock, Eye, EyeOff, AlertCircle, 
 import { FaSpotify } from 'react-icons/fa';
 import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/authService';
-import { useDeezer } from '../../store/DeezerContext';
+// import { useDeezer } from '../../store/DeezerContext'; // removed
 import toast from 'react-hot-toast';
 import { 
   AnimatedPage, 
@@ -25,7 +25,7 @@ const LoginForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
-  const { loading: deezerLoading } = useDeezer();
+  // const { loading: deezerLoading } = useDeezer(); // removed
   
   const [formData, setFormData] = useState({
     email: '',
