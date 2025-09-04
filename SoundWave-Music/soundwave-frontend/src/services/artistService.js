@@ -65,6 +65,54 @@ export const artistService = {
     }
   },
 
+  // Obtenir les albums d'un artiste
+  getArtistAlbums: async (artistId, params = {}) => {
+    try {
+      const response = await apiClient.get(`/api/artists/${artistId}/albums`, { params });
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Erreur lors de la récupération des albums de l\'artiste'
+      };
+    }
+  },
+
+  // Obtenir mes chansons (pour l'artiste connecté)
+  getMySongs: async (params = {}) => {
+    try {
+      const response = await apiClient.get('/api/artists/me/songs', { params });
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Erreur lors de la récupération de mes chansons'
+      };
+    }
+  },
+
+  // Obtenir mes albums (pour l'artiste connecté)
+  getMyAlbums: async (params = {}) => {
+    try {
+      const response = await apiClient.get('/api/artists/me/albums', { params });
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Erreur lors de la récupération de mes albums'
+      };
+    }
+  },
+
   // Suivre un artiste
   followArtist: async (artistId) => {
     try {

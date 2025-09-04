@@ -319,10 +319,218 @@ const unfollowArtist = async (req, res) => {
   }
 };
 
+// @desc    Obtenir les chansons d'un artiste
+// @route   GET /api/artists/:id/songs
+// @access  Public
+const getArtistSongs = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { page = 1, limit = 10 } = req.query;
+    
+    console.log(`🎵 Récupération des chansons de l'artiste: ${id}`);
+    
+    // Vérifier que l'artiste existe
+    const artist = await User.findOne({ _id: id, role: 'artist' });
+    if (!artist) {
+      return res.status(404).json({
+        success: false,
+        message: 'Artiste non trouvé'
+      });
+    }
+    
+    const skip = (page - 1) * limit;
+    
+    const songs = await Song.find({ artist: id })
+      .select('title duration genre playCount audioUrl coverImage createdAt')
+      .populate('uploader', 'username')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+    
+    const total = await Song.countDocuments({ artist: id });
+    
+    console.log(`✅ ${songs.length} chansons trouvées pour l'artiste ${artist.username}`);
+    
+    res.json({
+      success: true,
+      message: 'Chansons de l\'artiste récupérées avec succès',
+      data: songs,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / parseInt(limit))
+      }
+    });
+    
+  } catch (error) {
+    console.error('💥 Erreur lors de la récupération des chansons de l\'artiste:', error);
+    
+    res.status(500).json({
+      success: false,
+      message: 'Erreur serveur lors de la récupération des chansons',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Obtenir les albums d'un artiste
+// @route   GET /api/artists/:id/albums
+// @access  Public
+const getArtistAlbums = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { page = 1, limit = 10 } = req.query;
+    
+    console.log(`🎵 Récupération des albums de l'artiste: ${id}`);
+    
+    // Vérifier que l'artiste existe
+    const artist = await User.findOne({ _id: id, role: 'artist' });
+    if (!artist) {
+      return res.status(404).json({
+        success: false,
+        message: 'Artiste non trouvé'
+      });
+    }
+    
+    const skip = (page - 1) * limit;
+    
+    const albums = await Album.find({ artistId: id })
+      .select('title genre releaseDate coverUrl description songsCount createdAt')
+      .populate('artist', 'username')
+      .populate('songs', 'title duration')
+      .sort({ releaseDate: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+    
+    const total = await Album.countDocuments({ artistId: id });
+    
+    console.log(`✅ ${albums.length} albums trouvés pour l'artiste ${artist.username}`);
+    
+    res.json({
+      success: true,
+      message: 'Albums de l\'artiste récupérés avec succès',
+      data: albums,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / parseInt(limit))
+      }
+    });
+    
+  } catch (error) {
+    console.error('💥 Erreur lors de la récupération des albums de l\'artiste:', error);
+    
+    res.status(500).json({
+      success: false,
+      message: 'Erreur serveur lors de la récupération des albums',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Obtenir mes chansons (pour l'artiste connecté)
+// @route   GET /api/artists/me/songs
+// @access  Private (Artistes seulement)
+const getMySongs = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { page = 1, limit = 20 } = req.query;
+    
+    console.log(`🎵 Récupération des chansons de l'artiste connecté: ${userId}`);
+    
+    const skip = (page - 1) * limit;
+    
+    const songs = await Song.find({ uploader: userId })
+      .select('title duration genre playCount audioUrl coverImage createdAt')
+      .populate('uploader', 'username')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+    
+    const total = await Song.countDocuments({ uploader: userId });
+    
+    console.log(`✅ ${songs.length} chansons trouvées pour l'artiste connecté`);
+    
+    res.json({
+      success: true,
+      message: 'Mes chansons récupérées avec succès',
+      data: songs,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / parseInt(limit))
+      }
+    });
+    
+  } catch (error) {
+    console.error('💥 Erreur lors de la récupération de mes chansons:', error);
+    
+    res.status(500).json({
+      success: false,
+      message: 'Erreur serveur lors de la récupération de mes chansons',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Obtenir mes albums (pour l'artiste connecté)
+// @route   GET /api/artists/me/albums
+// @access  Private (Artistes seulement)
+const getMyAlbums = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { page = 1, limit = 20 } = req.query;
+    
+    console.log(`🎵 Récupération des albums de l'artiste connecté: ${userId}`);
+    
+    const skip = (page - 1) * limit;
+    
+    const albums = await Album.find({ artistId: userId })
+      .select('title genre releaseDate coverUrl description songsCount createdAt')
+      .populate('artist', 'username')
+      .populate('songs', 'title duration')
+      .sort({ releaseDate: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+    
+    const total = await Album.countDocuments({ artistId: userId });
+    
+    console.log(`✅ ${albums.length} albums trouvés pour l'artiste connecté`);
+    
+    res.json({
+      success: true,
+      message: 'Mes albums récupérés avec succès',
+      data: albums,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / parseInt(limit))
+      }
+    });
+    
+  } catch (error) {
+    console.error('💥 Erreur lors de la récupération de mes albums:', error);
+    
+    res.status(500).json({
+      success: false,
+      message: 'Erreur serveur lors de la récupération de mes albums',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getPopularArtists,
   getArtistById,
   searchArtists,
   followArtist,
-  unfollowArtist
+  unfollowArtist,
+  getArtistSongs,
+  getArtistAlbums,
+  getMySongs,
+  getMyAlbums
 };

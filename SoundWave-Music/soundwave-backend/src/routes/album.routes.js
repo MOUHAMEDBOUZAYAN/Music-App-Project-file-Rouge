@@ -6,12 +6,14 @@ const albumController = require('../controllers/album.controller');
 const { 
   protect, 
   owner,
+  artist,
   validateObjectId,
   validatePagination,
   searchLimiter,
   uploadLimiter,
   activityLogger 
 } = require('../middleware');
+const { uploadImage } = require('../services/cloudinary.service');
 
 // @route   GET api/albums
 // @desc    Obtenir tous les albums (avec pagination)
@@ -35,7 +37,9 @@ router.get('/:id',
 // @access  Private (Artistes seulement)
 router.post('/', 
   protect, 
+  artist,
   uploadLimiter, 
+  uploadImage.single('cover'),
   activityLogger('create_album'), 
   albumController.createAlbum
 );

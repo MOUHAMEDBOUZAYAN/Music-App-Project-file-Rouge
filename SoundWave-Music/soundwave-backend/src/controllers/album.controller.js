@@ -1,7 +1,6 @@
 const Album = require('../models/Album');
 const Song = require('../models/Song');
 const { AppError } = require('../middleware/error.middleware');
-const { uploadToCloudinary } = require('../services/cloudinary.service');
 
 // @desc    Obtenir tous les albums (avec pagination)
 // @route   GET /api/albums
@@ -103,11 +102,10 @@ const createAlbum = async (req, res, next) => {
       return next(new AppError('Seuls les artistes peuvent créer des albums', 403));
     }
     
-    // Upload de la cover si présente
+    // Upload de la cover si présente (stockage local via uploadImage)
     let coverUrl = null;
-    if (req.file) {
-      const uploadResult = await uploadToCloudinary(req.file, 'albums');
-      coverUrl = uploadResult.secure_url;
+    if (req.file && req.file.filename) {
+      coverUrl = `/uploads/images/${req.file.filename}`;
     }
     
     // Vérifier si les chansons existent et appartiennent à l'artiste

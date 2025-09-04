@@ -7,11 +7,15 @@ const {
   getArtistById, 
   searchArtists, 
   followArtist, 
-  unfollowArtist 
+  unfollowArtist,
+  getArtistSongs,
+  getArtistAlbums,
+  getMySongs,
+  getMyAlbums
 } = require('../controllers/artist.controller.js');
 
 // Importer les middlewares
-const { protect } = require('../middleware');
+const { protect, artist } = require('../middleware');
 
 // @route   GET api/artists/popular
 // @desc    Obtenir les artistes populaires
@@ -37,5 +41,25 @@ router.post('/:id/follow', protect, followArtist);
 // @desc    Ne plus suivre un artiste
 // @access  Private
 router.delete('/:id/follow', protect, unfollowArtist);
+
+// @route   GET api/artists/:id/songs
+// @desc    Obtenir les chansons d'un artiste
+// @access  Public
+router.get('/:id/songs', getArtistSongs);
+
+// @route   GET api/artists/:id/albums
+// @desc    Obtenir les albums d'un artiste
+// @access  Public
+router.get('/:id/albums', getArtistAlbums);
+
+// @route   GET api/artists/me/songs
+// @desc    Obtenir mes chansons (pour l'artiste connecté)
+// @access  Private (Artistes seulement)
+router.get('/me/songs', protect, artist, getMySongs);
+
+// @route   GET api/artists/me/albums
+// @desc    Obtenir mes albums (pour l'artiste connecté)
+// @access  Private (Artistes seulement)
+router.get('/me/albums', protect, artist, getMyAlbums);
 
 module.exports = router;
