@@ -128,35 +128,64 @@ const getSongById = async (req, res, next) => {
 // @access  Private
 const uploadSong = async (req, res, next) => {
   try {
-    const { title, artist, album, genre, duration, spotifyId, description } = req.body;
-    const uploaderId = req.user._id;
+    const { title, genre, duration, description, album } = req.body;
+    const artistId = req.user._id;
     
-    // Upload du fichier audio si présent (stockage local)
-    let audioUrl = null;
-    if (req.file && req.file.filename) {
-      audioUrl = `/uploads/audio/${req.file.filename}`;
-    }
-    
-    const song = await Song.create({
+    console.log('🎵 Upload Song - Données reçues:', {
       title,
-      artist,
-      album,
       genre,
-      duration: duration ? parseInt(duration) : undefined,
-      spotifyId,
+      duration,
       description,
-      audioUrl,
-      uploader: uploaderId
+      album,
+      artistId,
+      files: req.files,
+      file: req.file
     });
     
+    // Vérifier que le fichier audio est présent
+    if (!req.files || !req.files.audio || !req.files.audio[0]) {
+      return res.status(400).json({
+        success: false,
+        message: 'Fichier audio requis'
+      });
+    }
+    
+    // Upload du fichier audio
+    const audioFile = req.files.audio[0];
+    const audioUrl = `/uploads/audio/${audioFile.filename}`;
+    
+    // Upload de l'image de couverture si présente
+    let coverImage = null;
+    if (req.files.cover && req.files.cover[0]) {
+      const coverFile = req.files.cover[0];
+      coverImage = `/uploads/images/${coverFile.filename}`;
+    }
+    
+    // Créer la chanson
+    const song = await Song.create({
+      title,
+      artist: artistId,
+      album,
+      genre: genre ? [genre] : [],
+      duration: duration ? parseInt(duration) : undefined,
+      description,
+      audioUrl,
+      coverImage,
+      isPublic: true
+    });
+    
+    console.log('✅ Chanson créée avec succès:', song._id);
+    
     const populatedSong = await Song.findById(song._id)
-      .populate('uploader', 'username avatar');
+      .populate('artist', 'username profilePicture bio')
+      .populate('album', 'title coverImage');
     
     res.status(201).json({
       success: true,
       data: populatedSong
     });
   } catch (error) {
+    console.error('❌ Erreur lors de l\'upload de la chanson:', error);
     next(new AppError('Erreur lors de l\'upload de la chanson', 500));
   }
 };
@@ -177,7 +206,7 @@ const updateSong = async (req, res, next) => {
     }
     
     // Vérifier si l'utilisateur est le propriétaire ou un admin
-    if (song.uploader.toString() !== userId.toString() && req.user.role !== 'admin') {
+    if (song.artist.toString() !== userId.toString() && req.user.role !== 'admin') {
       return next(new AppError('Vous n\'êtes pas autorisé à modifier cette chanson', 403));
     }
     
@@ -211,6 +240,8 @@ const deleteSong = async (req, res, next) => {
     const { id } = req.params;
     const userId = req.user._id;
     
+    console.log('🗑️ Delete Song - ID:', id, 'User:', userId);
+    
     const song = await Song.findById(id);
     
     if (!song) {
@@ -218,17 +249,39 @@ const deleteSong = async (req, res, next) => {
     }
     
     // Vérifier si l'utilisateur est le propriétaire ou un admin
-    if (song.uploader.toString() !== userId.toString() && req.user.role !== 'admin') {
+    if (song.artist.toString() !== userId.toString() && req.user.role !== 'admin') {
       return next(new AppError('Vous n\'êtes pas autorisé à supprimer cette chanson', 403));
     }
     
+    // Supprimer les fichiers associés
+    if (song.audioUrl) {
+      const fs = require('fs');
+      const path = require('path');
+      const audioPath = path.join(__dirname, '../../', song.audioUrl);
+      if (fs.existsSync(audioPath)) {
+        fs.unlinkSync(audioPath);
+      }
+    }
+    
+    if (song.coverImage) {
+      const fs = require('fs');
+      const path = require('path');
+      const coverPath = path.join(__dirname, '../../', song.coverImage);
+      if (fs.existsSync(coverPath)) {
+        fs.unlinkSync(coverPath);
+      }
+    }
+    
     await Song.findByIdAndDelete(id);
+    
+    console.log('✅ Chanson supprimée avec succès:', id);
     
     res.json({
       success: true,
       message: 'Chanson supprimée avec succès'
     });
   } catch (error) {
+    console.error('❌ Erreur lors de la suppression de la chanson:', error);
     next(new AppError('Erreur lors de la suppression de la chanson', 500));
   }
 };
@@ -439,13 +492,14 @@ const getAllSongs = async (req, res, next) => {
       sortObj.createdAt = -1; // Tri par défaut
     }
     
-    const songs = await Song.find({})
-      .populate('uploader', 'username avatar')
+    const songs = await Song.find({ isPublic: true })
+      .populate('artist', 'username profilePicture bio')
+      .populate('album', 'title coverImage')
       .sort(sortObj)
       .skip(skip)
       .limit(limit);
     
-    const total = await Song.countDocuments({});
+    const total = await Song.countDocuments({ isPublic: true });
     
     res.json({
       success: true,
@@ -462,6 +516,40 @@ const getAllSongs = async (req, res, next) => {
   }
 };
 
+// @desc    Obtenir les chansons de l'utilisateur connecté
+// @route   GET /api/songs/user
+// @access  Private
+const getUserSongs = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+    
+    const songs = await Song.find({ artist: userId })
+      .populate('artist', 'username profilePicture bio')
+      .populate('album', 'title coverImage')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+    
+    const total = await Song.countDocuments({ artist: userId });
+    
+    res.json({
+      success: true,
+      data: songs,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    next(new AppError('Erreur lors de la récupération de vos chansons', 500));
+  }
+};
+
 module.exports = {
   searchSongs,
   getSongById,
@@ -472,5 +560,6 @@ module.exports = {
   getLikedSongs,
   addComment,
   getTrendingSongs,
-  getAllSongs
+  getAllSongs,
+  getUserSongs
 }; 

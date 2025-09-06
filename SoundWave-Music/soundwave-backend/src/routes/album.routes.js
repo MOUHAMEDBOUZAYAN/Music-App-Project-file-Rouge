@@ -24,6 +24,15 @@ router.get('/',
   albumController.getAlbums
 );
 
+// @route   GET api/albums/user
+// @desc    Obtenir les albums de l'utilisateur connecté
+// @access  Private
+router.get('/user',
+  protect,
+  validatePagination,
+  albumController.getUserAlbums
+);
+
 // @route   GET api/albums/:id
 // @desc    Obtenir un album par son ID
 // @access  Public

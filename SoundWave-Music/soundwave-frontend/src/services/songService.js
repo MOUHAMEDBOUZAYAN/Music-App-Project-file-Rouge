@@ -1,259 +1,85 @@
-// Song service will be implemented here 
-import { apiClient, endpoints } from './api.js';
+import api from './api';
 
-export const songService = {
-  // Rechercher des chansons (via /api/search/songs)
-  searchSongs: async (params = {}) => {
-    try {
-      const normalized = { ...params };
-      if (normalized.search && !normalized.q) {
-        normalized.q = normalized.search;
-        delete normalized.search;
-      }
-      const response = await apiClient.get(endpoints.search.songs, { params: normalized });
-      return {
-        success: true,
-        data: response.data
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.response?.data?.message || 'Erreur lors de la recherche'
-      };
-    }
+const songService = {
+  // Uploader une chanson
+  uploadSong: async (formData) => {
+    console.log('🎵 Uploading song with formData:', formData);
+    const response = await api.post('/songs', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    console.log('✅ Song uploaded successfully:', response.data);
+    return response.data;
   },
 
-  // Obtenir une chanson par ID
-  getSongById: async (id) => {
-    try {
-      const response = await apiClient.get(`/api/songs/${id}`);
-      return {
-        success: true,
-        data: response.data
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.response?.data?.message || 'Erreur lors de la récupération de la chanson'
-      };
-    }
+  // Obtenir toutes les chansons
+  getAllSongs: async (params = {}) => {
+    const response = await api.get('/songs/all', { params });
+    return response.data;
   },
 
-  // Uploader une nouvelle chanson
-  uploadSong: async (songData, audioFile, coverFile = null) => {
-    try {
-      const formData = new FormData();
-      
-      // Ajouter les données de la chanson
-      Object.keys(songData).forEach(key => {
-        if (songData[key] !== null && songData[key] !== undefined) {
-          if (key === 'tags' && Array.isArray(songData[key])) {
-            formData.append(key, JSON.stringify(songData[key]));
-          } else {
-            formData.append(key, songData[key]);
-          }
-        }
-      });
-      
-      // Ajouter le fichier audio
-      if (audioFile) {
-        formData.append('audio', audioFile);
-      }
-      
-      // Ajouter la cover si présente
-      if (coverFile) {
-        formData.append('cover', coverFile);
-      }
-      
-      const response = await apiClient.post(endpoints.songs.upload, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        onUploadProgress: (progressEvent) => {
-          const percentCompleted = Math.round(
-            (progressEvent.loaded * 100) / progressEvent.total
-          );
-          // Ici vous pouvez émettre un événement pour mettre à jour la progression
-          console.log('Upload progress:', percentCompleted);
-        },
-      });
-      
-      return {
-        success: true,
-        data: response.data
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.response?.data?.message || 'Erreur lors de l\'upload de la chanson'
-      };
-    }
-  },
-
-  // Mettre à jour une chanson
-  updateSong: async (id, songData) => {
-    try {
-      const response = await apiClient.put(`/api/songs/${id}`, songData);
-      return {
-        success: true,
-        data: response.data
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.response?.data?.message || 'Erreur lors de la mise à jour'
-      };
-    }
+  // Obtenir les chansons de l'utilisateur connecté
+  getUserSongs: async (params = {}) => {
+    const response = await api.get('/songs/user', { params });
+    return response.data;
   },
 
   // Supprimer une chanson
-  deleteSong: async (id) => {
-    try {
-      await apiClient.delete(`/api/songs/${id}`);
-      return {
-        success: true,
-        message: 'Chanson supprimée avec succès'
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.response?.data?.message || 'Erreur lors de la suppression'
-      };
-    }
-  },
-
-  // Aimer/ne plus aimer une chanson
-  likeSong: async (id) => {
-    try {
-      const response = await apiClient.post(`/api/songs/${id}/like`);
-      return {
-        success: true,
-        data: response.data
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.response?.data?.message || 'Erreur lors de l\'action like'
-      };
-    }
-  },
-
-  // Ajouter un commentaire
-  addComment: async (id, comment) => {
-    try {
-      const response = await apiClient.post(`/api/songs/${id}/comment`, {
-        content: comment
-      });
-      return {
-        success: true,
-        data: response.data
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.response?.data?.message || 'Erreur lors de l\'ajout du commentaire'
-      };
-    }
+  deleteSong: async (songId) => {
+    const response = await api.delete(`/songs/${songId}`);
+    return response.data;
   },
 
   // Obtenir les chansons tendance
   getTrendingSongs: async (params = {}) => {
-    try {
-      const response = await apiClient.get(endpoints.songs.trending, { params });
-      return {
-        success: true,
-        data: response.data
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.response?.data?.message || 'Erreur lors de la récupération des tendances'
-      };
-    }
+    const response = await api.get('/songs/trending', { params });
+    return response.data;
   },
 
-  // Obtenir les chansons d'un artiste
-  getArtistSongs: async (artistId, params = {}) => {
-    try {
-      const response = await apiClient.get(`/api/songs/artist/${artistId}`, { params });
-      return {
-        success: true,
-        data: response.data
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.response?.data?.message || 'Erreur lors de la récupération des chansons de l\'artiste'
-      };
-    }
+  // Obtenir les chansons likées
+  getLikedSongs: async () => {
+    const response = await api.get('/songs/liked');
+    return response.data;
   },
 
-  // Obtenir les chansons likées par l'utilisateur
-  getLikedSongs: async (params = {}) => {
-    try {
-      const response = await apiClient.get(endpoints.songs.liked, { params });
-      return {
-        success: true,
-        data: response.data
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.response?.data?.message || 'Erreur lors de la récupération des chansons likées'
-      };
-    }
+  // Rechercher des chansons
+  searchSongs: async (query, params = {}) => {
+    const response = await api.get('/songs', { 
+      params: { q: query, ...params } 
+    });
+    return response.data;
   },
 
-  // Obtenir les albums récents
-  getRecentAlbums: async (params = {}) => {
-    try {
-      const response = await apiClient.get('/api/songs/all', {
-        params: {
-          ...params,
-          sortBy: 'releaseDate',
-          sortOrder: 'desc'
-        }
-      });
-      
-      // Grouper par album et formater
-      const albumsMap = new Map();
-      
-      response.data.forEach(song => {
-        if (song.album) {
-          const albumId = song.album._id || song.album.id;
-          if (!albumsMap.has(albumId)) {
-            albumsMap.set(albumId, {
-              id: albumId,
-              name: song.album.title || song.album.name,
-              artist: song.album.artist?.name || song.artist?.name || 'Artiste inconnu',
-              coverUrl: song.album.cover || song.album.artwork || song.cover,
-              genre: song.genre || 'Pop',
-              releaseDate: song.releaseDate || song.createdAt,
-              tracks: []
-            });
-          }
-          
-          const album = albumsMap.get(albumId);
-          album.tracks.push(song);
-        }
-      });
-      
-      // Trier par date de sortie et retourner
-      const recentAlbums = Array.from(albumsMap.values())
-        .sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate))
-        .slice(0, params.limit || 10);
-      
-      return {
-        success: true,
-        data: recentAlbums
-      };
-    } catch (error) {
-      console.error('Erreur lors de la récupération des albums récents:', error);
-      return {
-        success: false,
-        error: 'Impossible de récupérer les albums récents',
-        data: []
-      };
-    }
-  }
+  // Obtenir une chanson par ID
+  getSongById: async (id) => {
+    const response = await api.get(`/songs/${id}`);
+    return response.data;
+  },
+
+  // Mettre à jour une chanson
+  updateSong: async (id, data) => {
+    const response = await api.put(`/songs/${id}`, data);
+    return response.data;
+  },
+
+  // Supprimer une chanson
+  deleteSong: async (id) => {
+    const response = await api.delete(`/songs/${id}`);
+    return response.data;
+  },
+
+  // Aimer/ne plus aimer une chanson
+  likeSong: async (id) => {
+    const response = await api.post(`/songs/${id}/like`);
+    return response.data;
+  },
+
+  // Ajouter un commentaire
+  addComment: async (id, content) => {
+    const response = await api.post(`/songs/${id}/comment`, { content });
+    return response.data;
+  },
 };
+
+export { songService };

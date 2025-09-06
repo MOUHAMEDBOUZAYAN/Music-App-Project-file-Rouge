@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { USER_ROLES } from '../utils/constants.js';
+import { songService } from '../services/songService';
+import { albumService } from '../services/albumService';
 import { 
   User, 
   Mail, 
@@ -17,7 +19,10 @@ import {
   Download,
   Star,
   Save,
-  X
+  X,
+  Disc,
+  Upload,
+  BarChart3
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -30,6 +35,9 @@ const Profile = () => {
     username: '',
     email: ''
   });
+  const [userSongs, setUserSongs] = useState([]);
+  const [userAlbums, setUserAlbums] = useState([]);
+  const [loadingStats, setLoadingStats] = useState(false);
 
   useEffect(() => {
     setIsVisible(true);
@@ -38,8 +46,30 @@ const Profile = () => {
         username: user.username || '',
         email: user.email || ''
       });
+      
+      // Charger les statistiques si l'utilisateur est un artiste
+      if (user.role === USER_ROLES.ARTIST || user.role === USER_ROLES.ADMIN) {
+        loadUserStats();
+      }
     }
   }, [user]);
+
+  const loadUserStats = async () => {
+    setLoadingStats(true);
+    try {
+      const [songsResponse, albumsResponse] = await Promise.all([
+        songService.getUserSongs({ limit: 5 }),
+        albumService.getUserAlbums({ limit: 5 })
+      ]);
+      
+      setUserSongs(songsResponse.data || []);
+      setUserAlbums(albumsResponse.data || []);
+    } catch (error) {
+      console.error('Erreur lors du chargement des statistiques:', error);
+    } finally {
+      setLoadingStats(false);
+    }
+  };
 
   const handleEditClick = () => {
     setIsEditing(true);
@@ -415,10 +445,10 @@ const Profile = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
-              { icon: <Music className="h-8 w-8" />, value: '0', label: 'Playlists créées', color: 'text-green-500', bgColor: 'bg-green-500/20' },
+              { icon: <Music className="h-8 w-8" />, value: userSongs.length.toString(), label: 'Chansons uploadées', color: 'text-green-500', bgColor: 'bg-green-500/20' },
+              { icon: <Disc className="h-8 w-8" />, value: userAlbums.length.toString(), label: 'Albums créés', color: 'text-blue-500', bgColor: 'bg-blue-500/20' },
               { icon: <Heart className="h-8 w-8" />, value: '0', label: 'Morceaux likés', color: 'text-red-500', bgColor: 'bg-red-500/20' },
-              { icon: <Clock className="h-8 w-8" />, value: '0h', label: 'Heures d\'écoute', color: 'text-blue-500', bgColor: 'bg-blue-500/20' },
-              { icon: <Download className="h-8 w-8" />, value: '0', label: 'Téléchargements', color: 'text-purple-500', bgColor: 'bg-purple-500/20' }
+              { icon: <Clock className="h-8 w-8" />, value: '0h', label: 'Heures d\'écoute', color: 'text-purple-500', bgColor: 'bg-purple-500/20' }
             ].map((stat, index) => (
               <div 
                 key={index}
@@ -438,6 +468,121 @@ const Profile = () => {
           </div>
         </div>
       </section>
+
+      {/* Section créations pour les artistes */}
+      {(user.role === USER_ROLES.ARTIST || user.role === USER_ROLES.ADMIN) && (
+        <section className="py-16 px-6">
+          <div className="max-w-6xl mx-auto">
+            <div className={`text-center mb-12 transition-all duration-1000 delay-1000 ${
+              isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+            }`}>
+              <h2 className="text-3xl font-bold text-white mb-4">Vos créations</h2>
+              <p className="text-xl text-gray-400">Gérez vos chansons et albums</p>
+            </div>
+
+            {/* Actions rapides pour artistes */}
+            <div className="flex justify-center space-x-4 mb-8">
+              <Link
+                to="/artist-dashboard"
+                className="px-6 py-3 bg-green-500 text-black rounded-lg font-medium hover:bg-green-400 transition-colors flex items-center space-x-2"
+              >
+                <BarChart3 className="h-5 w-5" />
+                <span>Tableau de bord</span>
+              </Link>
+            </div>
+
+            {/* Dernières chansons */}
+            <div className="mb-12">
+              <h3 className="text-2xl font-bold text-white mb-6 flex items-center space-x-3">
+                <Music className="h-6 w-6 text-green-500" />
+                <span>Dernières chansons</span>
+              </h3>
+              
+              {loadingStats ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : userSongs.length === 0 ? (
+                <div className="text-center py-8 bg-gray-900/50 rounded-lg">
+                  <Music className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-400 mb-4">Aucune chanson uploadée</p>
+                  <Link
+                    to="/artist-dashboard"
+                    className="inline-block px-6 py-3 bg-green-500 text-black rounded-lg font-medium hover:bg-green-400 transition-colors"
+                  >
+                    Uploader une chanson
+                  </Link>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {userSongs.slice(0, 6).map((song) => (
+                    <div key={song._id} className="bg-gray-800 rounded-lg p-4 hover:bg-gray-700 transition-colors">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-12 h-12 bg-gray-700 rounded-lg flex items-center justify-center">
+                          <Music className="h-6 w-6 text-gray-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-white font-medium truncate">{song.title}</h4>
+                          <p className="text-gray-400 text-sm">{song.genre?.[0] || 'Sans genre'}</p>
+                        </div>
+                        <button className="p-2 hover:bg-gray-600 rounded transition-colors">
+                          <Play className="h-4 w-4 text-gray-400" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Derniers albums */}
+            <div>
+              <h3 className="text-2xl font-bold text-white mb-6 flex items-center space-x-3">
+                <Disc className="h-6 w-6 text-blue-500" />
+                <span>Derniers albums</span>
+              </h3>
+              
+              {loadingStats ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : userAlbums.length === 0 ? (
+                <div className="text-center py-8 bg-gray-900/50 rounded-lg">
+                  <Disc className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-400 mb-4">Aucun album créé</p>
+                  <Link
+                    to="/artist-dashboard"
+                    className="inline-block px-6 py-3 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-400 transition-colors"
+                  >
+                    Créer un album
+                  </Link>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {userAlbums.slice(0, 6).map((album) => (
+                    <div key={album._id} className="bg-gray-800 rounded-lg p-4 hover:bg-gray-700 transition-colors">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-12 h-12 bg-gray-700 rounded-lg flex items-center justify-center">
+                          <Disc className="h-6 w-6 text-gray-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-white font-medium truncate">{album.title}</h4>
+                          <p className="text-gray-400 text-sm">
+                            {album.songs?.length || 0} chanson{(album.songs?.length || 0) > 1 ? 's' : ''}
+                          </p>
+                        </div>
+                        <button className="p-2 hover:bg-gray-600 rounded transition-colors">
+                          <Play className="h-4 w-4 text-gray-400" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Actions rapides */}
       <section className="py-16 px-6">

@@ -29,6 +29,7 @@ import Contact from './pages/Contact';
 import NewReleases from './pages/NewReleases';
 import Subscriptions from './pages/Subscriptions';
 import SpotifyCallback from './pages/SpotifyCallback';
+import ArtistDashboard from './pages/ArtistDashboard';
 import Footer from './components/common/Footer';
 
 // Styles
@@ -189,6 +190,12 @@ function App() {
                   <Layout>
                     <Subscriptions />
                   </Layout>
+                </ProtectedRoute>
+              } />
+
+              <Route path="/artist-dashboard" element={
+                <ProtectedRoute>
+                  <ArtistDashboard />
                 </ProtectedRoute>
               } />
               

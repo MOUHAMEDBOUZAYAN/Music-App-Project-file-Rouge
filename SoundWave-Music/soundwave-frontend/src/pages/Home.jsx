@@ -17,6 +17,8 @@ import { useAuth } from '../hooks/useAuth';
 import { useMusic } from '../store/MusicContext';
 import { useSidebar } from '../store/SidebarContext';
 import { useNavigate } from 'react-router-dom';
+import { songService } from '../services/songService';
+import { albumService } from '../services/albumService';
 import toast from 'react-hot-toast';
 
 const Home = () => {
@@ -27,13 +29,13 @@ const Home = () => {
   
   const [currentFilter, setCurrentFilter] = useState('Tout');
   
-  // Données locales (placeholder) remplaçant l'ancien contexte Deezer
+  // Données des créations des artistes
   const [popularArtists, setPopularArtists] = useState([]);
   const [popularAlbums, setPopularAlbums] = useState([]);
   const [newReleases, setNewReleases] = useState([]);
   const [featuredPlaylists, setFeaturedPlaylists] = useState([]);
-  const deezerLoading = false;
-  const deezerError = null;
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   
   // Refs pour le défilement horizontal
   const radioScrollRef = useRef(null);
@@ -43,7 +45,85 @@ const Home = () => {
 
   useEffect(() => {
     console.log('🏠 Home - État de la sidebar:', isSidebarOpen);
+    loadHomeData();
   }, [isSidebarOpen]);
+
+  // Charger les données de la page d'accueil
+  const loadHomeData = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const [songsResponse, albumsResponse, trendingResponse] = await Promise.all([
+        songService.getAllSongs({ limit: 20, sortBy: 'createdAt', sortOrder: 'desc' }),
+        albumService.getAllAlbums({ limit: 20, sortBy: 'createdAt', sortOrder: 'desc' }),
+        songService.getTrendingSongs({ limit: 10 })
+      ]);
+
+      // Organiser les données pour l'affichage
+      const songs = songsResponse.data || [];
+      const albums = albumsResponse.data || [];
+      const trendingSongs = trendingResponse.data || [];
+
+      // Extraire les artistes uniques des chansons
+      const artistsMap = new Map();
+      songs.forEach(song => {
+        if (song.artist && song.artist._id) {
+          if (!artistsMap.has(song.artist._id)) {
+            artistsMap.set(song.artist._id, {
+              id: song.artist._id,
+              name: song.artist.username || song.artist.name,
+              picture: song.artist.profilePicture || song.artist.avatar,
+              cover: song.coverImage || song.album?.coverImage
+            });
+          }
+        }
+      });
+
+      setPopularArtists(Array.from(artistsMap.values()));
+      setPopularAlbums(albums.map(album => ({
+        id: album._id,
+        title: album.title,
+        name: album.title,
+        cover: album.coverImage,
+        picture: album.coverImage,
+        artist: {
+          name: album.artist?.username || album.artist?.name || 'Artiste inconnu'
+        }
+      })));
+      setNewReleases(songs.slice(0, 10).map(song => ({
+        id: song._id,
+        title: song.title,
+        name: song.title,
+        cover: song.coverImage,
+        picture: song.coverImage,
+        artist: {
+          name: song.artist?.username || song.artist?.name || 'Artiste inconnu'
+        }
+      })));
+      setFeaturedPlaylists(trendingSongs.map(song => ({
+        id: song._id,
+        title: song.title,
+        name: song.title,
+        cover: song.coverImage,
+        picture: song.coverImage
+      })));
+
+    } catch (err) {
+      console.error('Erreur lors du chargement des données:', err);
+      
+      // Gestion spécifique des erreurs de connexion
+      if (err.message?.includes('timeout') || err.message?.includes('ECONNABORTED')) {
+        setError('Le serveur backend ne répond pas. Veuillez démarrer le backend avec: cd soundwave-backend && npm run dev');
+      } else if (err.message?.includes('ERR_NETWORK') || err.message?.includes('ECONNREFUSED')) {
+        setError('Impossible de se connecter au serveur. Vérifiez que le backend est démarré sur le port 5000.');
+      } else {
+        setError('Erreur lors du chargement des données. Vérifiez la connexion au serveur.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Fonctions de défilement
   const scrollLeft = (ref) => {
@@ -59,20 +139,21 @@ const Home = () => {
   };
 
   const handlePlaySong = (song) => {
-    const deezerSong = {
-      _id: song.id,
+    // Construire l'URL complète pour les fichiers locaux
+    const baseUrl = 'http://127.0.0.1:5000';
+    const localSong = {
+      _id: song.id || song._id,
       title: song.title || song.name,
-      artist: song.artist?.name || song.artists?.[0]?.name || 'Artiste inconnu',
-      cover: song.cover || song.album?.cover || song.images?.[0]?.url,
-      audioUrl: song.preview || song.preview_url,
+      artist: song.artist?.name || song.artist?.username || 'Artiste inconnu',
+      cover: song.cover || song.coverImage || song.picture,
+      audioUrl: song.audioUrl ? `${baseUrl}${song.audioUrl}` : song.audioUrl,
       duration: song.duration || song.duration_ms,
       album: song.album?.title || song.album?.name,
-      // deezerId: song.id,
-      // isDeezer: true
+      isLocal: true
     };
     
-    playTrack(deezerSong);
-    toast.success(`Lecture de ${deezerSong.title}`);
+    playTrack(localSong);
+    toast.success(`Lecture de ${localSong.title}`);
   };
 
   const handleArtistClick = (artist) => {
@@ -80,19 +161,20 @@ const Home = () => {
   };
 
   const handleAddToQueue = (song) => {
-    const deezerSong = {
-      _id: song.id,
+    // Construire l'URL complète pour les fichiers locaux
+    const baseUrl = 'http://127.0.0.1:5000';
+    const localSong = {
+      _id: song.id || song._id,
       title: song.title || song.name,
-      artist: song.artist?.name || song.artists?.[0]?.name || 'Artiste inconnu',
-      cover: song.cover || song.album?.cover || song.images?.[0]?.url,
-      audioUrl: song.preview || song.preview_url,
+      artist: song.artist?.name || song.artist?.username || 'Artiste inconnu',
+      cover: song.cover || song.coverImage || song.picture,
+      audioUrl: song.audioUrl ? `${baseUrl}${song.audioUrl}` : song.audioUrl,
       duration: song.duration || song.duration_ms,
       album: song.album?.title || song.album?.name,
-      // deezerId: song.id,
-      // isDeezer: true
+      isLocal: true
     };
     
-    addToQueue(deezerSong);
+    addToQueue(localSong);
     toast.success('Ajouté à la file d\'attente');
   };
 
@@ -100,12 +182,40 @@ const Home = () => {
     toggleLike(song);
   };
 
-  if (deezerLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-white">Chargement de votre musique...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center p-6">
+        <div className="text-center max-w-md">
+          <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Music2 className="h-8 w-8 text-white" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-4">Erreur de connexion</h2>
+          <p className="text-gray-300 mb-6">{error}</p>
+          <div className="space-y-3">
+            <button 
+              onClick={loadHomeData}
+              className="bg-green-500 hover:bg-green-400 text-black px-6 py-3 rounded-lg font-medium transition-colors mr-3"
+            >
+              Réessayer
+            </button>
+            <div className="text-sm text-gray-400 mt-4">
+              <p>💡 <strong>Solution rapide :</strong></p>
+              <p>1. Ouvrir un terminal</p>
+              <p>2. Aller dans le dossier soundwave-backend</p>
+              <p>3. Exécuter : npm run dev</p>
+            </div>
+          </div>
         </div>
       </div>
     );

@@ -94,8 +94,19 @@ const getAlbumById = async (req, res, next) => {
 // @access  Private (Artistes seulement)
 const createAlbum = async (req, res, next) => {
   try {
-    const { title, artist, genre, releaseDate, description, songs = [] } = req.body;
+    const { title, genre, releaseDate, description, songs = [] } = req.body;
     const artistId = req.user._id;
+    
+    console.log('🎵 Create Album - Données reçues:', {
+      title,
+      genre,
+      releaseDate,
+      description,
+      songs,
+      artistId,
+      files: req.files,
+      file: req.file
+    });
     
     // Vérifier si l'utilisateur est un artiste
     if (req.user.role !== 'artist' && req.user.role !== 'admin') {
@@ -103,42 +114,52 @@ const createAlbum = async (req, res, next) => {
     }
     
     // Upload de la cover si présente (stockage local via uploadImage)
-    let coverUrl = null;
+    let coverImage = null;
     if (req.file && req.file.filename) {
-      coverUrl = `/uploads/images/${req.file.filename}`;
+      coverImage = `/uploads/images/${req.file.filename}`;
     }
     
     // Vérifier si les chansons existent et appartiennent à l'artiste
-    if (songs.length > 0) {
-      const existingSongs = await Song.find({ 
-        _id: { $in: songs },
-        uploader: artistId
-      });
-      if (existingSongs.length !== songs.length) {
-        return next(new AppError('Certaines chansons n\'existent pas ou ne vous appartiennent pas', 400));
+    let songIds = [];
+    if (songs && songs.length > 0) {
+      try {
+        songIds = JSON.parse(songs);
+      } catch (e) {
+        songIds = songs;
+      }
+      
+      if (songIds.length > 0) {
+        const existingSongs = await Song.find({ 
+          _id: { $in: songIds },
+          artist: artistId
+        });
+        if (existingSongs.length !== songIds.length) {
+          return next(new AppError('Certaines chansons n\'existent pas ou ne vous appartiennent pas', 400));
+        }
       }
     }
     
     const album = await Album.create({
       title,
-      artist: artist || req.user.username,
+      artist: artistId,
       genre,
       releaseDate: releaseDate || new Date(),
-      description,
-      coverUrl,
-      songs,
-      artistId
+      coverImage,
+      songs: songIds
     });
     
+    console.log('✅ Album créé avec succès:', album._id);
+    
     const populatedAlbum = await Album.findById(album._id)
-      .populate('artist', 'username avatar')
-      .populate('songs', 'title duration');
+      .populate('artist', 'username profilePicture bio')
+      .populate('songs', 'title duration coverImage');
     
     res.status(201).json({
       success: true,
       data: populatedAlbum
     });
   } catch (error) {
+    console.error('❌ Erreur lors de la création de l\'album:', error);
     next(new AppError('Erreur lors de la création de l\'album', 500));
   }
 };
@@ -159,7 +180,7 @@ const updateAlbum = async (req, res, next) => {
     }
     
     // Vérifier si l'utilisateur est le propriétaire ou un admin
-    if (album.artistId.toString() !== userId.toString() && req.user.role !== 'admin') {
+    if (album.artist.toString() !== userId.toString() && req.user.role !== 'admin') {
       return next(new AppError('Vous n\'êtes pas autorisé à modifier cet album', 403));
     }
     
@@ -195,6 +216,8 @@ const deleteAlbum = async (req, res, next) => {
     const { id } = req.params;
     const userId = req.user._id;
     
+    console.log('🗑️ Delete Album - ID:', id, 'User:', userId);
+    
     const album = await Album.findById(id);
     
     if (!album) {
@@ -202,17 +225,30 @@ const deleteAlbum = async (req, res, next) => {
     }
     
     // Vérifier si l'utilisateur est le propriétaire ou un admin
-    if (album.artistId.toString() !== userId.toString() && req.user.role !== 'admin') {
+    if (album.artist.toString() !== userId.toString() && req.user.role !== 'admin') {
       return next(new AppError('Vous n\'êtes pas autorisé à supprimer cet album', 403));
     }
     
+    // Supprimer l'image de couverture
+    if (album.coverImage) {
+      const fs = require('fs');
+      const path = require('path');
+      const coverPath = path.join(__dirname, '../../', album.coverImage);
+      if (fs.existsSync(coverPath)) {
+        fs.unlinkSync(coverPath);
+      }
+    }
+    
     await Album.findByIdAndDelete(id);
+    
+    console.log('✅ Album supprimé avec succès:', id);
     
     res.json({
       success: true,
       message: 'Album supprimé avec succès'
     });
   } catch (error) {
+    console.error('❌ Erreur lors de la suppression de l\'album:', error);
     next(new AppError('Erreur lors de la suppression de l\'album', 500));
   }
 };
@@ -233,7 +269,7 @@ const addSongToAlbum = async (req, res, next) => {
     }
     
     // Vérifier si l'utilisateur est le propriétaire
-    if (album.artistId.toString() !== userId.toString()) {
+    if (album.artist.toString() !== userId.toString()) {
       return next(new AppError('Vous n\'êtes pas autorisé à modifier cet album', 403));
     }
     
@@ -280,7 +316,7 @@ const removeSongFromAlbum = async (req, res, next) => {
     }
     
     // Vérifier si l'utilisateur est le propriétaire
-    if (album.artistId.toString() !== userId.toString()) {
+    if (album.artist.toString() !== userId.toString()) {
       return next(new AppError('Vous n\'êtes pas autorisé à modifier cet album', 403));
     }
     
@@ -306,6 +342,40 @@ const removeSongFromAlbum = async (req, res, next) => {
   }
 };
 
+// @desc    Obtenir les albums de l'utilisateur connecté
+// @route   GET /api/albums/user
+// @access  Private
+const getUserAlbums = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+    
+    const albums = await Album.find({ artist: userId })
+      .populate('artist', 'username profilePicture bio')
+      .populate('songs', 'title duration coverImage')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+    
+    const total = await Album.countDocuments({ artist: userId });
+    
+    res.json({
+      success: true,
+      data: albums,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    next(new AppError('Erreur lors de la récupération de vos albums', 500));
+  }
+};
+
 module.exports = {
   getAlbums,
   getAlbumById,
@@ -313,5 +383,6 @@ module.exports = {
   updateAlbum,
   deleteAlbum,
   addSongToAlbum,
-  removeSongFromAlbum
+  removeSongFromAlbum,
+  getUserAlbums
 }; 

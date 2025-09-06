@@ -13,7 +13,9 @@ import {
   Cog,
   Disc3,
   Users,
-  Crown
+  Crown,
+  BarChart3,
+  Music
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useSidebar } from '../../store/SidebarContext';
@@ -136,6 +138,21 @@ const Sidebar = ({ isOpen, onToggle }) => {
               <Crown className="h-5 w-5" />
               <span>Abonnements</span>
             </Link>
+
+            {/* Lien vers le tableau de bord artiste */}
+            {(user?.role === 'artist' || user?.role === 'admin') && (
+              <Link
+                to="/artist-dashboard"
+                className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
+                  isActive('/artist-dashboard') 
+                    ? 'bg-gray-800 text-white' 
+                    : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+                }`}
+              >
+                <BarChart3 className="h-5 w-5" />
+                <span>Tableau de bord</span>
+              </Link>
+            )}
           </nav>
         </div>
 

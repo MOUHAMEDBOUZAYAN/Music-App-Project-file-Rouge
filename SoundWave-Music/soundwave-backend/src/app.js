@@ -16,12 +16,20 @@ const {
 // Load environment variables
 dotenv.config();
 
+// Set default environment variables if not provided
+process.env.PORT = process.env.PORT || '5000';
+process.env.NODE_ENV = process.env.NODE_ENV || 'development';
+process.env.CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:3000';
+process.env.MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/soundwave';
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'default-jwt-secret-change-in-production';
+
 
 // Connect to database (optional for now)
 try {
   connectDB();
 } catch (error) {
   console.log('⚠️  Database connection failed, continuing without database...');
+  console.log('💡 To fix: Install MongoDB and set MONGODB_URI in .env file');
 }
 
 const app = express();
@@ -42,7 +50,8 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Static serving for uploads (audio/images)
-app.use('/uploads', express.static(require('path').join(__dirname, '../uploads')));
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Test route
 app.get('/api/health', (req, res) => {
@@ -68,6 +77,7 @@ app.use('/api/admin', require('./routes/admin.routes'));
 app.use('/api/search', require('./routes/search.routes'));
 app.use('/api/social', require('./routes/social.routes'));
 app.use('/api/favorites', require('./routes/favorites.routes'));
+
 
 // Routes 404 - doit être placé avant le middleware d'erreur
 app.use(notFound);

@@ -54,6 +54,15 @@ router.get('/liked',
   songController.getLikedSongs
 );
 
+// @route   GET api/songs/user
+// @desc    Obtenir les chansons de l'utilisateur connecté
+// @access  Private
+router.get('/user',
+  protect,
+  validatePagination,
+  songController.getUserSongs
+);
+
 // @route   GET api/songs/:id
 // @desc    Obtenir les détails d'une chanson
 // @access  Public
@@ -69,7 +78,10 @@ router.post('/',
   protect, 
   artist,
   uploadLimiter, 
-  uploadAudio.single('audio'),
+  uploadAudio.fields([
+    { name: 'audio', maxCount: 1 },
+    { name: 'cover', maxCount: 1 }
+  ]),
   validateSong, 
   activityLogger('upload_song'), 
   songController.uploadSong
