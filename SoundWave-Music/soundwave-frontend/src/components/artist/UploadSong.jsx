@@ -77,6 +77,12 @@ const UploadSong = ({ onClose, onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Vérifier que l'utilisateur est connecté
+    if (!user) {
+      toast.error('Vous devez être connecté pour uploader une chanson');
+      return;
+    }
+    
     if (!audioFile) {
       toast.error('Veuillez sélectionner un fichier audio');
       return;
@@ -233,6 +239,7 @@ const UploadSong = ({ onClose, onSuccess }) => {
                 <option value="Pop">Pop</option>
                 <option value="Rock">Rock</option>
                 <option value="Hip-Hop">Hip-Hop</option>
+                <option value="Rap">Rap</option>
                 <option value="R&B">R&B</option>
                 <option value="Electronic">Electronic</option>
                 <option value="Jazz">Jazz</option>

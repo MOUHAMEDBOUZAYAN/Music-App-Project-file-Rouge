@@ -102,6 +102,39 @@ const uploadAudio = multer({
 });
 
 /**
+ * Middleware Multer pour l'upload multiple (audio + images)
+ */
+const uploadMultiple = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      let folder = 'uploads';
+      if (file.fieldname === 'audio') {
+        folder = 'uploads/audio';
+      } else if (file.fieldname === 'cover') {
+        folder = 'uploads/images';
+      }
+      cb(null, path.join(__dirname, '../../', folder));
+    },
+    filename: (req, file, cb) => {
+      const fileName = Date.now() + '-' + file.originalname;
+      cb(null, fileName);
+    }
+  }),
+  limits: {
+    fileSize: 50 * 1024 * 1024 // 50MB
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.fieldname === 'audio' && file.mimetype.startsWith('audio/')) {
+      cb(null, true);
+    } else if (file.fieldname === 'cover' && file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error(`Type de fichier non autorisé pour ${file.fieldname}`), false);
+    }
+  }
+});
+
+/**
  * Optimiser une image (simulation)
  * @param {string} fileName - Le nom du fichier
  * @param {Object} options - Options d'optimisation
@@ -177,6 +210,7 @@ module.exports = {
   deleteFromLocal,
   uploadImage,
   uploadAudio,
+  uploadMultiple,
   optimizeImage,
   createThumbnail,
   getFileInfo,

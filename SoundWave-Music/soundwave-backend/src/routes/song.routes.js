@@ -18,7 +18,7 @@ const {
   socialActionLimiter,
   activityLogger 
 } = require('../middleware');
-const { uploadAudio } = require('../services/cloudinary.service');
+const { uploadMultiple } = require('../services/cloudinary.service');
 
 // @route   GET api/songs
 // @desc    Rechercher des chansons
@@ -78,10 +78,21 @@ router.post('/',
   protect, 
   artist,
   uploadLimiter, 
-  uploadAudio.fields([
+  uploadMultiple.fields([
     { name: 'audio', maxCount: 1 },
     { name: 'cover', maxCount: 1 }
   ]),
+  (err, req, res, next) => {
+    if (err) {
+      console.error('❌ Erreur Multer:', err);
+      return res.status(400).json({
+        success: false,
+        message: 'Erreur lors de l\'upload du fichier',
+        error: err.message
+      });
+    }
+    next();
+  },
   validateSong, 
   activityLogger('upload_song'), 
   songController.uploadSong

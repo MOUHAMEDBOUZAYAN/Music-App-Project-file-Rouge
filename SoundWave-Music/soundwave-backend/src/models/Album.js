@@ -24,9 +24,17 @@ const albumSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'Song'
   }],
-  genre: {
+  genre: [{
     type: String,
     trim: true
+  }],
+  description: {
+    type: String,
+    default: ''
+  },
+  songCount: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: true

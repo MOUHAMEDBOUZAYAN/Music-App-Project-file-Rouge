@@ -66,11 +66,11 @@ export const authService = {
       
       const responseData = await apiClient.post(endpoints.auth.register, {
         firstName: userData.firstName,
-        lastName: userData.lastName,
+        LastName: userData.lastName,
         email: userData.email,
         password: userData.password,
         confirmPassword: userData.confirmPassword,
-        userType: userData.userType || 'listener'
+        role: userData.userType || 'listener'
       });
       
       console.log('📄 Réponse du serveur:', responseData);

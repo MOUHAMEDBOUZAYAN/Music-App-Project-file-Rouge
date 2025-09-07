@@ -128,6 +128,14 @@ const getSongById = async (req, res, next) => {
 // @access  Private
 const uploadSong = async (req, res, next) => {
   try {
+    // Vérifier que l'utilisateur est connecté
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Vous devez être connecté pour uploader une chanson'
+      });
+    }
+
     const { title, genre, duration, description, album } = req.body;
     const artistId = req.user._id;
     
@@ -140,6 +148,13 @@ const uploadSong = async (req, res, next) => {
       artistId,
       files: req.files,
       file: req.file
+    });
+    
+    console.log('🔍 Vérification des fichiers:', {
+      hasFiles: !!req.files,
+      filesKeys: req.files ? Object.keys(req.files) : 'no files',
+      audioFile: req.files?.audio ? req.files.audio[0] : 'no audio',
+      coverFile: req.files?.cover ? req.files.cover[0] : 'no cover'
     });
     
     // Vérifier que le fichier audio est présent
@@ -165,7 +180,7 @@ const uploadSong = async (req, res, next) => {
     const song = await Song.create({
       title,
       artist: artistId,
-      album,
+      album: album || '',
       genre: genre ? [genre] : [],
       duration: duration ? parseInt(duration) : undefined,
       description,
@@ -186,7 +201,15 @@ const uploadSong = async (req, res, next) => {
     });
   } catch (error) {
     console.error('❌ Erreur lors de l\'upload de la chanson:', error);
-    next(new AppError('Erreur lors de l\'upload de la chanson', 500));
+    console.error('❌ Stack trace:', error.stack);
+    
+    // Retourner une réponse d'erreur détaillée
+    return res.status(500).json({
+      success: false,
+      message: 'Erreur lors de l\'upload de la chanson',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Erreur interne du serveur',
+      details: process.env.NODE_ENV === 'development' ? error.stack : null
+    });
   }
 };
 
@@ -428,8 +451,8 @@ const getTrendingSongs = async (req, res, next) => {
     const skip = (page - 1) * limit;
     
     const songs = await Song.find()
-      .populate('uploader', 'username avatar')
-      .sort({ views: -1, likesCount: -1 })
+      .populate('artist', 'username avatar')
+      .sort({ plays: -1, likes: -1 })
       .skip(skip)
       .limit(limit);
     

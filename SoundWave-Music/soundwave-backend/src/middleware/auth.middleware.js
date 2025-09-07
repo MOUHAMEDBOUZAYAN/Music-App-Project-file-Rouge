@@ -63,7 +63,14 @@ const admin = (req, res, next) => {
  * Middleware pour vérifier si l'utilisateur est artiste ou admin
  */
 const artist = (req, res, next) => {
-  if (req.user && (req.user.role === 'artist' || req.user.role === 'admin')) {
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      message: 'Vous devez être connecté pour effectuer cette action'
+    });
+  }
+  
+  if (req.user.role === 'artist' || req.user.role === 'admin') {
     next();
   } else {
     return res.status(403).json({

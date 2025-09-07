@@ -15,18 +15,21 @@ const generateToken = (id) => {
 const register = async (req, res) => {
   console.log('📝 Données reçues pour l\'inscription:', req.body);
   
-  const { firstName, lastName, email, password, confirmPassword, userType } = req.body;
+  const { firstName, LastName, email, password, confirmPassword, role } = req.body;
+  
+  // Créer le nom d'utilisateur à partir du prénom et nom
+  const username = `${firstName} ${LastName}`.trim();
 
   try {
     // Validation des données
-    if (!firstName || !lastName || !email || !password || !confirmPassword) {
+    if (!firstName || !LastName || !email || !password || !confirmPassword) {
       console.log('❌ Validation échouée - champs manquants');
       return res.status(400).json({ 
         success: false,
         message: 'Tous les champs sont requis',
         errors: {
           firstName: !firstName ? 'Le prénom est requis' : null,
-          lastName: !lastName ? 'Le nom est requis' : null,
+          LastName: !LastName ? 'Le nom est requis' : null,
           email: !email ? 'L\'email est requis' : null,
           password: !password ? 'Le mot de passe est requis' : null,
           confirmPassword: !confirmPassword ? 'La confirmation du mot de passe est requise' : null
@@ -56,14 +59,12 @@ const register = async (req, res) => {
       });
     }
 
-    // Créer le nom d'utilisateur à partir du prénom et nom
-    const username = `${firstName} ${lastName}`.trim();
-    
-    // Déterminer le rôle basé sur userType
-    const role = userType === 'artist' ? 'artist' : 'listener';
+    // Utiliser le nom d'utilisateur fourni
+    // Déterminer le rôle basé sur role
+    const userRole = role || 'listener';
 
     console.log('✅ Validation réussie, création de l\'utilisateur...');
-    console.log('📋 Données utilisateur:', { username, email, role });
+    console.log('📋 Données utilisateur:', { username, email, role: userRole });
 
     // Vérifier si la base de données est disponible
     if (!User || !User.findOne) {
@@ -126,7 +127,7 @@ const register = async (req, res) => {
           message: 'Un utilisateur avec ce nom existe déjà',
           errors: {
             firstName: 'Ce nom d\'utilisateur est déjà pris',
-            lastName: 'Ce nom d\'utilisateur est déjà pris'
+            LastName: 'Ce nom d\'utilisateur est déjà pris'
           }
         });
       }
@@ -138,7 +139,7 @@ const register = async (req, res) => {
       username,
       email: email.toLowerCase(),
       password,
-      role
+      role: userRole
     });
 
     if (user) {
@@ -194,7 +195,7 @@ const register = async (req, res) => {
           message: 'Un utilisateur avec ce nom existe déjà',
           errors: {
             firstName: 'Ce nom d\'utilisateur est déjà pris',
-            lastName: 'Ce nom d\'utilisateur est déjà pris'
+            LastName: 'Ce nom d\'utilisateur est déjà pris'
           }
         });
       }

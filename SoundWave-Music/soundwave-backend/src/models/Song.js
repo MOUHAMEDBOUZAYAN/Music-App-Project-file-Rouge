@@ -12,8 +12,9 @@ const songSchema = new mongoose.Schema({
     required: true,
   },
   album: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Album',
+    type: String,
+    trim: true,
+    default: ''
   },
   duration: {
     type: Number,

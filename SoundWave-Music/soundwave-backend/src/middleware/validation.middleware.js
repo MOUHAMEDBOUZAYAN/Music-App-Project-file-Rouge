@@ -1,4 +1,4 @@
-const { body, param, query, validationResult } = require('express-validator');
+ const { body, param, query, validationResult } = require('express-validator');
 
 /**
  * Middleware pour gérer les erreurs de validation
@@ -31,7 +31,7 @@ const validateRegister = [
     .matches(/^[a-zA-ZÀ-ÿ\s'.-]+$/)
     .withMessage('Le prénom ne peut contenir que des lettres, espaces, tirets, apostrophes et points'),
   
-  body('lastName')
+  body('LastName')
     .trim()
     .isLength({ min: 2, max: 50 })
     .withMessage('Le nom doit contenir entre 2 et 50 caractères')
@@ -113,11 +113,6 @@ const validateSong = [
     .isLength({ min: 1, max: 100 })
     .withMessage('Le titre doit contenir entre 1 et 100 caractères'),
   
-  body('artist')
-    .trim()
-    .isLength({ min: 1, max: 100 })
-    .withMessage('L\'artiste doit contenir entre 1 et 100 caractères'),
-  
   body('album')
     .optional()
     .trim()
@@ -126,13 +121,19 @@ const validateSong = [
   
   body('genre')
     .optional()
-    .isIn(['Pop', 'Rock', 'Hip-Hop', 'R&B', 'Jazz', 'Classical', 'Electronic', 'Country', 'Reggae', 'Blues', 'Folk', 'Alternative', 'Indie', 'Funk', 'Soul', 'Disco'])
+    .isIn(['Pop', 'Rock', 'Hip-Hop', 'R&B', 'Jazz', 'Classical', 'Electronic', 'Country', 'Reggae','Rap', 'Blues', 'Folk', 'Alternative', 'Indie', 'Funk', 'Soul', 'Disco'])
     .withMessage('Genre musical invalide'),
   
   body('duration')
     .optional()
     .isInt({ min: 1, max: 3600 })
     .withMessage('La durée doit être entre 1 et 3600 secondes'),
+  
+  body('description')
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('La description ne peut pas dépasser 500 caractères'),
   
   handleValidationErrors
 ];
