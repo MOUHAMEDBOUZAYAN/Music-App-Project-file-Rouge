@@ -13,7 +13,7 @@ const SongCard = ({ song, onPlay, onLike, isLiked = false }) => {
       {/* Album Cover */}
       <div className="relative w-12 h-12 flex-shrink-0">
         <img
-          src={song.coverUrl || 'https://via.placeholder.com/48/1DB954/FFFFFF?text=🎵'}
+          src={song.coverUrl || song.cover || 'https://via.placeholder.com/48/1DB954/FFFFFF?text=🎵'}
           alt={song.title}
           className="w-full h-full rounded object-cover"
         />

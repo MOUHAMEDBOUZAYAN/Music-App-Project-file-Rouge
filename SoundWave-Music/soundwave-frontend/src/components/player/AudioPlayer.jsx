@@ -235,6 +235,9 @@ const AudioPlayer = () => {
                     src={currentTrack.cover || currentTrack.coverUrl} 
                     alt={currentTrack.title}
                     className="w-full h-full object-cover rounded"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                    }}
                   />
                 )}
               </div>

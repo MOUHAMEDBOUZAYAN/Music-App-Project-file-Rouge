@@ -12,7 +12,14 @@ const NowPlayingSheet = ({ track, isOpen, onClose, onPlayPause, isPlaying, onNex
         <div className="flex flex-col items-center text-center">
           <div className="w-56 h-56 rounded-xl overflow-hidden bg-gray-800 mb-4">
             {(track.cover || track.coverUrl) && (
-              <img src={track.cover || track.coverUrl} alt={track.title} className="w-full h-full object-cover" />
+              <img 
+                src={track.cover || track.coverUrl} 
+                alt={track.title} 
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
             )}
           </div>
           <div className="mb-2">

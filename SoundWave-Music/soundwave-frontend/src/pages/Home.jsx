@@ -73,8 +73,8 @@ const Home = () => {
             artistsMap.set(song.artist._id, {
               id: song.artist._id,
               name: song.artist.username || song.artist.name,
-              picture: song.artist.profilePicture || song.artist.avatar,
-              cover: song.coverImage || song.album?.coverImage
+              picture: song.artist.profilePicture ? `http://localhost:5000${song.artist.profilePicture}` : song.artist.avatar,
+              cover: song.coverImage ? `http://localhost:5000${song.coverImage}` : (song.album?.coverImage ? `http://localhost:5000${song.album.coverImage}` : null)
             });
           }
         }
@@ -85,8 +85,8 @@ const Home = () => {
         id: album._id,
         title: album.title,
         name: album.title,
-        cover: album.coverImage,
-        picture: album.coverImage,
+        cover: album.coverImage ? `http://localhost:5000${album.coverImage}` : null,
+        picture: album.coverImage ? `http://localhost:5000${album.coverImage}` : null,
         artist: {
           name: album.artist?.username || album.artist?.name || 'Artiste inconnu'
         }
@@ -95,8 +95,8 @@ const Home = () => {
         id: song._id,
         title: song.title,
         name: song.title,
-        cover: song.coverImage,
-        picture: song.coverImage,
+        cover: song.coverImage ? `http://localhost:5000${song.coverImage}` : null,
+        picture: song.coverImage ? `http://localhost:5000${song.coverImage}` : null,
         artist: {
           name: song.artist?.username || song.artist?.name || 'Artiste inconnu'
         }
@@ -105,8 +105,8 @@ const Home = () => {
         id: song._id,
         title: song.title,
         name: song.title,
-        cover: song.coverImage,
-        picture: song.coverImage
+        cover: song.coverImage ? `http://localhost:5000${song.coverImage}` : null,
+        picture: song.coverImage ? `http://localhost:5000${song.coverImage}` : null
       })));
 
     } catch (err) {
