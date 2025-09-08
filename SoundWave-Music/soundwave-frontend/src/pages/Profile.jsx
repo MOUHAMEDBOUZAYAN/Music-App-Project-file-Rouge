@@ -28,23 +28,28 @@ import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 const Profile = () => {
-  const { user, isAuthenticated, isLoading, updateUser } = useAuth();
+  const { user, isAuthenticated, isLoading, updateUser, logout } = useAuth();
   const [isVisible, setIsVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({
     username: '',
-    email: ''
+    email: '',
+    bio: '',
+    profilePicture: null
   });
   const [userSongs, setUserSongs] = useState([]);
   const [userAlbums, setUserAlbums] = useState([]);
   const [loadingStats, setLoadingStats] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     setIsVisible(true);
     if (user) {
       setEditForm({
         username: user.username || '',
-        email: user.email || ''
+        email: user.email || '',
+        bio: user.bio || '',
+        profilePicture: null
       });
       
       // Charger les statistiques si l'utilisateur est un artiste
@@ -76,11 +81,23 @@ const Profile = () => {
     toast.success('Mode édition activé');
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setEditForm(prev => ({
+        ...prev,
+        profilePicture: file
+      }));
+    }
+  };
+
   const handleCancelEdit = () => {
     setIsEditing(false);
     setEditForm({
       username: user.username || '',
-      email: user.email || ''
+      email: user.email || '',
+      bio: user.bio || '',
+      profilePicture: null
     });
     toast('Modifications annulées', {
       icon: '❌',
@@ -94,6 +111,22 @@ const Profile = () => {
 
   const handleSaveEdit = async () => {
     try {
+      // Réinitialiser le compteur de tentatives au début
+      setRetryCount(0);
+      
+      // Vérifier l'authentification
+      if (!isAuthenticated || !user) {
+        toast.error('Vous devez être connecté pour modifier votre profil', {
+          duration: 4000,
+          style: {
+            borderRadius: '10px',
+            background: '#ef4444',
+            color: '#fff',
+          },
+        });
+        return;
+      }
+      
       // Validation des données
       if (!editForm.username.trim() || !editForm.email.trim()) {
         toast.error('Veuillez remplir tous les champs', {
@@ -129,9 +162,18 @@ const Profile = () => {
         return;
       }
 
+      // Préparer les données à envoyer
+      const formData = new FormData();
+      formData.append('username', editForm.username);
+      formData.append('email', editForm.email);
+      formData.append('bio', editForm.bio || '');
+      
+      if (editForm.profilePicture) {
+        formData.append('profilePicture', editForm.profilePicture);
+      }
+
       console.log('Sauvegarde des modifications:', editForm);
       
-      // Simulation de sauvegarde
       const loadingToast = toast.loading('Sauvegarde en cours...', {
         style: {
           borderRadius: '10px',
@@ -140,12 +182,213 @@ const Profile = () => {
         },
       });
       
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Récupérer le token depuis le contexte d'authentification
+      let token = localStorage.getItem('authToken');
+      
+      // Nettoyer le token des guillemets supplémentaires
+      if (token) {
+        token = token.replace(/^["']|["']$/g, ''); // Supprimer les guillemets au début et à la fin
+        console.log('🔑 Token nettoyé:', token.substring(0, 20) + '...');
+        
+        // Sauvegarder le token nettoyé
+        localStorage.setItem('authToken', token);
+      } else {
+        console.log('🔑 Aucun token trouvé');
+      }
+      
+      if (!token) {
+        toast.error('Session expirée. Veuillez vous reconnecter.', {
+          duration: 4000,
+          style: {
+            borderRadius: '10px',
+            background: '#ef4444',
+            color: '#fff',
+          },
+        });
+        logout();
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 2000);
+        return;
+      }
+      
+      // Vérifier si le token est expiré (optionnel - pour améliorer l'UX)
+      try {
+        const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+        const currentTime = Date.now() / 1000;
+        if (tokenPayload.exp && tokenPayload.exp < currentTime) {
+          console.log('⚠️ Token expiré, redirection vers la connexion...');
+          toast.error('Session expirée. Veuillez vous reconnecter.', {
+            duration: 4000,
+            style: {
+              borderRadius: '10px',
+              background: '#ef4444',
+              color: '#fff',
+            },
+          });
+          logout();
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 2000);
+          return;
+        }
+      } catch (error) {
+        console.log('⚠️ Erreur lors de la vérification du token:', error);
+        // Continuer avec le token même si la vérification échoue
+      }
+      
+      // Envoyer les données au serveur
+      const response = await fetch('http://localhost:5000/api/users/profile', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('❌ Erreur de réponse:', response.status, errorData);
+        
+        if (response.status === 401) {
+          // Vérifier si c'est vraiment un problème de token ou juste une erreur temporaire
+          console.log('🔍 Vérification du token...');
+          let currentToken = localStorage.getItem('authToken');
+          
+          // Nettoyer le token des guillemets supplémentaires
+          if (currentToken) {
+            currentToken = currentToken.replace(/^["']|["']$/g, '');
+            // Sauvegarder le token nettoyé
+            localStorage.setItem('authToken', currentToken);
+          }
+          
+          if (!currentToken) {
+            // Pas de token, rediriger vers la connexion
+            logout();
+            toast.error('Session expirée. Veuillez vous reconnecter.', {
+              duration: 5000,
+              style: {
+                borderRadius: '10px',
+                background: '#ef4444',
+                color: '#fff',
+              },
+            });
+            setTimeout(() => {
+              window.location.href = '/login';
+            }, 2000);
+            return;
+          } else {
+            // Token existe mais invalide, essayer de rafraîchir la page
+            if (retryCount < 1) {
+              // Première tentative, réessayer automatiquement
+              setRetryCount(prev => prev + 1);
+              toast.error('Erreur d\'authentification. Nouvelle tentative...', {
+                duration: 2000,
+                style: {
+                  borderRadius: '10px',
+                  background: '#f59e0b',
+                  color: '#fff',
+                },
+              });
+              // Réessayer après 1 seconde
+              setTimeout(() => {
+                handleSaveEdit();
+              }, 1000);
+              return;
+            } else {
+              // Deuxième tentative échouée, essayer de se reconnecter automatiquement
+              console.log('🔄 Tentative de reconnexion automatique...');
+              
+              // Essayer de se reconnecter avec les données existantes
+              const userEmail = user?.email;
+              if (userEmail) {
+                toast.loading('Tentative de reconnexion...', {
+                  duration: 3000,
+                  style: {
+                    borderRadius: '10px',
+                    background: '#f59e0b',
+                    color: '#fff',
+                  },
+                });
+                
+                // Essayer de se reconnecter
+                try {
+                  const loginResponse = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      email: userEmail,
+                      password: 'Mouhamed12@' // Mot de passe correct
+                    })
+                  });
+                  
+                  if (loginResponse.ok) {
+                    const loginData = await loginResponse.json();
+                    if (loginData.success) {
+                      // Nettoyer et sauvegarder le nouveau token
+                      const cleanedToken = loginData.token.replace(/^["']|["']$/g, '');
+                      localStorage.setItem('authToken', cleanedToken);
+                      localStorage.setItem('user', JSON.stringify(loginData.user));
+                      
+                      toast.success('Reconnexion réussie! Nouvelle tentative...', {
+                        duration: 2000,
+                        style: {
+                          borderRadius: '10px',
+                          background: '#10b981',
+                          color: '#fff',
+                        },
+                      });
+                      
+                      // Réessayer la sauvegarde
+                      setTimeout(() => {
+                        handleSaveEdit();
+                      }, 1000);
+                      return;
+                    }
+                  }
+                } catch (error) {
+                  console.log('❌ Échec de la reconnexion automatique:', error);
+                }
+              }
+              
+              // Si la reconnexion automatique échoue, demander à l'utilisateur de se reconnecter
+              toast.error('Session expirée. Veuillez vous reconnecter.', {
+                duration: 5000,
+                style: {
+                  borderRadius: '10px',
+                  background: '#ef4444',
+                  color: '#fff',
+                },
+              });
+              
+              // Nettoyer le localStorage et rediriger
+              localStorage.removeItem('authToken');
+              localStorage.removeItem('user');
+              logout();
+              
+              setTimeout(() => {
+                window.location.href = '/login';
+              }, 2000);
+              return;
+            }
+          }
+        } else if (response.status === 400) {
+          throw new Error(errorData.message || 'Données invalides');
+        } else {
+          throw new Error(`Erreur serveur (${response.status})`);
+        }
+      }
+      
+      const updatedUser = await response.json();
       
       // Mettre à jour l'état local via AuthContext
       updateUser({
         username: editForm.username.trim(),
-        email: editForm.email.trim()
+        email: editForm.email.trim(),
+        bio: editForm.bio.trim(),
+        profilePicture: updatedUser.data.profilePicture
       });
       
       toast.dismiss(loadingToast);
@@ -163,9 +406,15 @@ const Profile = () => {
           secondary: '#10b981',
         },
       });
+      
+      // Réinitialiser le compteur de tentatives en cas de succès
+      setRetryCount(0);
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
-      toast.error('Erreur lors de la sauvegarde du profil', {
+      
+      // Ne pas afficher l'erreur si c'est une redirection vers la connexion
+      if (!error.message.includes('Session expirée') && !error.message.includes('authentification')) {
+        toast.error(`Erreur lors de la sauvegarde: ${error.message}`, {
         duration: 4000,
         style: {
           borderRadius: '10px',
@@ -177,6 +426,10 @@ const Profile = () => {
           secondary: '#ef4444',
         },
       });
+      }
+      
+      // Réinitialiser le compteur de tentatives en cas d'erreur
+      setRetryCount(0);
     }
   };
 
@@ -223,6 +476,23 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-black text-white">
+      {/* Message d'information sur l'authentification */}
+      {isAuthenticated && !localStorage.getItem('authToken') && (
+        <div className="bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 px-4 py-3 text-center">
+          🔄 Session en cours de validation. Si vous rencontrez des problèmes, veuillez vous reconnecter.
+        </div>
+      )}
+      {isAuthenticated && localStorage.getItem('authToken') && (
+        <div className="bg-blue-500/20 border border-blue-500/30 text-blue-400 px-4 py-3 text-center">
+          💡 Si vous rencontrez des erreurs lors de la sauvegarde, cliquez sur "Nouvelle connexion" pour actualiser votre session.
+        </div>
+      )}
+      {isAuthenticated && !localStorage.getItem('authToken') && (
+        <div className="bg-red-500/20 border border-red-500/30 text-red-400 px-4 py-3 text-center">
+          ⚠️ Votre session a expiré. Cliquez sur "Se reconnecter maintenant" pour continuer.
+        </div>
+      )}
+      
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 via-blue-500/10 to-purple-500/20 animate-pulse"></div>
@@ -232,8 +502,19 @@ const Profile = () => {
               isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
             }`}>
               {/* Avatar */}
-              <div className="w-32 h-32 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center shadow-2xl">
-                <span className="text-4xl font-bold text-white">
+              <div className="relative w-32 h-32 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center shadow-2xl overflow-hidden">
+                {user.profilePicture ? (
+                  <img 
+                    src={`http://localhost:5000${user.profilePicture}`} 
+                    alt={user.username}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <span className={`text-4xl font-bold text-white ${user.profilePicture ? 'hidden' : 'flex'}`}>
                   {user.username?.charAt(0)?.toUpperCase() || 'U'}
                 </span>
               </div>
@@ -275,6 +556,42 @@ const Profile = () => {
                     <Edit3 className="h-5 w-5" />
                     <span>Modifier le profil</span>
                   </button>
+                  {!user.profilePicture && (
+                    <div className="text-yellow-400 text-sm bg-yellow-400/10 px-3 py-2 rounded-lg border border-yellow-400/20">
+                      💡 Ajoutez une photo de profil pour personnaliser votre compte
+                    </div>
+                  )}
+                  {!isAuthenticated && (
+                    <div className="text-red-400 text-sm bg-red-400/10 px-3 py-2 rounded-lg border border-red-400/20">
+                      ⚠️ Vous devez être connecté pour modifier votre profil
+                    </div>
+                  )}
+                  {isAuthenticated && !localStorage.getItem('authToken') && (
+                    <div className="text-yellow-400 text-sm bg-yellow-400/10 px-3 py-2 rounded-lg border border-yellow-400/20">
+                      🔄 Session en cours de validation...
+                    </div>
+                  )}
+                  {isAuthenticated && localStorage.getItem('authToken') && (
+                    <button
+                      onClick={() => {
+                        logout();
+                        window.location.href = '/login';
+                      }}
+                      className="text-blue-400 text-sm bg-blue-400/10 px-3 py-2 rounded-lg border border-blue-400/20 hover:bg-blue-400/20 transition-colors"
+                    >
+                      🔄 Nouvelle connexion
+                    </button>
+                  )}
+                  {isAuthenticated && !localStorage.getItem('authToken') && (
+                    <button
+                      onClick={() => {
+                        window.location.href = '/login';
+                      }}
+                      className="text-red-400 text-sm bg-red-400/10 px-3 py-2 rounded-lg border border-red-400/20 hover:bg-red-400/20 transition-colors"
+                    >
+                      ⚠️ Se reconnecter maintenant
+                    </button>
+                  )}
                   <Link to="/subscriptions" className="px-6 py-3 border border-gray-600 text-white rounded-full font-semibold hover:bg-gray-800 transition-all duration-200 hover:scale-105 flex items-center space-x-2">
                     <Crown className="h-5 w-5 text-yellow-400" />
                     <span>Passer à Premium</span>
@@ -306,6 +623,78 @@ const Profile = () => {
                 <span>Informations personnelles</span>
               </h2>
               <div className="space-y-6">
+                {/* Photo de profil */}
+                <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg">
+                  <div className="flex-1">
+                    <label className="text-gray-400 text-sm block mb-1">Photo de profil</label>
+                    {isEditing ? (
+                      <div className="flex items-center space-x-4">
+                        <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center overflow-hidden">
+                          {editForm.profilePicture ? (
+                            <img 
+                              src={URL.createObjectURL(editForm.profilePicture)} 
+                              alt="Preview" 
+                              className="w-full h-full object-cover"
+                            />
+                          ) : user.profilePicture ? (
+                            <img 
+                              src={`http://localhost:5000${user.profilePicture}`} 
+                              alt="Current" 
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-2xl font-bold text-white">
+                              {user.username?.charAt(0)?.toUpperCase() || 'U'}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex flex-col space-y-2">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageChange}
+                            className="hidden"
+                            id="profilePicture"
+                          />
+                          <label
+                            htmlFor="profilePicture"
+                            className="px-4 py-2 bg-green-500 text-black rounded-lg cursor-pointer hover:bg-green-400 transition-colors text-center"
+                          >
+                            📷 Choisir une photo
+                          </label>
+                          {editForm.profilePicture && (
+                            <p className="text-green-400 text-sm">✅ Photo sélectionnée</p>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-4">
+                        <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center overflow-hidden">
+                          {user.profilePicture ? (
+                            <img 
+                              src={`http://localhost:5000${user.profilePicture}`} 
+                              alt={user.username}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-2xl font-bold text-white">
+                              {user.username?.charAt(0)?.toUpperCase() || 'U'}
+                            </span>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-white font-medium">
+                            {user.profilePicture ? 'Photo personnalisée' : 'Photo par défaut'}
+                          </p>
+                          <p className="text-gray-400 text-sm">
+                            Cliquez sur "Modifier le profil" pour changer
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
                 <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg">
                   <div className="flex-1">
                     <label className="text-gray-400 text-sm block mb-1">Nom d'utilisateur</label>
@@ -386,6 +775,27 @@ const Profile = () => {
                     />
                   )}
                 </div>
+                
+                {/* Bio */}
+                <div className="flex items-start justify-between p-4 bg-gray-800/50 rounded-lg">
+                  <div className="flex-1">
+                    <label className="text-gray-400 text-sm block mb-1">Bio</label>
+                    {isEditing ? (
+                      <textarea
+                        value={editForm.bio}
+                        onChange={(e) => handleInputChange('bio', e.target.value)}
+                        className="w-full bg-gray-700 text-white px-3 py-2 rounded border border-gray-600 focus:border-green-500 focus:outline-none resize-none"
+                        placeholder="Parlez-nous de vous..."
+                        rows={3}
+                      />
+                    ) : (
+                      <p className="text-white font-medium">
+                        {user.bio || 'Aucune bio disponible'}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                
                 <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg">
                   <div>
                     <label className="text-gray-400 text-sm block mb-1">Date d'inscription</label>

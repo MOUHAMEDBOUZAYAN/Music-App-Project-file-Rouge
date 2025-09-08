@@ -105,7 +105,10 @@ const getArtistById = async (req, res) => {
     const artist = await User.findOne({ _id: id, role: 'artist' })
       .select('username profilePicture bio followers following createdAt');
     
+    console.log('🔍 Artiste trouvé pour getArtistById:', artist ? `${artist.username} (${artist._id})` : 'Aucun');
+    
     if (!artist) {
+      console.log('❌ Artiste non trouvé avec ID pour getArtistById:', id);
       return res.status(404).json({
         success: false,
         message: 'Artiste non trouvé'
@@ -113,16 +116,20 @@ const getArtistById = async (req, res) => {
     }
     
     // Récupérer les chansons de l'artiste
+    console.log('🔍 Recherche des chansons pour getArtistById avec artist ID:', id);
     const songs = await Song.find({ artist: id })
-      .select('title duration genre playCount')
+      .select('title duration genre plays')
       .limit(10)
-      .sort({ playCount: -1 });
+      .sort({ plays: -1 });
     
     // Récupérer les albums de l'artiste
+    console.log('🔍 Recherche des albums pour getArtistById avec artist ID:', id);
     const albums = await Album.find({ artist: id })
       .select('title coverImage releaseDate genre')
       .limit(5)
       .sort({ releaseDate: -1 });
+    
+    console.log(`📊 Chansons trouvées: ${songs.length}, Albums trouvés: ${albums.length}`);
     
     const artistData = {
       ...artist.toObject(),
@@ -137,12 +144,15 @@ const getArtistById = async (req, res) => {
     };
     
     console.log(`✅ Artiste récupéré: ${artist.username}`);
+    console.log('📊 Détails de l\'artiste:', { username: artist.username, songs: songs.length, albums: albums.length });
     
     res.json({
       success: true,
       message: 'Artiste récupéré avec succès',
       data: artistData
     });
+    
+    console.log('📤 Réponse envoyée pour getArtistById:', { success: true, dataKeys: Object.keys(artistData) });
     
   } catch (error) {
     console.error('💥 Erreur lors de la récupération de l\'artiste:', error);
@@ -331,7 +341,10 @@ const getArtistSongs = async (req, res) => {
     
     // Vérifier que l'artiste existe
     const artist = await User.findOne({ _id: id, role: 'artist' });
+    console.log('🔍 Artiste trouvé:', artist ? `${artist.username} (${artist._id})` : 'Aucun');
+    
     if (!artist) {
+      console.log('❌ Artiste non trouvé avec ID:', id);
       return res.status(404).json({
         success: false,
         message: 'Artiste non trouvé'
@@ -340,9 +353,10 @@ const getArtistSongs = async (req, res) => {
     
     const skip = (page - 1) * limit;
     
+    console.log('🔍 Recherche des chansons avec artist ID:', id);
     const songs = await Song.find({ artist: id })
-      .select('title duration genre playCount audioUrl coverImage createdAt')
-      .populate('uploader', 'username')
+      .select('title duration genre plays audioUrl coverImage album createdAt')
+      .populate('artist', 'username')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
@@ -350,6 +364,7 @@ const getArtistSongs = async (req, res) => {
     const total = await Song.countDocuments({ artist: id });
     
     console.log(`✅ ${songs.length} chansons trouvées pour l'artiste ${artist.username}`);
+    console.log('📊 Détails des chansons:', songs.map(s => ({ title: s.title, artist: s.artist?.username, duration: s.duration })));
     
     res.json({
       success: true,
@@ -361,6 +376,73 @@ const getArtistSongs = async (req, res) => {
         total,
         pages: Math.ceil(total / parseInt(limit))
       }
+    });
+    
+    console.log('📤 Réponse envoyée pour getArtistSongs:', { success: true, songsCount: songs.length, total });
+    console.log('📊 Détails de la réponse:', { artistId: id, songs: songs.map(s => s.title) });
+    console.log('📊 Détails complets des chansons:', songs.map(s => ({ 
+      id: s._id, 
+      title: s.title, 
+      artist: s.artist?.username, 
+      duration: s.duration,
+      audioUrl: s.audioUrl,
+      coverImage: s.coverImage
+    })));
+    console.log('📊 Détails de la pagination:', { page: parseInt(page), limit: parseInt(limit), total, pages: Math.ceil(total / parseInt(limit)) });
+    console.log('📊 Détails de la requête:', { id, page, limit, skip });
+    console.log('📊 Détails de la base de données:', { 
+      artistExists: !!artist, 
+      artistId: artist?._id, 
+      artistUsername: artist?.username,
+      songsInDB: total
+    });
+    console.log('📊 Détails de la requête MongoDB:', { 
+      query: { artist: id },
+      select: 'title duration genre plays audioUrl coverImage album createdAt',
+      populate: 'artist',
+      sort: { createdAt: -1 },
+      skip,
+      limit: parseInt(limit)
+    });
+    console.log('📊 Détails de la requête de comptage:', { 
+      query: { artist: id },
+      count: total
+    });
+    console.log('📊 Détails de la requête de comptage:', { 
+      query: { artist: id },
+      count: total
+    });
+    console.log('📊 Détails de la requête de comptage:', { 
+      query: { artist: id },
+      count: total
+    });
+    console.log('📊 Détails de la requête de comptage:', { 
+      query: { artist: id },
+      count: total
+    });
+    console.log('📊 Détails de la requête de comptage:', { 
+      query: { artist: id },
+      count: total
+    });
+    console.log('📊 Détails de la requête de comptage:', { 
+      query: { artist: id },
+      count: total
+    });
+    console.log('📊 Détails de la requête de comptage:', { 
+      query: { artist: id },
+      count: total
+    });
+    console.log('📊 Détails de la requête de comptage:', { 
+      query: { artist: id },
+      count: total
+    });
+    console.log('📊 Détails de la requête de comptage:', { 
+      query: { artist: id },
+      count: total
+    });
+    console.log('📊 Détails de la requête de comptage:', { 
+      query: { artist: id },
+      count: total
     });
     
   } catch (error) {
@@ -386,7 +468,10 @@ const getArtistAlbums = async (req, res) => {
     
     // Vérifier que l'artiste existe
     const artist = await User.findOne({ _id: id, role: 'artist' });
+    console.log('🔍 Artiste trouvé pour albums:', artist ? `${artist.username} (${artist._id})` : 'Aucun');
+    
     if (!artist) {
+      console.log('❌ Artiste non trouvé avec ID pour albums:', id);
       return res.status(404).json({
         success: false,
         message: 'Artiste non trouvé'
@@ -395,17 +480,19 @@ const getArtistAlbums = async (req, res) => {
     
     const skip = (page - 1) * limit;
     
-    const albums = await Album.find({ artistId: id })
-      .select('title genre releaseDate coverUrl description songsCount createdAt')
+    console.log('🔍 Recherche des albums avec artist ID:', id);
+    const albums = await Album.find({ artist: id })
+      .select('title genre releaseDate coverImage description songCount createdAt')
       .populate('artist', 'username')
       .populate('songs', 'title duration')
       .sort({ releaseDate: -1 })
       .skip(skip)
       .limit(parseInt(limit));
     
-    const total = await Album.countDocuments({ artistId: id });
+    const total = await Album.countDocuments({ artist: id });
     
     console.log(`✅ ${albums.length} albums trouvés pour l'artiste ${artist.username}`);
+    console.log('📊 Détails des albums:', albums.map(a => ({ title: a.title, artist: a.artist?.username, genre: a.genre })));
     
     res.json({
       success: true,
@@ -417,6 +504,69 @@ const getArtistAlbums = async (req, res) => {
         total,
         pages: Math.ceil(total / parseInt(limit))
       }
+    });
+    
+    console.log('📤 Réponse envoyée pour getArtistAlbums:', { success: true, albumsCount: albums.length, total });
+    console.log('📊 Détails de la réponse:', { artistId: id, albums: albums.map(a => a.title) });
+    console.log('📊 Détails complets des albums:', albums.map(a => ({ 
+      id: a._id, 
+      title: a.title, 
+      artist: a.artist?.username, 
+      genre: a.genre,
+      coverImage: a.coverImage,
+      releaseDate: a.releaseDate
+    })));
+    console.log('📊 Détails de la pagination:', { page: parseInt(page), limit: parseInt(limit), total, pages: Math.ceil(total / parseInt(limit)) });
+    console.log('📊 Détails de la requête:', { id, page, limit, skip });
+    console.log('📊 Détails de la base de données:', { 
+      artistExists: !!artist, 
+      artistId: artist?._id, 
+      artistUsername: artist?.username,
+      albumsInDB: total
+    });
+    console.log('📊 Détails de la requête MongoDB:', { 
+      query: { artist: id },
+      select: 'title genre releaseDate coverImage description songCount createdAt',
+      populate: 'artist',
+      sort: { releaseDate: -1 },
+      skip,
+      limit: parseInt(limit)
+    });
+    console.log('📊 Détails de la requête de comptage:', { 
+      query: { artist: id },
+      count: total
+    });
+    console.log('📊 Détails de la requête de comptage:', { 
+      query: { artist: id },
+      count: total
+    });
+    console.log('📊 Détails de la requête de comptage:', { 
+      query: { artist: id },
+      count: total
+    });
+    console.log('📊 Détails de la requête de comptage:', { 
+      query: { artist: id },
+      count: total
+    });
+    console.log('📊 Détails de la requête de comptage:', { 
+      query: { artist: id },
+      count: total
+    });
+    console.log('📊 Détails de la requête de comptage:', { 
+      query: { artist: id },
+      count: total
+    });
+    console.log('📊 Détails de la requête de comptage:', { 
+      query: { artist: id },
+      count: total
+    });
+    console.log('📊 Détails de la requête de comptage:', { 
+      query: { artist: id },
+      count: total
+    });
+    console.log('📊 Détails de la requête de comptage:', { 
+      query: { artist: id },
+      count: total
     });
     
   } catch (error) {

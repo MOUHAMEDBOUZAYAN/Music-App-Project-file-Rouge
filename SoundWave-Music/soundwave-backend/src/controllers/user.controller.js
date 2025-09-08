@@ -90,8 +90,25 @@ const getUserProfile = async (req, res, next) => {
 // @access  Private
 const updateUserProfile = async (req, res, next) => {
   try {
-    const { username, bio, avatar, location, website } = req.body;
+    const { username, bio, email } = req.body;
     const userId = req.user._id;
+    
+    console.log('📝 Update Profile - Données reçues:', {
+      username,
+      bio,
+      email,
+      hasProfilePicture: !!req.file,
+      file: req.file,
+      userId: userId,
+      userRole: req.user.role
+    });
+    
+    console.log('🔍 Vérification de l\'utilisateur:', {
+      userExists: !!req.user,
+      userId: req.user?._id,
+      username: req.user?.username,
+      role: req.user?.role
+    });
     
     // Vérifier si le nom d'utilisateur est déjà pris
     if (username && username !== req.user.username) {
@@ -101,23 +118,40 @@ const updateUserProfile = async (req, res, next) => {
       }
     }
     
+    // Vérifier si l'email est déjà pris
+    if (email && email !== req.user.email) {
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return next(new AppError('Cet email est déjà utilisé', 400));
+      }
+    }
+    
+    // Préparer les données de mise à jour
+    const updateData = {
+      username: username || req.user.username,
+      bio: bio || req.user.bio,
+      email: email || req.user.email
+    };
+    
+    // Ajouter la photo de profil si elle a été uploadée
+    if (req.file) {
+      updateData.profilePicture = `/uploads/images/${req.file.filename}`;
+    }
+    
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      {
-        username: username || req.user.username,
-        bio: bio || req.user.bio,
-        avatar: avatar || req.user.avatar,
-        location: location || req.user.location,
-        website: website || req.user.website
-      },
+      updateData,
       { new: true, runValidators: true }
     ).select('-password');
+    
+    console.log('✅ Profil mis à jour avec succès:', updatedUser._id);
     
     res.json({
       success: true,
       data: updatedUser
     });
   } catch (error) {
+    console.error('❌ Erreur lors de la mise à jour du profil:', error);
     next(new AppError('Erreur lors de la mise à jour du profil', 500));
   }
 };

@@ -21,7 +21,14 @@ process.env.PORT = process.env.PORT || '5000';
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 process.env.CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:3000';
 process.env.MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/soundwave';
-process.env.JWT_SECRET = process.env.JWT_SECRET || 'default-jwt-secret-change-in-production';
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'Mouhamed12@';
+process.env.JWT_EXPIRE = process.env.JWT_EXPIRE || '7d';
+
+console.log('🔧 Configuration JWT dans app.js:', {
+  JWT_SECRET: process.env.JWT_SECRET.substring(0, 10) + '...',
+  JWT_EXPIRE: process.env.JWT_EXPIRE,
+  NODE_ENV: process.env.NODE_ENV
+});
 
 
 // Connect to database (optional for now)

@@ -4,9 +4,20 @@ const jwtConfig = require('../config/jwt');
 
 // Fonction pour générer un token JWT
 const generateToken = (id) => {
-  return jwt.sign({ id }, jwtConfig.secret, {
-    expiresIn: jwtConfig.expiresIn
+  console.log('🔑 Génération du token avec:', {
+    id,
+    secret: jwtConfig.secret,
+    expiresIn: jwtConfig.expiresIn,
+    issuer: jwtConfig.issuer
   });
+  
+  const token = jwt.sign({ id }, jwtConfig.secret, {
+    expiresIn: jwtConfig.expiresIn,
+    issuer: jwtConfig.issuer
+  });
+  
+  console.log('✅ Token généré:', token.substring(0, 20) + '...');
+  return token;
 };
 
 // @desc    Enregistrer un nouvel utilisateur
@@ -81,7 +92,8 @@ const register = async (req, res) => {
 
       // Générer un token temporaire
       const token = jwt.sign({ id: mockUser._id }, jwtConfig.secret, {
-        expiresIn: jwtConfig.expiresIn
+        expiresIn: jwtConfig.expiresIn,
+        issuer: jwtConfig.issuer
       });
 
       console.log('✅ Utilisateur simulé créé avec succès');
@@ -245,7 +257,8 @@ const login = async (req, res) => {
         };
 
         const token = jwt.sign({ id: mockUser._id }, jwtConfig.secret, {
-          expiresIn: jwtConfig.expiresIn
+          expiresIn: jwtConfig.expiresIn,
+          issuer: jwtConfig.issuer
         });
 
         console.log('✅ Connexion simulée réussie');

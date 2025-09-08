@@ -108,6 +108,14 @@ const activityLogger = (action) => {
     };
 
     console.log(`ACTIVITY: ${action} by ${logEntry.userEmail}`);
+    console.log('🔍 Activity Logger - Détails:', {
+      action,
+      method: req.method,
+      url: req.originalUrl,
+      hasUser: !!req.user,
+      userId: req.user?._id,
+      userEmail: req.user?.email
+    });
     saveActivityToFile(logEntry);
 
     next();

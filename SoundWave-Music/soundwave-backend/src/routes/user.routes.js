@@ -13,6 +13,7 @@ const {
   socialActionLimiter,
   activityLogger 
 } = require('../middleware');
+const { uploadImage } = require('../services/cloudinary.service');
 
 // @route   GET api/users
 // @desc    Obtenir tous les utilisateurs (filtrés)
@@ -35,7 +36,16 @@ router.get('/profile/:username',
 // @desc    Mettre à jour le profil de l'utilisateur connecté
 // @access  Private
 router.put('/profile', 
+  (req, res, next) => {
+    console.log('🛣️ Route PUT /api/users/profile appelée');
+    console.log('🔍 Headers:', {
+      authorization: req.headers.authorization ? 'présent' : 'manquant',
+      contentType: req.headers['content-type']
+    });
+    next();
+  },
   protect, 
+  uploadImage.single('profilePicture'),
   validateUserProfile, 
   activityLogger('update_profile'), 
   userController.updateUserProfile

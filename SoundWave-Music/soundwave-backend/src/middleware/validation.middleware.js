@@ -7,6 +7,12 @@ const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     console.log('❌ Erreurs de validation:', errors.array());
+    console.log('📝 Données reçues:', {
+      username: req.body.username,
+      email: req.body.email,
+      bio: req.body.bio,
+      hasFile: !!req.file
+    });
     return res.status(400).json({
       success: false,
       message: 'Erreur de validation',
@@ -17,6 +23,7 @@ const handleValidationErrors = (req, res, next) => {
       }))
     });
   }
+  console.log('✅ Validation réussie');
   next();
 };
 
@@ -82,13 +89,28 @@ const validateLogin = [
  * Règles de validation pour les utilisateurs
  */
 const validateUserProfile = [
+  (req, res, next) => {
+    console.log('🔍 Validation du profil utilisateur:', {
+      username: req.body.username,
+      email: req.body.email,
+      bio: req.body.bio,
+      hasFile: !!req.file
+    });
+    next();
+  },
   body('username')
     .optional()
     .trim()
-    .isLength({ min: 3, max: 30 })
-    .withMessage('Le nom d\'utilisateur doit contenir entre 3 et 30 caractères')
-    .matches(/^[a-zA-Z0-9_]+$/)
-    .withMessage('Le nom d\'utilisateur ne peut contenir que des lettres, chiffres et underscores'),
+    .isLength({ min: 2, max: 50 })
+    .withMessage('Le nom d\'utilisateur doit contenir entre 2 et 50 caractères')
+    .matches(/^[a-zA-ZÀ-ÿ\u00C0-\u017F\s'.-]+$/)
+    .withMessage('Le nom d\'utilisateur ne peut contenir que des lettres, espaces, tirets, apostrophes et points'),
+  
+  body('email')
+    .optional()
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('Veuillez fournir une adresse email valide'),
   
   body('bio')
     .optional()

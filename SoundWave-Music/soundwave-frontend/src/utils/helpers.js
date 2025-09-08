@@ -157,6 +157,12 @@ export const secureStorage = {
         return false;
       }
       
+      // Pour les tokens, sauvegarder directement sans JSON.stringify
+      if (key === 'authToken' && typeof value === 'string') {
+        localStorage.setItem(key, value);
+        return true;
+      }
+      
       const serializedValue = JSON.stringify(value);
       
       // Vérifier que la sérialisation a réussi
@@ -180,6 +186,12 @@ export const secureStorage = {
       // Vérifier que l'item existe et n'est pas vide
       if (!item || item === 'null' || item === 'undefined' || item.trim() === '') {
         return null;
+      }
+      
+      // Pour les tokens, retourner directement sans JSON.parse
+      if (key === 'authToken') {
+        // Nettoyer le token des guillemets supplémentaires
+        return item.replace(/^["']|["']$/g, '');
       }
       
       // Essayer de parser l'item

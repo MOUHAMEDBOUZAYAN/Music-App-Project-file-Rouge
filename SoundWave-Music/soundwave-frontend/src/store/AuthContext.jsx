@@ -106,6 +106,29 @@ export const AuthProvider = ({ children }) => {
         const token = secureStorage.get('authToken');
         let user = secureStorage.get('user');
         
+        // Nettoyer le token des guillemets supplémentaires
+        if (token && typeof token === 'string') {
+          const cleanedToken = token.replace(/^["']|["']$/g, '');
+          if (cleanedToken !== token) {
+            console.log('🧹 Token nettoyé des guillemets supplémentaires');
+            console.log('🔑 Token original:', token.substring(0, 20) + '...');
+            console.log('🔑 Token nettoyé:', cleanedToken.substring(0, 20) + '...');
+            console.log('🔑 Token identique:', cleanedToken === token);
+            console.log('🔑 Token length original:', token.length);
+            console.log('🔑 Token length nettoyé:', cleanedToken.length);
+            console.log('🔑 Token starts with quote:', token.startsWith('"') || token.startsWith("'"));
+            console.log('🔑 Token ends with quote:', token.endsWith('"') || token.endsWith("'"));
+            console.log('🔑 Token first char:', token.charAt(0));
+            console.log('🔑 Token last char:', token.charAt(token.length - 1));
+            console.log('🔑 Token first char code:', token.charCodeAt(0));
+            console.log('🔑 Token last char code:', token.charCodeAt(token.length - 1));
+            secureStorage.set('authToken', cleanedToken);
+            token = cleanedToken; // Utiliser le token nettoyé
+          } else {
+            console.log('🔑 Token déjà propre:', token.substring(0, 20) + '...');
+          }
+        }
+        
         // Corriger les anciens formats (double JSON encodé)
         if (user && typeof user === 'string') {
           try {
@@ -185,9 +208,25 @@ export const AuthProvider = ({ children }) => {
       
       console.log('✅ Données validées, sauvegarde en cours...');
       
+      // Nettoyer le token des guillemets supplémentaires
+      const cleanedToken = token.replace(/^["']|["']$/g, '');
+      
       // Sauvegarde dans le localStorage
-      const tokenSaved = secureStorage.set('authToken', token);
+      const tokenSaved = secureStorage.set('authToken', cleanedToken);
       const userSaved = secureStorage.set('user', user);
+      
+      console.log('🔑 Token original:', token.substring(0, 20) + '...');
+      console.log('🔑 Token nettoyé:', cleanedToken.substring(0, 20) + '...');
+      console.log('🔑 Token sauvegardé:', cleanedToken.substring(0, 20) + '...');
+      console.log('🔑 Token identique:', cleanedToken === token);
+      console.log('🔑 Token length original:', token.length);
+      console.log('🔑 Token length nettoyé:', cleanedToken.length);
+      console.log('🔑 Token starts with quote:', token.startsWith('"') || token.startsWith("'"));
+      console.log('🔑 Token ends with quote:', token.endsWith('"') || token.endsWith("'"));
+      console.log('🔑 Token first char:', token.charAt(0));
+      console.log('🔑 Token last char:', token.charAt(token.length - 1));
+      console.log('🔑 Token first char code:', token.charCodeAt(0));
+      console.log('🔑 Token last char code:', token.charCodeAt(token.length - 1));
       
       if (!tokenSaved || !userSaved) {
         throw new Error('Erreur lors de la sauvegarde des données');
@@ -222,6 +261,27 @@ export const AuthProvider = ({ children }) => {
   const updateUser = (userData) => {
     const updatedUser = { ...state.user, ...userData };
     secureStorage.set('user', updatedUser);
+    
+    // Nettoyer le token s'il existe
+    const token = secureStorage.get('authToken');
+    if (token && typeof token === 'string') {
+      const cleanedToken = token.replace(/^["']|["']$/g, '');
+      if (cleanedToken !== token) {
+        console.log('🧹 Token nettoyé dans updateUser');
+        console.log('🔑 Token original:', token.substring(0, 20) + '...');
+        console.log('🔑 Token nettoyé:', cleanedToken.substring(0, 20) + '...');
+        console.log('🔑 Token identique:', cleanedToken === token);
+        console.log('🔑 Token length original:', token.length);
+        console.log('🔑 Token length nettoyé:', cleanedToken.length);
+        console.log('🔑 Token starts with quote:', token.startsWith('"') || token.startsWith("'"));
+        console.log('🔑 Token ends with quote:', token.endsWith('"') || token.endsWith("'"));
+        console.log('🔑 Token first char:', token.charAt(0));
+        console.log('🔑 Token last char:', token.charAt(token.length - 1));
+        secureStorage.set('authToken', cleanedToken);
+      } else {
+        console.log('🔑 Token déjà propre dans updateUser:', token.substring(0, 20) + '...');
+      }
+    }
     
     dispatch({
       type: AuthActionTypes.UPDATE_USER,

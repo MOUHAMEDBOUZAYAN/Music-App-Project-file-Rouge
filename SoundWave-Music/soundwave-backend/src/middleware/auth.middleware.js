@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const jwtConfig = require('../config/jwt');
 
 /**
  * Middleware pour protéger les routes privées
@@ -13,9 +14,19 @@ const protect = async (req, res, next) => {
     try {
       // Extraire le token du header
       token = req.headers.authorization.split(' ')[1];
+      
+      console.log('🔍 Vérification du token:', {
+        token: token.substring(0, 20) + '...',
+        secret: jwtConfig.secret,
+        issuer: jwtConfig.issuer
+      });
 
       // Vérifier le token
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const decoded = jwt.verify(token, jwtConfig.secret, {
+        issuer: jwtConfig.issuer
+      });
+      
+      console.log('✅ Token décodé avec succès:', decoded);
 
       // Récupérer l'utilisateur depuis la base de données
       const user = await User.findById(decoded.id).select('-password');
