@@ -383,9 +383,24 @@ const Search = () => {
     toast.success('Ajouté à la file d\'attente');
   };
 
-  const handleToggleLike = (song) => {
-    // Pass whole object so context can decide backend vs external
-    toggleLike(song);
+  const handleToggleLike = async (song) => {
+    try {
+      const songId = song._id || song.id;
+      const wasLiked = likedTracks.includes(songId);
+      
+      console.log('🔍 Search - handleToggleLike called:', { song, songId, wasLiked });
+      
+      await toggleLike(song);
+      
+      if (wasLiked) {
+        toast.success('Retiré des favoris');
+      } else {
+        toast.success('Ajouté aux favoris');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour des favoris:', error);
+      toast.error('Erreur lors de la mise à jour des favoris');
+    }
   };
 
   // Recherche automatique quand la page se charge avec un paramètre de requête

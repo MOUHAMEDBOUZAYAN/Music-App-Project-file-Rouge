@@ -29,6 +29,26 @@ const Artist = () => {
   const { user } = useAuth();
   const { playTrack, addToQueue, toggleLike, likedTracks } = useMusic();
   
+  const handleToggleLike = async (track) => {
+    try {
+      const trackId = track._id || track.id;
+      const wasLiked = likedTracks.includes(trackId);
+      
+      console.log('🎤 Artist - handleToggleLike called:', { track, trackId, wasLiked });
+      
+      await toggleLike(track);
+      
+      if (wasLiked) {
+        toast.success('Retiré des favoris');
+      } else {
+        toast.success('Ajouté aux favoris');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour des favoris:', error);
+      toast.error('Erreur lors de la mise à jour des favoris');
+    }
+  };
+  
   const [artist, setArtist] = useState(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -70,8 +90,17 @@ const Artist = () => {
         
         // Charger les informations de l'artiste depuis le backend
         console.log('🔍 Recherche de l\'artiste avec ID:', id);
-        const artistResponse = await fetch(`http://localhost:5000/api/users/${id}`);
-        console.log('📡 Réponse artiste:', artistResponse.status, artistResponse.statusText);
+        
+        // Essayer d'abord l'endpoint des artistes
+        let artistResponse = await fetch(`http://localhost:5000/api/artists/${id}`);
+        console.log('📡 Réponse artiste (artists):', artistResponse.status, artistResponse.statusText);
+        
+        if (!artistResponse.ok) {
+          // Si pas trouvé, essayer l'endpoint des utilisateurs
+          console.log('🔄 Tentative avec l\'endpoint utilisateurs...');
+          artistResponse = await fetch(`http://localhost:5000/api/users/${id}`);
+          console.log('📡 Réponse artiste (users):', artistResponse.status, artistResponse.statusText);
+        }
         
         if (artistResponse.ok) {
           const artistData = await artistResponse.json();
@@ -257,6 +286,9 @@ const Artist = () => {
           src={artist.profilePicture ? `http://localhost:5000${artist.profilePicture}` : `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1200&h=400&fit=crop&crop=center`}
           alt={artist.username || artist.name}
           className="w-full h-full object-cover"
+          onError={(e) => {
+            e.target.src = `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1200&h=400&fit=crop&crop=center`;
+          }}
         />
         
         {/* Badge Artiste vérifié - Style Spotify */}
@@ -267,10 +299,17 @@ const Artist = () => {
 
         {/* Informations de l'artiste - Style Spotify */}
         <div className="absolute bottom-6 left-6 right-6">
-          <h1 className="text-5xl font-bold mb-2">{artist.username || artist.name}</h1>
-          <p className="text-gray-300 text-lg">
+          <h1 className="text-5xl font-bold mb-2 text-white">
+            {artist?.username || artist?.name || 'Artiste'}
+          </h1>
+          <p className="text-gray-300 text-lg mb-2">
             {topTracks.length} chanson{topTracks.length > 1 ? 's' : ''} • {albums.length} album{albums.length > 1 ? 's' : ''}
           </p>
+          {artist?.bio && (
+            <p className="text-gray-300 text-sm max-w-2xl line-clamp-2">
+              {artist.bio}
+            </p>
+          )}
         </div>
       </div>
 
@@ -344,7 +383,9 @@ const Artist = () => {
           <div className="flex items-center space-x-2">
             <Users className="w-4 h-4 text-gray-400" />
             <span className="text-gray-400">
-              {artist.nb_fan ? artist.nb_fan.toLocaleString('fr-FR') : '944 008'} auditeurs mensuels
+              {artist?.monthlyListeners ? artist.monthlyListeners.toLocaleString('fr-FR') : 
+               artist?.nb_fan ? artist.nb_fan.toLocaleString('fr-FR') : 
+               Math.floor(Math.random() * 500000 + 100000).toLocaleString('fr-FR')} auditeurs mensuels
             </span>
           </div>
           <div className="flex items-center space-x-2">
@@ -368,6 +409,12 @@ const Artist = () => {
           <h2 className="text-2xl font-bold mb-6">Populaires</h2>
           {tracksLoading ? (
             <div className="text-gray-400">Chargement des titres…</div>
+          ) : topTracks.length === 0 ? (
+            <div className="text-center py-12">
+              <Music className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-white mb-2">Aucune chanson disponible</h3>
+              <p className="text-gray-400">Cet artiste n'a pas encore publié de chansons</p>
+            </div>
           ) : (
             <>
               {/* Liste compacte mobile comme Spotify */}
@@ -390,7 +437,7 @@ const Artist = () => {
                       <div className="text-gray-400 text-xs truncate">{track.album || 'Album inconnu'}</div>
                     </div>
                     <div className="ml-3 flex items-center space-x-3">
-                      <button onClick={() => toggleLike(track)} className="text-gray-300 hover:text-white transition-colors">
+                      <button onClick={() => handleToggleLike(track)} className="text-gray-300 hover:text-white transition-colors">
                         <Heart className="h-4 w-4" />
                       </button>
                       <button onClick={() => handlePlaySong(track)} className="w-8 h-8 rounded-full bg-green-500 text-black flex items-center justify-center hover:scale-105 transition-transform">
@@ -437,7 +484,7 @@ const Artist = () => {
                         <button onClick={(e) => { e.stopPropagation(); handleAddToQueue(track); }} className="p-2 rounded-full bg-gray-700 hover:bg-gray-600 transition-colors">
                           <Music2 className="h-4 w-4 text-white" />
                         </button>
-                        <button onClick={(e) => { e.stopPropagation(); toggleLike(track); }} className={`p-2 rounded-full transition-colors ${likedTracks.includes(String(track._id)) ? 'bg-red-500 hover:bg-red-400' : 'bg-gray-700 hover:bg-gray-600'}`}>
+                        <button onClick={(e) => { e.stopPropagation(); handleToggleLike(track); }} className={`p-2 rounded-full transition-colors ${likedTracks.includes(String(track._id)) ? 'bg-red-500 hover:bg-red-400' : 'bg-gray-700 hover:bg-gray-600'}`}>
                           <Heart className={`h-4 w-4 ${likedTracks.includes(String(track._id)) ? 'text-white fill-white' : 'text-white'}`} />
                         </button>
                       </div>
@@ -692,7 +739,9 @@ const Artist = () => {
               <div className="flex-1 ml-8">
                 <h3 className="text-4xl font-bold mb-8 text-white group-hover:text-blue-400 transition-colors duration-300">{artist.name}</h3>
                 <p className="text-gray-300 text-xl mb-8">
-                  {artist.nb_fan ? artist.nb_fan.toLocaleString('fr-FR') : '944 008'} auditeurs mensuels
+                  {artist?.monthlyListeners ? artist.monthlyListeners.toLocaleString('fr-FR') : 
+                   artist?.nb_fan ? artist.nb_fan.toLocaleString('fr-FR') : 
+                   Math.floor(Math.random() * 500000 + 100000).toLocaleString('fr-FR')} auditeurs mensuels
                 </p>
                 
                 {/* Indicateur pour plus d'infos */}
@@ -714,7 +763,7 @@ const Artist = () => {
                       <Mail className="w-6 h-6 text-blue-400" />
                       <div>
                         <p className="text-gray-400 text-sm font-medium mb-1">Contact Business</p>
-                        <p className="text-white text-base">contact@{artist.name?.toLowerCase()}.com</p>
+                        <p className="text-white text-base">contact@{artist?.username?.toLowerCase() || artist?.name?.toLowerCase() || 'artiste'}.com</p>
                       </div>
                     </div>
                     
@@ -722,7 +771,9 @@ const Artist = () => {
                       <Music className="w-6 h-6 text-green-400" />
                       <div>
                         <p className="text-gray-400 text-sm font-medium mb-1">Genre Principal</p>
-                        <p className="text-white text-base">Hip-Hop, Rap, Urban</p>
+                        <p className="text-white text-base">
+                          {topTracks.length > 0 && topTracks[0]?.genre ? topTracks[0].genre : 'Hip-Hop, Rap, Urban'}
+                        </p>
                       </div>
                     </div>
                     
@@ -755,8 +806,12 @@ const Artist = () => {
                     <div className="flex items-center space-x-4">
                       <Users className="w-6 h-6 text-pink-400" />
                       <div>
-                        <p className="text-gray-400 text-sm font-medium mb-1">Collaborations</p>
-                        <p className="text-white text-base">Inkonnu, Shaw, Snor</p>
+                        <p className="text-gray-400 text-sm font-medium mb-1">Auditeurs mensuels</p>
+                        <p className="text-white text-base">
+                          {artist?.monthlyListeners ? artist.monthlyListeners.toLocaleString('fr-FR') : 
+                           artist?.nb_fan ? artist.nb_fan.toLocaleString('fr-FR') : 
+                           Math.floor(Math.random() * 500000 + 100000).toLocaleString('fr-FR')}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -1032,9 +1087,8 @@ const Artist = () => {
             <div className="bg-gray-800/30 rounded-lg p-6 border border-gray-700/50">
               <h3 className="text-lg font-semibold mb-4 text-white">Biographie</h3>
               <p className="text-gray-300 text-sm leading-relaxed">
-                {artist.name} est né au Maroc et a commencé sa carrière musicale en 2018. 
-                Il s'est fait connaître grâce à son style unique qui mélange le rap traditionnel 
-                avec des influences modernes et internationales.
+                {artist?.bio || 
+                 `${artist?.username || artist?.name || 'Cet artiste'} est un talent musical qui s'est fait connaître grâce à son style unique et ses créations originales. ${artist?.username || artist?.name || 'L\'artiste'} a commencé sa carrière musicale et continue de captiver son public avec des mélodies entraînantes et des textes percutants.`}
               </p>
             </div>
             

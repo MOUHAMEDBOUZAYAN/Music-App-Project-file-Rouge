@@ -1,41 +1,50 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, Play, Shuffle, MoreVertical, Clock, User } from 'lucide-react';
+import { Heart, Play, Shuffle, MoreVertical, Clock, User, Plus } from 'lucide-react';
 import TrackList from '../components/music/TrackList';
 import { useMusic } from '../store/MusicContext';
 import { songService } from '../services/songService';
+import toast from 'react-hot-toast';
 
 const LikedSongs = () => {
   const [likedSongs, setLikedSongs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [sortBy, setSortBy] = useState('dateAdded'); // dateAdded, title, artist, duration
-  const { likedTracks, toggleLike } = useMusic();
+  const { likedTracks, toggleLike, refreshLikedSongs, playTrack, addToQueue } = useMusic();
 
+  // تحميل الأغاني المفضلة عند تحميل الصفحة
   useEffect(() => {
     const loadLikedSongs = async () => {
       try {
-        // Charger directement depuis l'API
-        const res = await songService.getLikedSongs();
-        const apiSongs = Array.isArray(res?.data?.data) ? res.data.data : [];
+        console.log('🔄 Starting to load liked songs...');
+        console.log('🔑 Auth token:', localStorage.getItem('authToken'));
+        console.log('👤 User:', localStorage.getItem('user'));
+        
+        setIsLoading(true);
+        const apiSongs = await refreshLikedSongs();
+        console.log('🔄 Refreshed liked songs:', apiSongs);
+        
         const results = apiSongs.map(s => {
           if (s.type === 'external') {
             return {
               id: s.externalId,
               title: s.title || `Titre ${s.externalId}`,
-              artist: s.artist || 'Artiste inconnu',
-              album: s.album || '—',
+              artist: s.artist?.name || s.artist?.username || (typeof s.artist === 'string' ? s.artist : 'Artiste inconnu'),
+              album: s.album?.title || s.album?.name || s.album || '—',
               duration: s.duration || 180,
-              cover: s.cover || 'https://via.placeholder.com/40/1DB954/FFFFFF?text=🎵',
+              cover: s.cover || s.coverImage || s.album?.cover || `https://via.placeholder.com/40/1DB954/FFFFFF?text=${encodeURIComponent(s.title?.charAt(0) || '🎵')}`,
               dateAdded: (s.createdAt ? new Date(s.createdAt) : new Date()).toISOString().split('T')[0],
               isLiked: true
             };
           }
           return {
             id: s._id,
+            _id: s._id,
             title: s.title,
-            artist: s.artist || 'Artiste inconnu',
-            album: s.album || '—',
+            artist: s.artist?.name || s.artist?.username || (typeof s.artist === 'string' ? s.artist : 'Artiste inconnu'),
+            album: s.album?.title || s.album?.name || s.album || '—',
             duration: s.duration || 180,
-            cover: s.cover || 'https://via.placeholder.com/40/1DB954/FFFFFF?text=🎵',
+            cover: s.cover || s.coverImage || s.album?.cover || 'https://via.placeholder.com/40/1DB954/FFFFFF?text=🎵',
+            audioUrl: s.audioUrl || `http://localhost:5000/uploads/audio/${s._id}.mp3`,
             dateAdded: (s.createdAt ? new Date(s.createdAt) : new Date()).toISOString().split('T')[0],
             isLiked: true
           };
@@ -44,16 +53,79 @@ const LikedSongs = () => {
         setLikedSongs(results);
         setIsLoading(false);
       } catch (error) {
-        console.error('Erreur lors du chargement des musiques likées:', error);
+        console.error('❌ Erreur lors du chargement des musiques likées:', error);
+        console.error('❌ Error details:', {
+          status: error.status,
+          message: error.message,
+          response: error.response
+        });
+        
+        // إذا كان الخطأ 401، المستخدم غير مسجل دخول
+        if (error.status === 401) {
+          console.log('🔐 User not authenticated, redirecting to login...');
+          // يمكن إضافة إعادة توجيه هنا إذا لزم الأمر
+        }
+        
         setLikedSongs([]);
         setIsLoading(false);
       }
     };
 
     loadLikedSongs();
-    
-    return () => {};
-  }, [likedTracks]);
+  }, []); // تحميل مرة واحدة فقط عند تحميل الصفحة
+
+  // تحديث الأغاني المفضلة عند تغيير likedTracks
+  useEffect(() => {
+    // فقط إذا كان هناك تغيير في likedTracks
+    if (likedTracks && likedTracks.length >= 0) {
+      const loadLikedSongs = async () => {
+        try {
+          console.log('🔄 likedTracks changed, reloading songs...', likedTracks);
+          setIsLoading(true);
+          const apiSongs = await refreshLikedSongs();
+          console.log('🔄 Updated liked songs:', apiSongs);
+          
+          const results = apiSongs.map(s => {
+            if (s.type === 'external') {
+              return {
+                id: s.externalId,
+                title: s.title || `Titre ${s.externalId}`,
+                artist: s.artist?.name || s.artist?.username || (typeof s.artist === 'string' ? s.artist : 'Artiste inconnu'),
+                album: s.album?.title || s.album?.name || s.album || '—',
+                duration: s.duration || 180,
+                cover: s.cover || s.coverImage || s.album?.cover || `https://via.placeholder.com/40/1DB954/FFFFFF?text=${encodeURIComponent(s.title?.charAt(0) || '🎵')}`,
+                dateAdded: (s.createdAt ? new Date(s.createdAt) : new Date()).toISOString().split('T')[0],
+                isLiked: true
+              };
+            }
+            return {
+              id: s._id,
+              _id: s._id,
+              title: s.title,
+              artist: s.artist?.name || s.artist?.username || (typeof s.artist === 'string' ? s.artist : 'Artiste inconnu'),
+              album: s.album?.title || s.album?.name || s.album || '—',
+              duration: s.duration || 180,
+              cover: s.cover || s.coverImage || s.album?.cover || 'https://via.placeholder.com/40/1DB954/FFFFFF?text=🎵',
+              audioUrl: s.audioUrl || `http://localhost:5000/uploads/audio/${s._id}.mp3`,
+              dateAdded: (s.createdAt ? new Date(s.createdAt) : new Date()).toISOString().split('T')[0],
+              isLiked: true
+            };
+          });
+
+          setLikedSongs(results);
+          setIsLoading(false);
+        } catch (error) {
+          console.error('Erreur lors du rechargement des musiques likées:', error);
+          setIsLoading(false);
+        }
+      };
+
+      loadLikedSongs();
+    }
+  }, [likedTracks.length]); // تحديث عند تغيير عدد الأغاني المفضلة فقط
+
+  // تحديث تلقائي عند إضافة أو إزالة أغنية من المفضلة
+  // تم إزالة useEffect للـ storage لأنه يسبب التحديث المزدوج
 
   // Sort songs based on selected criteria
   const sortedSongs = [...likedSongs].sort((a, b) => {
@@ -71,25 +143,45 @@ const LikedSongs = () => {
   });
 
   const handlePlayAll = () => {
-    // TODO: Implement play all functionality
-    console.log('Playing all liked songs');
+    if (likedSongs.length > 0) {
+      // Jouer la première chanson et ajouter le reste à la queue
+      playTrack(likedSongs[0]);
+      likedSongs.slice(1).forEach(song => addToQueue(song));
+      toast.success(`Lecture de ${likedSongs.length} chansons`);
+    }
   };
 
   const handleShuffle = () => {
-    // TODO: Implement shuffle functionality
-    console.log('Shuffling liked songs');
+    if (likedSongs.length > 0) {
+      // Mélanger les chansons et jouer la première
+      const shuffledSongs = [...likedSongs].sort(() => Math.random() - 0.5);
+      playTrack(shuffledSongs[0]);
+      shuffledSongs.slice(1).forEach(song => addToQueue(song));
+      toast.success(`Lecture aléatoire de ${likedSongs.length} chansons`);
+    }
   };
 
-  const handleRemoveFromLiked = (songId) => {
+  const handlePlaySong = (song) => {
+    playTrack(song);
+    toast.success(`Lecture de "${song.title}"`);
+  };
+
+  const handleAddToQueue = (song) => {
+    addToQueue(song);
+    toast.success(`"${song.title}" ajoutée à la file d'attente`);
+  };
+
+  const handleRemoveFromLiked = async (songId) => {
     try {
+      console.log('🔄 Removing song from liked:', songId);
       // Mettre à jour le contexte (source de vérité)
-      toggleLike(songId);
-      // Mettre à jour l'état local
-      setLikedSongs(prev => prev.filter(song => song.id !== songId));
+      await toggleLike(songId);
       
+      toast.success('Retiré des favoris');
       console.log(`Musique ${songId} retirée des favoris`);
     } catch (error) {
       console.error('Erreur lors de la suppression:', error);
+      toast.error('Erreur lors de la suppression des favoris');
     }
   };
 
@@ -202,6 +294,10 @@ const LikedSongs = () => {
                   src={song.cover}
                   alt={song.title}
                   className="w-10 h-10 rounded object-cover"
+                  onError={(e) => {
+                    console.log('🖼️ Image failed to load:', song.cover, 'for song:', song.title);
+                    e.target.src = `https://via.placeholder.com/40/1DB954/FFFFFF?text=${encodeURIComponent(song.title?.charAt(0) || '🎵')}`;
+                  }}
                 />
                 <div className="flex-1 min-w-0">
                   <p className="text-white font-medium truncate">{song.title}</p>
@@ -223,11 +319,29 @@ const LikedSongs = () => {
                 </span>
                 <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
+                    onClick={() => handlePlaySong(song)}
+                    className="p-1 text-gray-400 hover:text-white transition-colors"
+                    title="Jouer"
+                  >
+                    <Play className="h-4 w-4" />
+                  </button>
+                  
+                  <button
+                    onClick={() => handleAddToQueue(song)}
+                    className="p-1 text-gray-400 hover:text-white transition-colors"
+                    title="Ajouter à la file d'attente"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                  
+                  <button
                     onClick={() => handleRemoveFromLiked(song.id)}
                     className="p-1 text-gray-400 hover:text-red-400 transition-colors"
+                    title="Retirer des favoris"
                   >
                     <Heart className="h-4 w-4" fill="currentColor" />
                   </button>
+                  
                   <button className="p-1 text-gray-400 hover:text-white transition-colors">
                     <MoreVertical className="h-4 w-4" />
                   </button>

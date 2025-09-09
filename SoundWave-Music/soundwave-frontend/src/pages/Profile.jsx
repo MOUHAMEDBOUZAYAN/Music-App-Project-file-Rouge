@@ -22,7 +22,8 @@ import {
   X,
   Disc,
   Upload,
-  BarChart3
+  BarChart3,
+  CheckCircle
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -477,125 +478,113 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Message d'information sur l'authentification */}
-      {isAuthenticated && !localStorage.getItem('authToken') && (
-        <div className="bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 px-4 py-3 text-center">
-          🔄 Session en cours de validation. Si vous rencontrez des problèmes, veuillez vous reconnecter.
-        </div>
-      )}
-      {isAuthenticated && localStorage.getItem('authToken') && (
-        <div className="bg-blue-500/20 border border-blue-500/30 text-blue-400 px-4 py-3 text-center">
-          💡 Si vous rencontrez des erreurs lors de la sauvegarde, cliquez sur "Nouvelle connexion" pour actualiser votre session.
-        </div>
-      )}
-      {isAuthenticated && !localStorage.getItem('authToken') && (
-        <div className="bg-red-500/20 border border-red-500/30 text-red-400 px-4 py-3 text-center">
-          ⚠️ Votre session a expiré. Cliquez sur "Se reconnecter maintenant" pour continuer.
-        </div>
-      )}
       
-      {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 via-blue-500/10 to-purple-500/20 animate-pulse"></div>
-        <div className="relative px-6 py-20 sm:py-32 lg:px-8">
-          <div className="mx-auto max-w-4xl">
-            <div className={`flex items-center gap-8 transition-all duration-1000 delay-300 ${
-              isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
-            }`}>
-              {/* Avatar */}
-              <div className="relative w-32 h-32 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center shadow-2xl overflow-hidden">
-                {user.profilePicture ? (
-                  <img 
-                    src={`http://localhost:5000${user.profilePicture}`} 
-                    alt={user.username}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'flex';
-                    }}
-                  />
-                ) : null}
-                <span className={`text-4xl font-bold text-white ${user.profilePicture ? 'hidden' : 'flex'}`}>
-                  {user.username?.charAt(0)?.toUpperCase() || 'U'}
-                </span>
-              </div>
-              
-              {/* Info utilisateur */}
-              <div className="flex-1">
-                <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4">
-                  {user.username || 'Utilisateur'}
-                </h1>
-                <p className="text-xl text-gray-300 mb-4">
-                  Membre SoundWave • {user.email || 'email@example.com'}
-                </p>
-                <div className="mb-6 flex items-center gap-3">
-                  <span className="text-gray-400 text-sm">Rôle:</span>
-                  {user.role === USER_ROLES.ADMIN && (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-500/20 text-red-400 border border-red-500/30">
-                      <Crown className="h-4 w-4 mr-2" />
-                      Admin
+      {/* Hero Section - تصميم بسيط ومهني للفنانين */}
+      <section className="relative">
+        <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900">
+          <div className="px-6 py-16 lg:px-8">
+            <div className="mx-auto max-w-6xl">
+              <div className={`flex flex-col lg:flex-row items-center lg:items-start gap-8 transition-all duration-1000 ${
+                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+              }`}>
+                {/* صورة الفنان - تصميم بسيط ومهني */}
+                <div className="relative group flex-shrink-0">
+                  <div className={`relative w-40 h-40 rounded-full flex items-center justify-center shadow-2xl overflow-hidden border-4 ${
+                    user.role === 'artist' 
+                      ? 'border-blue-500/30 bg-gradient-to-br from-blue-600/20 to-purple-600/20' 
+                      : 'border-green-500/30 bg-gradient-to-br from-green-600/20 to-blue-600/20'
+                  }`}>
+                    {user.profilePicture ? (
+                      <img 
+                        src={`http://localhost:5000${user.profilePicture}`} 
+                        alt={user.username}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <span className={`text-5xl font-bold text-white ${user.profilePicture ? 'hidden' : 'flex'}`}>
+                      {user.username?.charAt(0)?.toUpperCase() || 'U'}
                     </span>
+                  </div>
+                  
+                  {/* مؤشر الفنان */}
+                  {user.role === 'artist' && (
+                    <div className="absolute -top-2 -right-2 bg-blue-500 rounded-full p-2 border-2 border-gray-900 shadow-lg">
+                      <Music className="h-5 w-5 text-white" />
+                    </div>
                   )}
-                  {user.role === USER_ROLES.ARTIST && (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                      <Music className="h-4 w-4 mr-2" />
-                      Artiste
-                    </span>
-                  )}
-                  {(!user.role || user.role === USER_ROLES.LISTENER) && (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-500/20 text-green-400 border border-green-500/30">
-                      <Play className="h-4 w-4 mr-2" />
-                      Listener
-                    </span>
+                  
+                  {/* زر التعديل */}
+                  {isEditing && (
+                    <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                      <Upload className="h-8 w-8 text-white" />
+                    </div>
                   )}
                 </div>
-                <div className="flex items-center space-x-4">
-                  <button 
-                    onClick={handleEditClick}
-                    className="px-6 py-3 bg-green-500 text-black rounded-full font-semibold hover:bg-green-400 transition-all duration-200 hover:scale-105 flex items-center space-x-2"
-                  >
-                    <Edit3 className="h-5 w-5" />
-                    <span>Modifier le profil</span>
-                  </button>
-                  {!user.profilePicture && (
-                    <div className="text-yellow-400 text-sm bg-yellow-400/10 px-3 py-2 rounded-lg border border-yellow-400/20">
-                      💡 Ajoutez une photo de profil pour personnaliser votre compte
+              
+                {/* معلومات الفنان - تصميم نظيف */}
+                <div className="flex-1 text-center lg:text-left">
+                  <h1 className="text-4xl lg:text-5xl font-bold text-white mb-3">
+                    {user.username || 'Utilisateur'}
+                  </h1>
+                  
+                  {/* السيرة الذاتية */}
+                  {user.bio && (
+                    <p className="text-lg text-gray-300 mb-4 max-w-2xl">
+                      {user.bio}
+                    </p>
+                  )}
+                  
+                  {/* معلومات إضافية */}
+                  <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 mb-6">
+                    <span className="text-gray-400 text-sm">
+                      {user.email || 'email@example.com'}
+                    </span>
+                    <span className="text-gray-500">•</span>
+                    <span className="text-gray-400 text-sm">
+                      Membre depuis {user.createdAt ? new Date(user.createdAt).getFullYear() : '2024'}
+                    </span>
+                  </div>
+                  
+                  {/* إحصائيات الفنان */}
+                  {user.role === 'artist' && (
+                    <div className="flex flex-wrap items-center justify-center lg:justify-start gap-6 mb-6">
+                      <div className="flex items-center space-x-2 bg-blue-500/10 px-4 py-2 rounded-full border border-blue-500/20">
+                        <Music className="h-4 w-4 text-blue-400" />
+                        <span className="text-blue-300 font-medium">{userSongs.length} chanson{userSongs.length > 1 ? 's' : ''}</span>
+                      </div>
+                      <div className="flex items-center space-x-2 bg-purple-500/10 px-4 py-2 rounded-full border border-purple-500/20">
+                        <Disc className="h-4 w-4 text-purple-400" />
+                        <span className="text-purple-300 font-medium">{userAlbums.length} album{userAlbums.length > 1 ? 's' : ''}</span>
+                      </div>
                     </div>
                   )}
-                  {!isAuthenticated && (
-                    <div className="text-red-400 text-sm bg-red-400/10 px-3 py-2 rounded-lg border border-red-400/20">
-                      ⚠️ Vous devez être connecté pour modifier votre profil
-                    </div>
-                  )}
-                  {isAuthenticated && !localStorage.getItem('authToken') && (
-                    <div className="text-yellow-400 text-sm bg-yellow-400/10 px-3 py-2 rounded-lg border border-yellow-400/20">
-                      🔄 Session en cours de validation...
-                    </div>
-                  )}
-                  {isAuthenticated && localStorage.getItem('authToken') && (
-                    <button
-                      onClick={() => {
-                        logout();
-                        window.location.href = '/login';
-                      }}
-                      className="text-blue-400 text-sm bg-blue-400/10 px-3 py-2 rounded-lg border border-blue-400/20 hover:bg-blue-400/20 transition-colors"
+                  
+                  {/* الأزرار */}
+                  <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4">
+                    <button 
+                      onClick={handleEditClick}
+                      className="px-6 py-3 bg-green-500 text-black rounded-full font-semibold hover:bg-green-400 transition-all duration-200 hover:scale-105 flex items-center space-x-2"
                     >
-                      🔄 Nouvelle connexion
+                      <Edit3 className="h-5 w-5" />
+                      <span>Modifier le profil</span>
                     </button>
-                  )}
-                  {isAuthenticated && !localStorage.getItem('authToken') && (
-                    <button
-                      onClick={() => {
-                        window.location.href = '/login';
-                      }}
-                      className="text-red-400 text-sm bg-red-400/10 px-3 py-2 rounded-lg border border-red-400/20 hover:bg-red-400/20 transition-colors"
-                    >
-                      ⚠️ Se reconnecter maintenant
-                    </button>
-                  )}
-                  <Link to="/subscriptions" className="px-6 py-3 border border-gray-600 text-white rounded-full font-semibold hover:bg-gray-800 transition-all duration-200 hover:scale-105 flex items-center space-x-2">
-                    <Crown className="h-5 w-5 text-yellow-400" />
-                    <span>Passer à Premium</span>
-                  </Link>
+                    
+                    {user.role === 'artist' && (
+                      <Link to="/artist-dashboard" className="px-6 py-3 bg-blue-500 text-white rounded-full font-semibold hover:bg-blue-400 transition-all duration-200 hover:scale-105 flex items-center space-x-2">
+                        <BarChart3 className="h-5 w-5" />
+                        <span>Tableau de bord</span>
+                      </Link>
+                    )}
+                    
+                    <Link to="/subscriptions" className="px-6 py-3 border border-gray-600 text-white rounded-full font-semibold hover:bg-gray-800 transition-all duration-200 hover:scale-105 flex items-center space-x-2">
+                      <Crown className="h-5 w-5 text-yellow-400" />
+                      <span>Premium</span>
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
@@ -612,7 +601,7 @@ const Profile = () => {
       <section className="py-16 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-            {/* Informations personnelles */}
+            {/* Informations personnelles - تصميم بسيط ومهني */}
             <div className={`bg-gray-900/50 backdrop-blur-xl border border-gray-800/50 rounded-2xl p-8 transition-all duration-1000 delay-500 ${
               isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
             }`}>
@@ -623,13 +612,33 @@ const Profile = () => {
                 <span>Informations personnelles</span>
               </h2>
               <div className="space-y-6">
-                {/* Photo de profil */}
-                <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg">
-                  <div className="flex-1">
-                    <label className="text-gray-400 text-sm block mb-1">Photo de profil</label>
-                    {isEditing ? (
-                      <div className="flex items-center space-x-4">
-                        <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center overflow-hidden">
+                {/* Photo de profil - Section améliorée pour artistes */}
+                <div className="p-6 bg-gradient-to-r from-gray-800/50 to-gray-700/50 rounded-xl border border-gray-600/30">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="text-white font-semibold text-lg flex items-center space-x-2">
+                        <User className="h-5 w-5 text-green-400" />
+                        <span>Photo de profil</span>
+                        {user.role === 'artist' && (
+                          <span className="bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full text-xs font-medium">
+                            Artiste
+                          </span>
+                        )}
+                      </h3>
+                      <p className="text-gray-400 text-sm mt-1">
+                        {user.role === 'artist' 
+                          ? 'Votre photo de profil apparaîtra sur vos chansons et albums'
+                          : 'Personnalisez votre profil avec une photo'
+                        }
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {isEditing ? (
+                    <div className="flex items-center space-x-6">
+                      {/* Preview de l'image */}
+                      <div className="relative">
+                        <div className="w-24 h-24 bg-gray-700 rounded-full flex items-center justify-center overflow-hidden border-2 border-gray-600">
                           {editForm.profilePicture ? (
                             <img 
                               src={URL.createObjectURL(editForm.profilePicture)} 
@@ -643,33 +652,69 @@ const Profile = () => {
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <span className="text-2xl font-bold text-white">
+                            <span className="text-3xl font-bold text-white">
                               {user.username?.charAt(0)?.toUpperCase() || 'U'}
                             </span>
                           )}
                         </div>
-                        <div className="flex flex-col space-y-2">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleImageChange}
-                            className="hidden"
-                            id="profilePicture"
-                          />
+                        {editForm.profilePicture && (
+                          <div className="absolute -top-2 -right-2 bg-green-500 rounded-full p-1">
+                            <CheckCircle className="h-4 w-4 text-black" />
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Contrôles d'upload */}
+                      <div className="flex-1 space-y-3">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageChange}
+                          className="hidden"
+                          id="profilePicture"
+                        />
+                        <div className="flex space-x-3">
                           <label
                             htmlFor="profilePicture"
-                            className="px-4 py-2 bg-green-500 text-black rounded-lg cursor-pointer hover:bg-green-400 transition-colors text-center"
+                            className="bg-green-500 hover:bg-green-400 text-black px-6 py-3 rounded-lg font-medium cursor-pointer transition-colors flex items-center space-x-2"
                           >
-                            📷 Choisir une photo
+                            <Upload className="h-5 w-5" />
+                            <span>Choisir une image</span>
                           </label>
                           {editForm.profilePicture && (
-                            <p className="text-green-400 text-sm">✅ Photo sélectionnée</p>
+                            <button
+                              onClick={() => setEditForm(prev => ({ ...prev, profilePicture: null }))}
+                              className="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-4 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2"
+                            >
+                              <X className="h-4 w-4" />
+                              <span>Supprimer</span>
+                            </button>
                           )}
                         </div>
+                        
+                        {/* Conseils pour artistes */}
+                        {user.role === 'artist' && (
+                          <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                            <div className="flex items-start space-x-2">
+                              <Star className="h-4 w-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                              <div className="text-sm">
+                                <p className="text-blue-300 font-medium mb-1">Conseils pour artistes :</p>
+                                <ul className="text-blue-200 space-y-1">
+                                  <li>• Utilisez une image haute qualité (minimum 400x400px)</li>
+                                  <li>• Évitez les images avec du texte ou des logos</li>
+                                  <li>• Une photo professionnelle améliore votre crédibilité</li>
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    ) : (
-                      <div className="flex items-center space-x-4">
-                        <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center overflow-hidden">
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-6">
+                      {/* Image actuelle */}
+                      <div className="relative">
+                        <div className="w-24 h-24 bg-gray-700 rounded-full flex items-center justify-center overflow-hidden border-2 border-gray-600">
                           {user.profilePicture ? (
                             <img 
                               src={`http://localhost:5000${user.profilePicture}`} 
@@ -677,22 +722,44 @@ const Profile = () => {
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <span className="text-2xl font-bold text-white">
+                            <span className="text-3xl font-bold text-white">
                               {user.username?.charAt(0)?.toUpperCase() || 'U'}
                             </span>
                           )}
                         </div>
-                        <div>
+                        {user.profilePicture && (
+                          <div className="absolute -top-2 -right-2 bg-green-500 rounded-full p-1">
+                            <CheckCircle className="h-4 w-4 text-black" />
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Statut */}
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-2">
                           <p className="text-white font-medium">
                             {user.profilePicture ? 'Photo personnalisée' : 'Photo par défaut'}
                           </p>
-                          <p className="text-gray-400 text-sm">
-                            Cliquez sur "Modifier le profil" pour changer
-                          </p>
+                          {user.profilePicture && (
+                            <span className="bg-green-500/20 text-green-300 px-2 py-1 rounded-full text-xs font-medium">
+                              Configuré
+                            </span>
+                          )}
                         </div>
+                        <p className="text-gray-400 text-sm">
+                          {user.profilePicture 
+                            ? 'Votre photo de profil est configurée'
+                            : 'Ajoutez une photo pour personnaliser votre profil'
+                          }
+                        </p>
+                        {user.role === 'artist' && !user.profilePicture && (
+                          <p className="text-yellow-400 text-sm mt-1">
+                            ⚠️ Recommandé pour les artistes
+                          </p>
+                        )}
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg">

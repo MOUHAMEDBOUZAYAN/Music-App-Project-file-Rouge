@@ -5,6 +5,7 @@ import { playlistService } from '../services/playlistService.js';
 import { songService } from '../services/songService.js';
 import { apiClient, endpoints } from '../services/api.js';
 import { Music, Plus, Search, X, ChevronRight, Clock, Play, MoreHorizontal, Globe, Lock, Heart, Save } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const CreatePlaylist = () => {
   const navigate = useNavigate();
@@ -167,33 +168,62 @@ const CreatePlaylist = () => {
 
   const addSong = (song) => {
     const id = song._id || song.id;
-    if (selectedIds.has(id)) return;
+    if (selectedIds.has(id)) {
+      toast.error('Cette chanson est déjà dans la playlist');
+      return;
+    }
     setSelectedSongs(prev => [...prev, song]);
+    toast.success(`${song.title || song.name} ajoutée à la playlist`);
   };
 
   const removeSong = (songId) => {
+    const song = selectedSongs.find(s => (s._id || s.id) === songId);
     setSelectedSongs(prev => prev.filter(s => (s._id || s.id) !== songId));
+    if (song) {
+      toast.success(`${song.title || song.name} retirée de la playlist`);
+    }
   };
 
   const handleCreate = async () => {
-    if (!name.trim()) return;
+    if (!name.trim()) {
+      toast.error('Veuillez entrer un nom pour votre playlist');
+      return;
+    }
+    
     setCreating(true);
     try {
+      console.log('🎵 Création de la playlist...', { name, description, isPublic, songsCount: selectedSongs.length });
+      
       const payload = {
         name: name.trim(),
         description: description.trim(),
         isPublic,
         songs: selectedSongs.map(s => s._id || s.id)
       };
+      
+      console.log('📤 Payload envoyé:', payload);
+      
       const res = await playlistService.createPlaylist(payload);
+      console.log('📥 Réponse reçue:', res);
+      
       if (res.success) {
-        const created = res.data?.data;
+        const created = res.data?.data || res.data;
+        console.log('✅ Playlist créée avec succès:', created);
+        
+        toast.success(`Playlist "${name}" créée avec succès!`);
+        
         if (created && created._id) {
           navigate(`/playlist/${created._id}`);
           return;
         }
         navigate('/playlists');
+      } else {
+        console.error('❌ Erreur lors de la création:', res.error);
+        toast.error(`Erreur lors de la création de la playlist: ${res.error}`);
       }
+    } catch (error) {
+      console.error('💥 Erreur lors de la création de la playlist:', error);
+      toast.error(`Erreur lors de la création de la playlist: ${error.message || 'Erreur inconnue'}`);
     } finally {
       setCreating(false);
     }
@@ -215,13 +245,32 @@ const CreatePlaylist = () => {
 
             {/* Playlist Details */}
             <div className="flex-1">
-              <p className="text-sm font-medium text-white mb-2">Playlist publique</p>
+              <div className="flex items-center gap-2 mb-2">
+                {isPublic ? (
+                  <Globe className="h-4 w-4 text-green-500" />
+                ) : (
+                  <Lock className="h-4 w-4 text-gray-400" />
+                )}
+                <span className="text-sm font-medium text-white">
+                  {isPublic ? 'Playlist publique' : 'Playlist privée'}
+                </span>
+              </div>
+              
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="bg-transparent text-6xl font-black text-white outline-none mb-4 w-full"
                 placeholder="Ma playlist"
               />
+              
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Ajoutez une description à votre playlist..."
+                className="bg-transparent text-gray-300 outline-none mb-4 w-full resize-none"
+                rows={2}
+              />
+              
               <div className="flex items-center gap-2 text-gray-300">
                 <img
                   src={user?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face'}
@@ -229,7 +278,7 @@ const CreatePlaylist = () => {
                   className="w-6 h-6 rounded-full"
                 />
                 <span className="font-medium">{user?.username || 'Yassin Bouryou'}</span>
-                <span>• {selectedSongs.length} titres, </span>
+                <span>• {selectedSongs.length} titres</span>
               </div>
             </div>
           </div>
@@ -248,6 +297,17 @@ const CreatePlaylist = () => {
             >
               <Plus className="h-8 w-8" />
             </button>
+            <button 
+              onClick={() => setIsPublic(!isPublic)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-colors ${
+                isPublic 
+                  ? 'border-green-500 text-green-500 hover:bg-green-500 hover:text-black' 
+                  : 'border-gray-600 text-gray-400 hover:border-gray-400 hover:text-white'
+              }`}
+            >
+              {isPublic ? <Globe className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
+              {isPublic ? 'Publique' : 'Privée'}
+            </button>
             <button className="text-gray-400 hover:text-white">
               <MoreHorizontal className="h-8 w-8" />
             </button>
@@ -257,6 +317,18 @@ const CreatePlaylist = () => {
 
       {/* Songs List */}
       <div className="px-6">
+        {/* Header with Add Button */}
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold">Chansons</h2>
+          <button
+            onClick={() => setShowSearchModal(true)}
+            className="bg-green-500 hover:bg-green-600 text-black font-bold px-4 py-2 rounded-full transition-colors flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Ajouter des chansons
+          </button>
+        </div>
+
         {/* Table Header */}
         <div className="grid grid-cols-12 gap-4 px-4 py-2 text-gray-400 text-sm font-medium border-b border-gray-800 mb-4">
           <div className="col-span-1">#</div>
@@ -270,51 +342,66 @@ const CreatePlaylist = () => {
 
         {/* Selected Songs */}
         <div className="space-y-1">
-          {selectedSongs.map((song, index) => (
-            <div
-              key={song.id}
-              className="grid grid-cols-12 gap-4 px-4 py-2 rounded-md hover:bg-gray-800/50 group"
-            >
-              <div className="col-span-1 flex items-center">
-                <span className="text-gray-400 group-hover:hidden">{index + 1}</span>
-                <button className="hidden group-hover:block text-white">
-                  <Play className="h-4 w-4" />
-                </button>
-              </div>
-              
-              <div className="col-span-6 flex items-center gap-3">
-                <img 
-                  src={song.cover} 
-                  alt={song.title}
-                  className="w-10 h-10 rounded object-cover"
-                />
-                <div>
-                  <p className="text-white font-medium">{song.title}</p>
-                  <p className="text-gray-400 text-sm">{song.artist}</p>
+          {selectedSongs.length === 0 ? (
+            <div className="text-center py-12">
+              <Music className="h-16 w-16 text-gray-600 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-300 mb-2">Votre playlist est vide</h3>
+              <p className="text-gray-500 mb-6">Ajoutez des chansons pour commencer à créer votre playlist</p>
+              <button
+                onClick={() => setShowSearchModal(true)}
+                className="bg-green-500 hover:bg-green-600 text-black font-bold px-6 py-3 rounded-full transition-colors"
+              >
+                <Plus className="h-5 w-5 inline mr-2" />
+                Ajouter des chansons
+              </button>
+            </div>
+          ) : (
+            selectedSongs.map((song, index) => (
+              <div
+                key={song.id}
+                className="grid grid-cols-12 gap-4 px-4 py-2 rounded-md hover:bg-gray-800/50 group"
+              >
+                <div className="col-span-1 flex items-center">
+                  <span className="text-gray-400 group-hover:hidden">{index + 1}</span>
+                  <button className="hidden group-hover:block text-white">
+                    <Play className="h-4 w-4" />
+                  </button>
+                </div>
+                
+                <div className="col-span-6 flex items-center gap-3">
+                  <img 
+                    src={song.cover} 
+                    alt={song.title}
+                    className="w-10 h-10 rounded object-cover"
+                  />
+                  <div>
+                    <p className="text-white font-medium">{song.title}</p>
+                    <p className="text-gray-400 text-sm">{song.artist}</p>
+                  </div>
+                </div>
+                
+                <div className="col-span-3 flex items-center">
+                  <span className="text-gray-400 text-sm hover:text-white cursor-pointer">
+                    {song.album}
+                  </span>
+                </div>
+                
+                <div className="col-span-1 flex items-center">
+                  <span className="text-gray-400 text-sm">il y a 19 minutes</span>
+                </div>
+                
+                <div className="col-span-1 flex items-center justify-end">
+                  <button
+                    onClick={() => removeSong(song.id)}
+                    className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-white mr-2"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                  <span className="text-gray-400 text-sm">{song.duration}</span>
                 </div>
               </div>
-              
-              <div className="col-span-3 flex items-center">
-                <span className="text-gray-400 text-sm hover:text-white cursor-pointer">
-                  {song.album}
-                </span>
-              </div>
-              
-              <div className="col-span-1 flex items-center">
-                <span className="text-gray-400 text-sm">il y a 19 minutes</span>
-              </div>
-              
-              <div className="col-span-1 flex items-center justify-end">
-                <button
-                  onClick={() => removeSong(song.id)}
-                  className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-white mr-2"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-                <span className="text-gray-400 text-sm">{song.duration}</span>
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
 
@@ -473,7 +560,7 @@ const CreatePlaylist = () => {
                 />
                 <div>
                   <p className="text-white font-medium">{song.title || song.name}</p>
-                  <p className="text-gray-400 text-sm">{song.artist?.name || song.artist || 'Artiste'}</p>
+                  <p className="text-gray-400 text-sm">{song.artist?.name || song.artist?.username || (typeof song.artist === 'string' ? song.artist : 'Artiste')}</p>
                 </div>
               </div>
               

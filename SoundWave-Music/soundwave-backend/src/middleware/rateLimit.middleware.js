@@ -5,7 +5,7 @@ const rateLimit = require('express-rate-limit');
  */
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 1000, // Augmenté pour les tests
+  max: 10000, // Augmenté pour le développement
   message: {
     success: false,
     message: 'Trop de requêtes depuis cette IP, veuillez réessayer plus tard.'
@@ -65,7 +65,7 @@ const registerLimiter = rateLimit({
  */
 const searchLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
-  max: 100, // Augmenté pour les tests
+  max: 1000, // Augmenté pour le développement
   message: {
     success: false,
     message: 'Trop de requêtes de recherche, veuillez ralentir.'
@@ -122,7 +122,7 @@ const commentLimiter = rateLimit({
  */
 const socialActionLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
-  max: 30, // Augmenté pour les tests
+  max: 10000, // Augmenté pour le développement
   message: {
     success: false,
     message: 'Trop d\'actions sociales, veuillez ralentir.'
@@ -138,7 +138,7 @@ const socialActionLimiter = rateLimit({
 
 /**
  * Fonction pour créer un limiteur de taux personnalisé
- */
+ */          
 const createCustomLimiter = (windowMs, max, message) => {
   return rateLimit({
     windowMs,

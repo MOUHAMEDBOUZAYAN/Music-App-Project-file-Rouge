@@ -178,8 +178,25 @@ const Home = () => {
     toast.success('Ajouté à la file d\'attente');
   };
 
-  const handleToggleLike = (song) => {
-    toggleLike(song);
+  const handleToggleLike = async (song) => {
+    try {
+      const songId = song._id || song.id;
+      const wasLiked = likedTracks.includes(songId);
+      
+      console.log('🎵 handleToggleLike called:', { song, songId, wasLiked, currentLikedTracks: likedTracks });
+      
+      await toggleLike(song);
+      
+      // Afficher le message immédiatement basé sur l'état précédent
+      if (wasLiked) {
+        toast.success('Retiré des favoris');
+      } else {
+        toast.success('Ajouté aux favoris');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour des favoris:', error);
+      toast.error('Erreur lors de la mise à jour des favoris');
+    }
   };
 
   if (loading) {
@@ -490,16 +507,31 @@ const Home = () => {
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-300"></div>
                       </div>
                       
-                      {/* Bouton play - Style Spotify exact */}
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handlePlaySong(album);
-                        }}
-                        className="absolute bottom-2 right-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 hover:bg-green-400 shadow-2xl transform translate-y-2 group-hover:translate-y-0 z-10"
-                      >
-                        <Play className="h-6 w-6 text-black ml-0.5" />
-                      </button>
+                      {/* Boutons d'action - Style Spotify exact */}
+                      <div className="absolute bottom-2 right-2 flex space-x-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 z-10">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleToggleLike(album);
+                          }}
+                          className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-2xl ${
+                            likedTracks.includes(album._id || album.id) 
+                              ? 'bg-green-500 text-white' 
+                              : 'bg-black/80 text-white hover:bg-gray-700'
+                          }`}
+                        >
+                          <Heart className="h-5 w-5" fill={likedTracks.includes(album._id || album.id) ? 'currentColor' : 'none'} />
+                        </button>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlePlaySong(album);
+                          }}
+                          className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center hover:scale-110 hover:bg-green-400 shadow-2xl"
+                        >
+                          <Play className="h-6 w-6 text-black ml-0.5" />
+                        </button>
+                      </div>
                     </div>
                     
                     <h3 className="font-bold text-base mb-1 truncate group-hover:text-white transition-colors text-white">
@@ -564,13 +596,31 @@ const Home = () => {
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300"></div>
                       </div>
                       
-                      {/* Bouton play - Style Spotify exact */}
-                      <button 
-                        onClick={() => handlePlaySong(release)}
-                        className="absolute bottom-2 right-2 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 hover:bg-green-400 shadow-2xl transform translate-y-2 group-hover:translate-y-0"
-                      >
-                        <Play className="h-5 w-5 text-black ml-0.5" />
-                      </button>
+                      {/* Boutons d'action - Style Spotify exact */}
+                      <div className="absolute bottom-2 right-2 flex space-x-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleToggleLike(release);
+                          }}
+                          className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-2xl ${
+                            likedTracks.includes(release._id || release.id) 
+                              ? 'bg-green-500 text-white' 
+                              : 'bg-black/80 text-white hover:bg-gray-700'
+                          }`}
+                        >
+                          <Heart className="h-5 w-5" fill={likedTracks.includes(release._id || release.id) ? 'currentColor' : 'none'} />
+                        </button>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlePlaySong(release);
+                          }}
+                          className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center hover:scale-110 hover:bg-green-400 shadow-2xl"
+                        >
+                          <Play className="h-5 w-5 text-black ml-0.5" />
+                        </button>
+                      </div>
                     </div>
                     
                     <h3 className="font-bold text-base mb-1 truncate group-hover:text-green-400 transition-colors text-white">

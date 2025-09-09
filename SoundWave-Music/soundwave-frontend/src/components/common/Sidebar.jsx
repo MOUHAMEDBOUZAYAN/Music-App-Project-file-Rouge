@@ -19,12 +19,30 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useSidebar } from '../../store/SidebarContext';
+import { useMusic } from '../../store/MusicContext';
 
 const Sidebar = ({ isOpen, onToggle }) => {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const { isSidebarOpen } = useSidebar();
+  // استخدام useMusic مع معالجة الأخطاء
+  let likedTracks = [];
+  try {
+    const musicContext = useMusic();
+    likedTracks = musicContext.likedTracks || [];
+  } catch (error) {
+    console.warn('MusicContext not available in Sidebar:', error);
+    // استخدام localStorage كبديل
+    try {
+      const storedLiked = localStorage.getItem('likedTracks');
+      if (storedLiked) {
+        likedTracks = JSON.parse(storedLiked);
+      }
+    } catch (e) {
+      console.warn('Could not load liked tracks from localStorage:', e);
+    }
+  }
   const [isLibraryExpanded, setIsLibraryExpanded] = useState(true);
   const [isUserExpanded, setIsUserExpanded] = useState(true);
   const [subscribedArtists, setSubscribedArtists] = useState([]);
@@ -188,7 +206,7 @@ const Sidebar = ({ isOpen, onToggle }) => {
                   <Heart className="h-4 w-4" />
                   <span className="text-sm">Titres likés</span>
                   <span className="ml-auto text-xs bg-gray-700 px-2 py-1 rounded-full">
-                    {JSON.parse(localStorage.getItem('likedTracks') || '[]').length}
+                    {likedTracks.length}
                   </span>
                 </Link>
                 

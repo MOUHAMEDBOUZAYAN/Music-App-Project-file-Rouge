@@ -132,6 +132,38 @@ public/uploads/
 temp/
 tmp/
 
+# Media files - Videos and Audio
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.flv
+*.webm
+*.mkv
+*.mp3
+*.wav
+*.flac
+*.aac
+*.ogg
+*.wma
+*.m4a
+*.aiff
+*.au
+*.ra
+*.amr
+*.3gp
+*.mpg
+*.mpeg
+*.m4v
+*.3g2
+*.asf
+*.rm
+*.rmvb
+*.vob
+*.ogv
+*.divx
+*.xvid
+
 # Database files
 *.db
 *.sqlite

@@ -151,17 +151,40 @@ const musicReducer = (state, action) => {
 
     case ACTIONS.TOGGLE_LIKE:
       const trackId = action.payload;
+      const isCurrentlyLiked = state.likedTracks.includes(trackId);
+      const newLikedTracks = isCurrentlyLiked
+        ? state.likedTracks.filter(id => id !== trackId)
+        : [...state.likedTracks, trackId];
+      
+      console.log('🔄 TOGGLE_LIKE action:', { 
+        trackId, 
+        isCurrentlyLiked, 
+        oldLikedTracks: state.likedTracks, 
+        newLikedTracks 
+      });
+      
       return {
         ...state,
-        likedTracks: state.likedTracks.includes(trackId)
-          ? state.likedTracks.filter(id => id !== trackId)
-          : [...state.likedTracks, trackId]
+        likedTracks: newLikedTracks
       };
 
     case ACTIONS.SET_LIKED_TRACKS:
+      const updatedLikedTracks = Array.isArray(action.payload) ? action.payload : [];
+      console.log('🔄 SET_LIKED_TRACKS action:', { 
+        payload: action.payload, 
+        updatedLikedTracks,
+        oldLikedTracks: state.likedTracks 
+      });
+      
+      // تجنب التحديث إذا كانت القيم متطابقة
+      if (JSON.stringify(state.likedTracks) === JSON.stringify(updatedLikedTracks)) {
+        console.log('🔄 No change in likedTracks, skipping update');
+        return state;
+      }
+      
       return {
         ...state,
-        likedTracks: Array.isArray(action.payload) ? action.payload : []
+        likedTracks: updatedLikedTracks
       };
 
     case ACTIONS.SET_PLAYLIST:
@@ -211,11 +234,23 @@ export const MusicProvider = ({ children }) => {
     },
 
     playTrack: (track) => {
+      console.log('🎵 playTrack called with:', track);
+      
+      if (!track) {
+        console.error('❌ No track provided to playTrack');
+        return;
+      }
+      
+      if (!track.audioUrl) {
+        console.error('❌ Track missing audioUrl:', track);
+        return;
+      }
+      
       dispatch({ type: ACTIONS.SET_CURRENT_TRACK, payload: track });
       dispatch({ type: ACTIONS.SET_IS_PLAYING, payload: true });
-      if (track) {
-        dispatch({ type: ACTIONS.ADD_TO_HISTORY, payload: track });
-      }
+      dispatch({ type: ACTIONS.ADD_TO_HISTORY, payload: track });
+      
+      console.log('✅ Track set for playback:', track.title);
     },
 
     playPlaylist: (playlist, startIndex = 0) => {
@@ -285,19 +320,29 @@ export const MusicProvider = ({ children }) => {
       const idStr = String(rawId || '').trim();
       const isMongoId = /^[a-f\d]{24}$/i.test(idStr);
 
-      // Toujours basculer l'UI localement
-      dispatch({ type: ACTIONS.TOGGLE_LIKE, payload: idStr });
+      console.log('🔄 toggleLike called with:', { track, rawId, idStr, isMongoId });
 
       try {
         if (isMongoId) {
+          console.log('📡 Sending like request to API for:', idStr);
           await songService.likeSong(idStr);
+          console.log('✅ Like request successful');
+          
+          // Recharger les chansons likées après succès
+          const res = await songService.getLikedSongs();
+          const likedIds = Array.isArray(res?.data)
+            ? res.data.map(s => s._id)
+            : [];
+          console.log('🔄 Refreshing liked tracks:', likedIds);
+          dispatch({ type: ACTIONS.SET_LIKED_TRACKS, payload: likedIds });
         } else {
           // Ancien support des favoris externes supprimé
           throw new Error('Unsupported track id');
         }
       } catch (e) {
-        // rollback en cas d'échec API
-        dispatch({ type: ACTIONS.TOGGLE_LIKE, payload: idStr });
+        console.error('❌ Like request failed:', e);
+        // لا rollback - فقط إظهار الخطأ
+        throw e;
       }
     },
 
@@ -321,6 +366,46 @@ export const MusicProvider = ({ children }) => {
     createPlaylist: (playlistData) => {
       // Cette action sera gérée par le service de playlist
       console.log('Créer une playlist:', playlistData);
+    },
+
+    refreshLikedSongs: async () => {
+      try {
+        console.log('🔄 refreshLikedSongs called');
+        console.log('🔑 Auth token in context:', localStorage.getItem('authToken'));
+        const res = await songService.getLikedSongs();
+        console.log('📡 getLikedSongs response:', res);
+        
+        const likedIds = Array.isArray(res?.data)
+          ? res.data.map(s => s._id)
+          : [];
+        
+        console.log('🎵 Extracted liked IDs:', likedIds);
+        dispatch({ type: ACTIONS.SET_LIKED_TRACKS, payload: likedIds });
+        return res.data || [];
+      } catch (e) {
+        console.error('❌ Erreur lors du rechargement des chansons likées:', e);
+        console.error('❌ Error details:', {
+          status: e.status,
+          message: e.message,
+          response: e.response
+        });
+        
+        // إذا كان الخطأ 401، المستخدم غير مسجل دخول
+        if (e.status === 401) {
+          console.log('🔐 User not authenticated in context');
+          dispatch({ type: ACTIONS.SET_LIKED_TRACKS, payload: [] });
+          return [];
+        }
+        
+        // إذا كان الخطأ 429، انتظر قليلاً قبل إعادة المحاولة
+        if (e.status === 429) {
+          console.log('⏳ Rate limit reached, waiting before retry...');
+          await new Promise(resolve => setTimeout(resolve, 2000)); // انتظار 2 ثانية
+        }
+        
+        // في حالة الخطأ، لا تغير likedTracks
+        return [];
+      }
     }
   };
 

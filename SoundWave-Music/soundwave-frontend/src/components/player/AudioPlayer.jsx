@@ -28,12 +28,13 @@ const AudioPlayer = () => {
     previousTrack,
     setShuffle,
     setRepeat,
+    toggleLike,
+    likedTracks,
   } = useMusic();
   const [volume, setVolume] = useState(0.7);
   const [isMuted, setIsMuted] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [isLiked, setIsLiked] = useState(false);
   const [showQueue, setShowQueue] = useState(false);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -111,9 +112,26 @@ const AudioPlayer = () => {
     setIsMuted(!isMuted);
   };
 
-  const toggleLike = () => {
-    setIsLiked(!isLiked);
-    toast.success(isLiked ? 'Retiré des favoris' : 'Ajouté aux favoris');
+  const handleToggleLike = async () => {
+    if (!currentTrack) return;
+    
+    try {
+      const trackId = currentTrack._id || currentTrack.id;
+      const wasLiked = likedTracks.includes(trackId);
+      
+      console.log('🎵 AudioPlayer - handleToggleLike called:', { track: currentTrack, trackId, wasLiked });
+      
+      await toggleLike(currentTrack);
+      
+      if (wasLiked) {
+        toast.success('Retiré des favoris');
+      } else {
+        toast.success('Ajouté aux favoris');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour des favoris:', error);
+      toast.error('Erreur lors de la mise à jour des favoris');
+    }
   };
 
   const formatTime = (time) => {
@@ -211,7 +229,7 @@ const AudioPlayer = () => {
       />
 
              {/* Barre de lecture (style Spotify) */}
-       <div className="fixed bottom-12 md:bottom-0 left-0 right-0 bg-black border-t border-gray-800 z-[35] lg:left-64 lg:z-40">
+       <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-gray-800 z-[35] lg:left-64 lg:z-40">
         <div className="px-4 py-2">
           {/* Barre de progression (desktop/tablette) */}
           <div 
@@ -229,8 +247,8 @@ const AudioPlayer = () => {
           <div className="hidden md:flex items-center justify-between h-16">
             {/* Informations de la piste */}
             <div className="flex items-center space-x-4 flex-1 min-w-0">
-              <div className="w-14 h-14 bg-gray-800 rounded flex-shrink-0">
-                {(currentTrack.cover || currentTrack.coverUrl) && (
+              <div className="w-14 h-14 bg-gray-800 rounded flex-shrink-0 flex items-center justify-center">
+                {(currentTrack.cover || currentTrack.coverUrl) ? (
                   <img 
                     src={currentTrack.cover || currentTrack.coverUrl} 
                     alt={currentTrack.title}
@@ -239,23 +257,25 @@ const AudioPlayer = () => {
                       e.target.style.display = 'none';
                     }}
                   />
+                ) : (
+                  <Music className="h-7 w-7 text-gray-400" />
                 )}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-medium text-white truncate">
-                  {currentTrack.title}
+                  {currentTrack.title || 'Aucune piste sélectionnée'}
                 </div>
                 <div className="text-xs text-gray-400 truncate">
-                  {currentTrack.artist}
+                  {currentTrack.artist?.name || currentTrack.artist?.username || (typeof currentTrack.artist === 'string' ? currentTrack.artist : 'Sélectionnez une musique')}
                 </div>
               </div>
               <button 
-                onClick={toggleLike}
+                onClick={handleToggleLike}
                 className={`p-2 rounded-full transition-colors ${
-                  isLiked ? 'text-green-500' : 'text-gray-400 hover:text-white'
+                  likedTracks.includes(currentTrack?._id || currentTrack?.id) ? 'text-green-500' : 'text-gray-400 hover:text-white'
                 }`}
               >
-                <Heart className="h-4 w-4" fill={isLiked ? 'currentColor' : 'none'} />
+                <Heart className="h-4 w-4" fill={likedTracks.includes(currentTrack?._id || currentTrack?.id) ? 'currentColor' : 'none'} />
               </button>
             </div>
 
@@ -378,8 +398,8 @@ const AudioPlayer = () => {
                 <div className="text-gray-400 text-xs truncate max-w-[12rem]">{currentTrack.artist}</div>
               </div>
               <div className="flex items-center space-x-2 ml-3">
-                <button type="button" onClick={(e) => { e.stopPropagation(); setIsLiked(!isLiked); }} className="p-2 text-gray-300">
-                  <Heart className="h-4 w-4" fill={isLiked ? 'currentColor' : 'none'} />
+                <button type="button" onClick={(e) => { e.stopPropagation(); handleToggleLike(); }} className="p-2 text-gray-300">
+                  <Heart className="h-4 w-4" fill={likedTracks.includes(currentTrack?._id || currentTrack?.id) ? 'currentColor' : 'none'} />
                 </button>
                 <button type="button" onClick={(e) => { e.stopPropagation(); togglePlayPause(); }} className="w-9 h-9 bg-white text-black rounded-full flex items-center justify-center">
                   {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
@@ -446,7 +466,7 @@ const AudioPlayer = () => {
         isPlaying={isPlaying}
         onNext={nextTrack}
         onPrevious={previousTrack}
-        onToggleLike={() => setIsLiked(!isLiked)}
+        onToggleLike={handleToggleLike}
       />
     </>
   );

@@ -108,8 +108,24 @@ const Album = () => {
     toast.success('Ajouté à la file d\'attente');
   };
 
-  const handleToggleLike = (track) => {
-    toggleLike(track);
+  const handleToggleLike = async (track) => {
+    try {
+      const trackId = track._id || track.id;
+      const wasLiked = likedTracks.includes(trackId);
+      
+      console.log('💿 Album - handleToggleLike called:', { track, trackId, wasLiked });
+      
+      await toggleLike(track);
+      
+      if (wasLiked) {
+        toast.success('Retiré des favoris');
+      } else {
+        toast.success('Ajouté aux favoris');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour des favoris:', error);
+      toast.error('Erreur lors de la mise à jour des favoris');
+    }
   };
 
   const formatTime = (seconds) => {

@@ -317,23 +317,30 @@ const likeUnlikeSong = async (req, res, next) => {
     const { id } = req.params;
     const userId = req.user._id;
     
+    console.log('❤️ likeUnlikeSong called:', { songId: id, userId });
+    
     const song = await Song.findById(id);
     
     if (!song) {
+      console.log('❌ Song not found:', id);
       return next(new AppError('Chanson non trouvée', 404));
     }
     
     const isLiked = song.likes.map(id => id.toString()).includes(userId.toString());
+    console.log('💖 Current like status:', { isLiked, currentLikes: song.likes.length });
     
     if (isLiked) {
       // Ne plus aimer
       song.likes = song.likes.filter(likeId => likeId.toString() !== userId.toString());
+      console.log('➖ Removing like, new likes count:', song.likes.length);
     } else {
       // Aimer
       song.likes.push(userId);
+      console.log('➕ Adding like, new likes count:', song.likes.length);
     }
     
     await song.save();
+    console.log('💾 Song saved successfully');
     
     res.json({
       success: true,
@@ -343,6 +350,7 @@ const likeUnlikeSong = async (req, res, next) => {
       }
     });
   } catch (error) {
+    console.error('❌ Error in likeUnlikeSong:', error);
     next(new AppError('Erreur lors de l\'action like', 500));
   }
 };
@@ -353,11 +361,21 @@ const likeUnlikeSong = async (req, res, next) => {
 const getLikedSongs = async (req, res, next) => {
   try {
     const userId = req.user._id;
+    console.log('🔍 getLikedSongs called for user:', userId);
+    
     const ExternalFavorite = require('../models/ExternalFavorite');
 
     const songs = await Song.find({ likes: userId })
       .populate('artist', 'username name')
       .populate('album', 'title name cover');
+    
+    console.log('🎵 Found liked songs:', songs.length, songs.map(s => ({ 
+      id: s._id, 
+      title: s.title, 
+      coverImage: s.coverImage,
+      albumCover: s.album?.cover,
+      fullSong: s.toObject()
+    })));
 
     // Fetch external favorites (e.g., Deezer) and return as lightweight entries
     const externals = await ExternalFavorite.find({ user: userId });
@@ -369,7 +387,9 @@ const getLikedSongs = async (req, res, next) => {
         title: s.title,
         artist: s.artist?.name || s.artist?.username,
         album: s.album?.title || s.album?.name,
-        cover: s.coverImage || s.album?.cover,
+        cover: s.coverImage ? `http://localhost:5000${s.coverImage}` : (s.album?.cover ? `http://localhost:5000${s.album.cover}` : null),
+        coverImage: s.coverImage ? `http://localhost:5000${s.coverImage}` : null,
+        audioUrl: s.audioUrl ? `http://localhost:5000${s.audioUrl}` : null,
         duration: s.duration,
         createdAt: s.createdAt
       })),
@@ -386,6 +406,8 @@ const getLikedSongs = async (req, res, next) => {
       }))
     ];
 
+    console.log('📤 Sending response with', response.length, 'items:', response.map(r => ({ type: r.type, title: r.title })));
+    
     res.json({
       success: true,
       data: response
