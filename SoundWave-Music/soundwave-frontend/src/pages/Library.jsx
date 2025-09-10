@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Play, 
   Heart, 
@@ -18,6 +19,7 @@ import { useAuth } from '../hooks/useAuth';
 import toast from 'react-hot-toast';
 
 const Library = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { 
     likedTracks, 
@@ -46,6 +48,12 @@ const Library = () => {
 
   // Données réelles depuis localStorage et API
   const [playlists, setPlaylists] = useState([]);
+
+  // Naviguer vers une playlist
+  const handlePlaylistClick = (playlist) => {
+    console.log('📚 Navigating to playlist:', playlist);
+    navigate(`/playlist/${playlist.id}`);
+  };
 
   // Charger les playlists depuis localStorage
   useEffect(() => {
@@ -77,37 +85,8 @@ const Library = () => {
     };
   }, []);
 
-  const [albums, setAlbums] = useState([
-    {
-      id: 1,
-      name: 'SALGOAT',
-      artist: 'LFERDA',
-      coverUrl: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop',
-      year: 2024
-    },
-    {
-      id: 2,
-      name: 'BLEDARD (Deluxe)',
-      artist: 'Draganov',
-      coverUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop',
-      year: 2024
-    }
-  ]);
-
-  const [artists, setArtists] = useState([
-    {
-      id: 1,
-      name: 'LFERDA',
-      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=200&h=200&fit=crop&crop=face',
-      followers: 1500000
-    },
-    {
-      id: 2,
-      name: 'Draganov',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face',
-      followers: 800000
-    }
-  ]);
+  const [albums, setAlbums] = useState([]);
+  const [artists, setArtists] = useState([]);
 
   const handlePlayPlaylist = (playlist) => {
     // Convertir la playlist au format attendu par playPlaylist
@@ -181,7 +160,7 @@ const Library = () => {
           : 'grid-cols-1'
       }`}>
         {filteredPlaylists.map((playlist) => (
-          <div key={playlist._id || playlist.id} className="group cursor-pointer">
+          <div key={playlist._id || playlist.id} className="group cursor-pointer" onClick={() => handlePlaylistClick(playlist)}>
             <div className="relative mb-3">
               <div className="aspect-square bg-gray-800 rounded-lg overflow-hidden">
                 {playlist.coverImage ? (
@@ -378,10 +357,60 @@ const Library = () => {
     );
   };
 
+  const renderSongs = () => {
+    console.log('🎵 Rendering liked songs:', likedTracks);
+    
+    if (!likedTracks || likedTracks.length === 0) {
+      return (
+        <div className="text-center py-12">
+          <Heart className="h-16 w-16 text-gray-600 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-gray-400 mb-2">Aucune chanson aimée</h3>
+          <p className="text-gray-500">Les chansons que vous aimez apparaîtront ici</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        {likedTracks.map((song, index) => (
+          <div key={song._id || index} className="flex items-center space-x-4 p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors group">
+            <div className="flex-shrink-0 w-12 h-12 bg-gray-700 rounded-lg flex items-center justify-center">
+              <Music className="h-6 w-6 text-gray-400" />
+            </div>
+            
+            <div className="flex-1 min-w-0">
+              <h3 className="font-medium text-white truncate">{song.title}</h3>
+              <p className="text-sm text-gray-400 truncate">
+                {song.artist?.username || song.artist?.name || 'Artiste inconnu'}
+              </p>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => playTrack(song)}
+                className="p-2 bg-gray-700 rounded-full hover:bg-gray-600 transition-colors opacity-0 group-hover:opacity-100"
+              >
+                <Play className="h-4 w-4 text-white" />
+              </button>
+              <button
+                onClick={() => toggleLike(song._id)}
+                className="p-2 text-red-400 hover:text-red-300 transition-colors"
+              >
+                <Heart className="h-4 w-4 fill-current" />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'playlists':
         return renderPlaylists();
+      case 'songs':
+        return renderSongs();
       case 'albums':
         return renderAlbums();
       case 'artists':
