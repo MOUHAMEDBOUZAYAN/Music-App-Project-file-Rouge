@@ -5,7 +5,7 @@ import { handleApiError, secureStorage } from '../utils/helpers.js';
 
 // Configuration de base d'Axios
 const api = axios.create({
-  baseURL: API_BASE_URL || '/api',
+  baseURL: API_BASE_URL || 'http://localhost:5000/api',
   timeout: 30000, // Augmenté à 30 secondes
   headers: {
     'Content-Type': 'application/json',

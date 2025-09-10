@@ -32,6 +32,14 @@ router.get('/recommended', playlistController.getRecommendedPlaylists);
 // @access  Public
 router.get('/public', playlistController.getPublicPlaylists);
 
+// @route   GET api/playlists/draft
+// @desc    Obtenir la playlist brouillon de l'utilisateur
+// @access  Private
+router.get('/draft', 
+  protect, 
+  playlistController.getDraftPlaylist
+);
+
 // @route   GET api/playlists/:id
 // @desc    Obtenir une playlist par son ID
 // @access  Public (si la playlist est publique) ou Private
@@ -91,6 +99,30 @@ router.delete('/:id/songs/:songId',
   validateObjectId, 
   activityLogger('remove_song_from_playlist'), 
   playlistController.removeSongFromPlaylist
+);
+
+// @route   POST api/playlists/draft
+// @desc    Créer une playlist brouillon
+// @access  Private
+router.post('/draft', 
+  protect, 
+  playlistController.createDraftPlaylist
+);
+
+// @route   PUT api/playlists/draft
+// @desc    Mettre à jour la playlist brouillon
+// @access  Private
+router.put('/draft', 
+  protect, 
+  playlistController.updateDraftPlaylist
+);
+
+// @route   DELETE api/playlists/draft
+// @desc    Supprimer la playlist brouillon
+// @access  Private
+router.delete('/draft', 
+  protect, 
+  playlistController.deleteDraftPlaylist
 );
 
 module.exports = router; 

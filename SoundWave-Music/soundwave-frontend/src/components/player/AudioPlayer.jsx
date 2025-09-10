@@ -12,7 +12,8 @@ import {
   List,
   Monitor,
   Maximize2,
-  Mic2
+  Mic2,
+  Music
 } from 'lucide-react';
 import NowPlayingSheet from './NowPlayingSheet';
 import { toast } from 'react-hot-toast';
@@ -43,15 +44,28 @@ const AudioPlayer = () => {
   const progressRef = useRef(null);
   const volumeRef = useRef(null);
 
+  // Debug current state
+  console.log('🎵 AudioPlayer render - currentTrack:', currentTrack);
+  console.log('🎵 AudioPlayer render - isPlaying:', isPlaying);
+  console.log('🎵 AudioPlayer render - currentTrack audioUrl:', currentTrack?.audioUrl);
+
   // Gérer la lecture audio
   useEffect(() => {
     if (currentTrack && audioRef.current) {
-      audioRef.current.src = currentTrack.audioUrl || currentTrack.previewUrl || currentTrack.preview_url || '';
+      const audioUrl = currentTrack.audioUrl || currentTrack.previewUrl || currentTrack.preview_url || '';
+      const fullAudioUrl = audioUrl 
+        ? (audioUrl.startsWith('http') ? audioUrl : `http://localhost:5000${audioUrl}`)
+        : '';
+      
+      console.log('🎵 Loading audio:', { audioUrl, fullAudioUrl, currentTrack });
+      
+      audioRef.current.src = fullAudioUrl;
       audioRef.current.load();
       
       if (isPlaying) {
         audioRef.current.play().catch(error => {
-          console.error('Erreur de lecture:', error);
+          console.error('❌ Erreur de lecture:', error);
+          console.error('❌ Audio URL:', fullAudioUrl);
           toast.error('Impossible de lire cette piste');
         });
       }
@@ -60,12 +74,20 @@ const AudioPlayer = () => {
 
   // Gérer la lecture/pause
   useEffect(() => {
+    console.log('🎵 AudioPlayer - isPlaying changed:', isPlaying, 'currentTrack:', currentTrack?.title);
     if (audioRef.current) {
       if (isPlaying) {
-        audioRef.current.play();
+        console.log('🎵 Attempting to play audio...');
+        audioRef.current.play().catch(error => {
+          console.error('❌ Play error:', error);
+          toast.error('Impossible de lire cette piste');
+        });
       } else {
+        console.log('🎵 Pausing audio...');
         audioRef.current.pause();
       }
+    } else {
+      console.log('❌ audioRef.current is null');
     }
   }, [isPlaying]);
 
@@ -395,7 +417,7 @@ const AudioPlayer = () => {
             <button onClick={() => setIsSheetOpen(true)} className="w-full flex items-center justify-between">
               <div className="min-w-0">
                 <div className="text-white text-sm font-medium truncate max-w-[12rem]">{currentTrack.title}</div>
-                <div className="text-gray-400 text-xs truncate max-w-[12rem]">{currentTrack.artist}</div>
+                <div className="text-gray-400 text-xs truncate max-w-[12rem]">{currentTrack.artist?.username || currentTrack.artist?.name || 'Artiste inconnu'}</div>
               </div>
               <div className="flex items-center space-x-2 ml-3">
                 <button type="button" onClick={(e) => { e.stopPropagation(); handleToggleLike(); }} className="p-2 text-gray-300">

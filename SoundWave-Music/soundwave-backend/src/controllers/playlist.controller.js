@@ -59,8 +59,8 @@ const getPlaylistById = async (req, res, next) => {
       .populate({
         path: 'songs',
         populate: {
-          path: 'uploader',
-          select: 'username avatar'
+          path: 'artist',
+          select: 'username name avatar'
         }
       });
     
@@ -139,7 +139,8 @@ const updatePlaylist = async (req, res, next) => {
     }
     
     // Vérifier si l'utilisateur est le propriétaire
-    if (playlist.owner.toString() !== userId.toString()) {
+    const ownerId = playlist.owner._id ? playlist.owner._id.toString() : playlist.owner.toString();
+    if (ownerId !== userId.toString()) {
       return next(new AppError('Vous n\'êtes pas autorisé à modifier cette playlist', 403));
     }
     
@@ -179,7 +180,8 @@ const deletePlaylist = async (req, res, next) => {
     }
     
     // Vérifier si l'utilisateur est le propriétaire
-    if (playlist.owner.toString() !== userId.toString()) {
+    const ownerId = playlist.owner._id ? playlist.owner._id.toString() : playlist.owner.toString();
+    if (ownerId !== userId.toString()) {
       return next(new AppError('Vous n\'êtes pas autorisé à supprimer cette playlist', 403));
     }
     
@@ -203,14 +205,37 @@ const addSongToPlaylist = async (req, res, next) => {
     const { songId } = req.body;
     const userId = req.user._id;
     
+    console.log('➕ Add song request:', {
+      playlistId: id,
+      songId: songId,
+      userId: userId,
+      userUsername: req.user.username
+    });
+    
     const playlist = await Playlist.findById(id);
     
     if (!playlist) {
       return next(new AppError('Playlist non trouvée', 404));
     }
     
+    console.log('➕ Playlist found:', {
+      playlistId: playlist._id,
+      playlistName: playlist.name,
+      owner: playlist.owner,
+      ownerType: typeof playlist.owner,
+      ownerId: playlist.owner._id ? playlist.owner._id.toString() : playlist.owner.toString()
+    });
+    
     // Vérifier si l'utilisateur est le propriétaire
-    if (playlist.owner.toString() !== userId.toString()) {
+    const ownerId = playlist.owner._id ? playlist.owner._id.toString() : playlist.owner.toString();
+    console.log('➕ Owner comparison:', {
+      ownerId: ownerId,
+      userId: userId.toString(),
+      match: ownerId === userId.toString()
+    });
+    
+    if (ownerId !== userId.toString()) {
+      console.log('❌ Access denied - user is not owner');
       return next(new AppError('Vous n\'êtes pas autorisé à modifier cette playlist', 403));
     }
     
@@ -250,14 +275,37 @@ const removeSongFromPlaylist = async (req, res, next) => {
     const { id, songId } = req.params;
     const userId = req.user._id;
     
+    console.log('🗑️ Remove song request:', {
+      playlistId: id,
+      songId: songId,
+      userId: userId,
+      userUsername: req.user.username
+    });
+    
     const playlist = await Playlist.findById(id);
     
     if (!playlist) {
       return next(new AppError('Playlist non trouvée', 404));
     }
     
+    console.log('🗑️ Playlist found:', {
+      playlistId: playlist._id,
+      playlistName: playlist.name,
+      owner: playlist.owner,
+      ownerType: typeof playlist.owner,
+      ownerId: playlist.owner._id ? playlist.owner._id.toString() : playlist.owner.toString()
+    });
+    
     // Vérifier si l'utilisateur est le propriétaire
-    if (playlist.owner.toString() !== userId.toString()) {
+    const ownerId = playlist.owner._id ? playlist.owner._id.toString() : playlist.owner.toString();
+    console.log('🗑️ Owner comparison:', {
+      ownerId: ownerId,
+      userId: userId.toString(),
+      match: ownerId === userId.toString()
+    });
+    
+    if (ownerId !== userId.toString()) {
+      console.log('❌ Access denied - user is not owner');
       return next(new AppError('Vous n\'êtes pas autorisé à modifier cette playlist', 403));
     }
     
@@ -452,6 +500,194 @@ const getRecommendedPlaylists = async (req, res, next) => {
   }
 };
 
+// @desc    Obtenir la playlist brouillon de l'utilisateur
+// @route   GET /api/playlists/draft
+// @access  Private
+const getDraftPlaylist = async (req, res, next) => {
+  try {
+    const draftPlaylist = await Playlist.findOne({ 
+      owner: req.user._id, 
+      isDraft: true 
+    })
+    .populate('owner', 'username avatar')
+    .populate({
+      path: 'songs',
+      select: 'title artist album duration coverImage audioUrl',
+      populate: {
+        path: 'artist',
+        select: 'username name'
+      }
+    });
+
+    if (!draftPlaylist) {
+      return res.json({
+        success: true,
+        data: null,
+        message: 'Aucune playlist brouillon trouvée'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: draftPlaylist,
+      message: 'Playlist brouillon récupérée avec succès'
+    });
+  } catch (error) {
+    console.error('💥 Erreur lors de la récupération de la playlist brouillon:', error);
+    next(new AppError('Erreur lors de la récupération de la playlist brouillon', 500));
+  }
+};
+
+// @desc    Créer une playlist brouillon
+// @route   POST /api/playlists/draft
+// @access  Private
+const createDraftPlaylist = async (req, res, next) => {
+  try {
+    const { name, description, songs = [] } = req.body;
+
+    // Vérifier si une playlist brouillon existe déjà
+    const existingDraft = await Playlist.findOne({ 
+      owner: req.user._id, 
+      isDraft: true 
+    });
+
+    if (existingDraft) {
+      // Mettre à jour la playlist brouillon existante
+      existingDraft.name = name || 'Ma Playlist';
+      existingDraft.description = description || '';
+      existingDraft.songs = songs;
+      existingDraft.updatedAt = new Date();
+      
+      await existingDraft.save();
+      
+      const updatedDraft = await Playlist.findById(existingDraft._id)
+        .populate('owner', 'username avatar')
+        .populate({
+          path: 'songs',
+          select: 'title artist album duration coverImage audioUrl',
+          populate: {
+            path: 'artist',
+            select: 'username name'
+          }
+        });
+
+      return res.json({
+        success: true,
+        data: updatedDraft,
+        message: 'Playlist brouillon mise à jour avec succès'
+      });
+    }
+
+    // Créer une nouvelle playlist brouillon
+    const draftPlaylist = new Playlist({
+      name: name || 'Ma Playlist',
+      description: description || '',
+      songs: songs,
+      owner: req.user._id,
+      isDraft: true,
+      isPublic: false
+    });
+
+    await draftPlaylist.save();
+
+    const newDraft = await Playlist.findById(draftPlaylist._id)
+      .populate('owner', 'username avatar')
+      .populate({
+        path: 'songs',
+        select: 'title artist album duration coverImage audioUrl',
+        populate: {
+          path: 'artist',
+          select: 'username name'
+        }
+      });
+
+    res.status(201).json({
+      success: true,
+      data: newDraft,
+      message: 'Playlist brouillon créée avec succès'
+    });
+  } catch (error) {
+    console.error('💥 Erreur lors de la création de la playlist brouillon:', error);
+    next(new AppError('Erreur lors de la création de la playlist brouillon', 500));
+  }
+};
+
+// @desc    Mettre à jour la playlist brouillon
+// @route   PUT /api/playlists/draft
+// @access  Private
+const updateDraftPlaylist = async (req, res, next) => {
+  try {
+    const { name, description, songs } = req.body;
+
+    const draftPlaylist = await Playlist.findOne({ 
+      owner: req.user._id, 
+      isDraft: true 
+    });
+
+    if (!draftPlaylist) {
+      return res.status(404).json({
+        success: false,
+        message: 'Aucune playlist brouillon trouvée'
+      });
+    }
+
+    // Mettre à jour les champs
+    if (name !== undefined) draftPlaylist.name = name;
+    if (description !== undefined) draftPlaylist.description = description;
+    if (songs !== undefined) draftPlaylist.songs = songs;
+    
+    draftPlaylist.updatedAt = new Date();
+    await draftPlaylist.save();
+
+    const updatedDraft = await Playlist.findById(draftPlaylist._id)
+      .populate('owner', 'username avatar')
+      .populate({
+        path: 'songs',
+        select: 'title artist album duration coverImage audioUrl',
+        populate: {
+          path: 'artist',
+          select: 'username name'
+        }
+      });
+
+    res.json({
+      success: true,
+      data: updatedDraft,
+      message: 'Playlist brouillon mise à jour avec succès'
+    });
+  } catch (error) {
+    console.error('💥 Erreur lors de la mise à jour de la playlist brouillon:', error);
+    next(new AppError('Erreur lors de la mise à jour de la playlist brouillon', 500));
+  }
+};
+
+// @desc    Supprimer la playlist brouillon
+// @route   DELETE /api/playlists/draft
+// @access  Private
+const deleteDraftPlaylist = async (req, res, next) => {
+  try {
+    const draftPlaylist = await Playlist.findOneAndDelete({ 
+      owner: req.user._id, 
+      isDraft: true 
+    });
+
+    if (!draftPlaylist) {
+      return res.status(404).json({
+        success: false,
+        message: 'Aucune playlist brouillon trouvée'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Playlist brouillon supprimée avec succès'
+    });
+  } catch (error) {
+    console.error('💥 Erreur lors de la suppression de la playlist brouillon:', error);
+    next(new AppError('Erreur lors de la suppression de la playlist brouillon', 500));
+  }
+};
+
 module.exports = {
   getMyPlaylists,
   getPlaylistById,
@@ -461,5 +697,9 @@ module.exports = {
   addSongToPlaylist,
   removeSongFromPlaylist,
   getPublicPlaylists,
-  getRecommendedPlaylists
+  getRecommendedPlaylists,
+  getDraftPlaylist,
+  createDraftPlaylist,
+  updateDraftPlaylist,
+  deleteDraftPlaylist
 }; 

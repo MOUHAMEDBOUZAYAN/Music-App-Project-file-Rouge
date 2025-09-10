@@ -40,6 +40,12 @@ const protect = async (req, res, next) => {
 
       // Ajouter l'utilisateur à l'objet request
       req.user = user;
+      console.log('🔐 Auth middleware - User authenticated:', {
+        userId: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role
+      });
       next();
     } catch (error) {
       console.error('Erreur d\'authentification:', error);
@@ -94,13 +100,66 @@ const artist = (req, res, next) => {
 /**
  * Middleware pour vérifier si l'utilisateur est le propriétaire de la ressource
  */
-const owner = (req, res, next) => {
-  if (req.user && (req.user._id.toString() === req.params.id || req.user.role === 'admin')) {
-    next();
-  } else {
-    return res.status(403).json({
+const owner = async (req, res, next) => {
+  try {
+    console.log('🔐 Owner middleware called:', {
+      baseUrl: req.baseUrl,
+      originalUrl: req.originalUrl,
+      params: req.params,
+      method: req.method,
+      userId: req.user?._id,
+      username: req.user?.username
+    });
+    
+    // Pour les routes de playlist, on doit vérifier le owner de la playlist
+    if (req.baseUrl && req.baseUrl.includes('/playlists') && req.params.id) {
+      const Playlist = require('../models/Playlist');
+      const playlist = await Playlist.findById(req.params.id);
+      
+      if (!playlist) {
+        return res.status(404).json({
+          success: false,
+          message: 'Playlist non trouvée'
+        });
+      }
+      
+      const ownerId = playlist.owner._id ? playlist.owner._id.toString() : playlist.owner.toString();
+      if (req.user && (ownerId === req.user._id.toString() || req.user.role === 'admin')) {
+        console.log('🔐 Owner middleware - Access granted:', {
+          userId: req.user._id,
+          username: req.user.username,
+          playlistOwnerId: ownerId,
+          isOwner: ownerId === req.user._id.toString()
+        });
+        next();
+      } else {
+        console.log('🔐 Owner middleware - Access denied:', {
+          userId: req.user?._id,
+          username: req.user?.username,
+          playlistOwnerId: ownerId,
+          isOwner: ownerId === req.user?._id?.toString()
+        });
+        return res.status(403).json({
+          success: false,
+          message: 'Accès refusé - vous n\'êtes pas autorisé à accéder à cette ressource'
+        });
+      }
+    } else {
+      // Pour les autres routes, vérifier directement l'ID
+      if (req.user && (req.user._id.toString() === req.params.id || req.user.role === 'admin')) {
+        next();
+      } else {
+        return res.status(403).json({
+          success: false,
+          message: 'Accès refusé - vous n\'êtes pas autorisé à accéder à cette ressource'
+        });
+      }
+    }
+  } catch (error) {
+    console.error('🔐 Owner middleware error:', error);
+    return res.status(500).json({
       success: false,
-      message: 'Accès refusé - vous n\'êtes pas autorisé à accéder à cette ressource'
+      message: 'Erreur lors de la vérification des permissions'
     });
   }
 };

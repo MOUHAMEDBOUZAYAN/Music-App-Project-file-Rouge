@@ -46,6 +46,8 @@ const initialState = {
 const musicReducer = (state, action) => {
   switch (action.type) {
     case ACTIONS.SET_CURRENT_TRACK:
+      console.log('🎵 MusicContext reducer - SET_CURRENT_TRACK:', action.payload);
+      console.log('🎵 MusicContext reducer - currentTrack audioUrl:', action.payload?.audioUrl);
       return {
         ...state,
         currentTrack: action.payload,
@@ -54,6 +56,7 @@ const musicReducer = (state, action) => {
       };
 
     case ACTIONS.SET_IS_PLAYING:
+      console.log('🎵 MusicContext - SET_IS_PLAYING:', action.payload, 'currentTrack:', state.currentTrack?.title);
       return {
         ...state,
         isPlaying: action.payload
@@ -64,6 +67,12 @@ const musicReducer = (state, action) => {
         ...state,
         queue: action.payload,
         currentQueueIndex: 0
+      };
+
+    case 'SET_CURRENT_QUEUE_INDEX':
+      return {
+        ...state,
+        currentQueueIndex: action.payload
       };
 
     case ACTIONS.ADD_TO_QUEUE:
@@ -254,12 +263,23 @@ export const MusicProvider = ({ children }) => {
     },
 
     playPlaylist: (playlist, startIndex = 0) => {
+      console.log('🎵 MusicContext - playPlaylist called with:', playlist);
+      console.log('🎵 MusicContext - playlist.tracks:', playlist.tracks);
+      console.log('🎵 MusicContext - startIndex:', startIndex);
+      
       if (playlist.tracks && playlist.tracks.length > 0) {
+        const currentTrackToSet = playlist.tracks[startIndex];
+        console.log('🎵 MusicContext - Setting currentTrack to:', currentTrackToSet);
+        console.log('🎵 MusicContext - currentTrack audioUrl:', currentTrackToSet?.audioUrl);
+        
         dispatch({ type: ACTIONS.SET_QUEUE, payload: playlist.tracks });
-        dispatch({ type: ACTIONS.SET_CURRENT_TRACK, payload: playlist.tracks[startIndex] });
-        dispatch({ type: ACTIONS.SET_CURRENT_TRACK, payload: startIndex });
+        dispatch({ type: ACTIONS.SET_CURRENT_TRACK, payload: currentTrackToSet });
+        dispatch({ type: 'SET_CURRENT_QUEUE_INDEX', payload: startIndex });
         dispatch({ type: ACTIONS.SET_IS_PLAYING, payload: true });
         dispatch({ type: ACTIONS.SET_PLAYLIST, payload: playlist });
+        console.log('✅ Playlist set for playback:', playlist.name, 'with', playlist.tracks.length, 'tracks');
+      } else {
+        console.log('❌ MusicContext - No tracks found in playlist:', playlist);
       }
     },
 
@@ -267,7 +287,7 @@ export const MusicProvider = ({ children }) => {
       if (album.tracks && album.tracks.length > 0) {
         dispatch({ type: ACTIONS.SET_QUEUE, payload: album.tracks });
         dispatch({ type: ACTIONS.SET_CURRENT_TRACK, payload: album.tracks[startIndex] });
-        dispatch({ type: ACTIONS.SET_CURRENT_TRACK, payload: startIndex });
+        dispatch({ type: 'SET_CURRENT_QUEUE_INDEX', payload: startIndex });
         dispatch({ type: ACTIONS.SET_IS_PLAYING, payload: true });
         dispatch({ type: ACTIONS.SET_ALBUM, payload: album });
       }

@@ -159,5 +159,69 @@ export const playlistService = {
         error: error.response?.data?.message || 'Erreur lors de l\'arrêt du suivi de la playlist'
       };
     }
+  },
+
+  // Créer une playlist brouillon
+  createDraftPlaylist: async (playlistData) => {
+    try {
+      const response = await apiClient.post('/playlists/draft', playlistData);
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Erreur lors de la création de la playlist brouillon'
+      };
+    }
+  },
+
+  // Obtenir la playlist brouillon de l'utilisateur
+  getDraftPlaylist: async () => {
+    try {
+      const response = await apiClient.get('/playlists/draft');
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Erreur lors de la récupération de la playlist brouillon'
+      };
+    }
+  },
+
+  // Mettre à jour la playlist brouillon
+  updateDraftPlaylist: async (playlistData) => {
+    try {
+      const response = await apiClient.put('/playlists/draft', playlistData);
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Erreur lors de la mise à jour de la playlist brouillon'
+      };
+    }
+  },
+
+  // Supprimer la playlist brouillon
+  deleteDraftPlaylist: async () => {
+    try {
+      await apiClient.delete('/playlists/draft');
+      return {
+        success: true,
+        message: 'Playlist brouillon supprimée avec succès'
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Erreur lors de la suppression de la playlist brouillon'
+      };
+    }
   }
 }; 

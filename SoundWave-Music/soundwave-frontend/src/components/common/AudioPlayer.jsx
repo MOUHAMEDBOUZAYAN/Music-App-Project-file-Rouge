@@ -269,9 +269,17 @@ const AudioPlayer = ({
       {/* Hidden audio element for actual playback */}
       <audio
         ref={audioRef}
-        src={currentTrack.audioUrl}
+        src={
+          currentTrack.audioUrl 
+            ? (currentTrack.audioUrl.startsWith('http') ? currentTrack.audioUrl : `http://localhost:5000${currentTrack.audioUrl}`)
+            : null
+        }
         onLoadedMetadata={() => setDuration(audioRef.current?.duration || 0)}
         onEnded={onNext}
+        onError={(e) => {
+          console.error('❌ Audio playback error:', e);
+          console.error('❌ Audio URL:', currentTrack.audioUrl);
+        }}
         style={{ display: 'none' }}
       />
     </div>

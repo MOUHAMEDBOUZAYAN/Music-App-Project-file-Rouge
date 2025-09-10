@@ -575,11 +575,11 @@ export const AppProvider = ({ children }) => {
     <AppStateContext.Provider value={state}>
       <AppDispatchContext.Provider value={dispatch}>
         <AuthProvider>
-          <MusicProvider>
-            <SidebarProvider>
+          <SidebarProvider>
+            <MusicProvider>
               {children}
-            </SidebarProvider>
-          </MusicProvider>
+            </MusicProvider>
+          </SidebarProvider>
         </AuthProvider>
       </AppDispatchContext.Provider>
     </AppStateContext.Provider>

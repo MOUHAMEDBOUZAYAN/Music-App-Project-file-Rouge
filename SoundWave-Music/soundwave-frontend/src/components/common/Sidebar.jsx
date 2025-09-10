@@ -46,6 +46,7 @@ const Sidebar = ({ isOpen, onToggle }) => {
   const [isLibraryExpanded, setIsLibraryExpanded] = useState(true);
   const [isUserExpanded, setIsUserExpanded] = useState(true);
   const [subscribedArtists, setSubscribedArtists] = useState([]);
+  const [userPlaylists, setUserPlaylists] = useState([]);
 
   const isActive = (path) => location.pathname === path;
 
@@ -65,6 +66,36 @@ const Sidebar = ({ isOpen, onToggle }) => {
     // Écouter les changements dans localStorage
     const handleStorageChange = () => {
       loadSubscribedArtists();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('localStorageChange', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('localStorageChange', handleStorageChange);
+    };
+  }, []);
+
+  // Charger les playlists de l'utilisateur
+  useEffect(() => {
+    const loadUserPlaylists = () => {
+      try {
+        const playlists = JSON.parse(localStorage.getItem('userPlaylists') || '[]');
+        console.log('📱 Sidebar - Loading playlists from localStorage:', playlists);
+        setUserPlaylists(playlists);
+        console.log('📱 Sidebar - Playlists loaded:', playlists.length);
+      } catch (error) {
+        console.error('Erreur lors du chargement des playlists:', error);
+      }
+    };
+
+    loadUserPlaylists();
+    
+    // Écouter les changements dans localStorage
+    const handleStorageChange = () => {
+      console.log('📱 Sidebar - localStorageChange event received');
+      loadUserPlaylists();
     };
 
     window.addEventListener('storage', handleStorageChange);
@@ -209,6 +240,28 @@ const Sidebar = ({ isOpen, onToggle }) => {
                     {likedTracks.length}
                   </span>
                 </Link>
+
+                {/* Playlists de l'utilisateur */}
+                {userPlaylists.length > 0 && (
+                  <div className="space-y-1">
+                    <div className="text-xs text-gray-500 px-3 py-1 font-medium">
+                      Mes playlists
+                    </div>
+                    {userPlaylists.map((playlist) => (
+                      <Link
+                        key={playlist._id || playlist.id}
+                        to={`/playlist/${playlist._id || playlist.id}`}
+                        className="flex items-center space-x-3 px-3 py-2 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors"
+                      >
+                        <Music className="h-4 w-4" />
+                        <span className="text-sm truncate">{playlist.name}</span>
+                        <span className="ml-auto text-xs bg-gray-700 px-2 py-1 rounded-full">
+                          {playlist.songs?.length || 0}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                )}
                 
                 <Link
                   to="/downloads"

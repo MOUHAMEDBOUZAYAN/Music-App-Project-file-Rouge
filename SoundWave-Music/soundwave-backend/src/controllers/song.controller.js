@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Song = require('../models/Song');
 const User = require('../models/User');
+const Artist = require('../models/Artist');
 const { AppError } = require('../middleware/error.middleware');
 // const { uploadToCloudinary } = require('../services/cloudinary.service'); // not used with local storage
 
@@ -47,10 +48,41 @@ const searchSongs = async (req, res, next) => {
     // Construire le filtre
     const filter = {};
     if (q && q.trim()) {
+      const searchQuery = q.trim();
+      console.log('🔍 Recherche avec query:', searchQuery);
+      
       filter.$or = [
-        { title: { $regex: q, $options: 'i' } },
-        { album: { $regex: q, $options: 'i' } }
+        { title: { $regex: searchQuery, $options: 'i' } },
+        { album: { $regex: searchQuery, $options: 'i' } },
+        { genre: { $regex: searchQuery, $options: 'i' } }
       ];
+      
+      // Si la recherche est très courte, ajouter des variantes
+      if (searchQuery.length <= 3) {
+        filter.$or.push(
+          { title: { $regex: `^${searchQuery}`, $options: 'i' } },
+          { album: { $regex: `^${searchQuery}`, $options: 'i' } }
+        );
+      }
+      
+      // Recherche dans les artistes (populate)
+      try {
+        const artists = await Artist.find({
+          $or: [
+            { username: { $regex: searchQuery, $options: 'i' } },
+            { name: { $regex: searchQuery, $options: 'i' } }
+          ]
+        }).select('_id');
+        
+        if (artists.length > 0) {
+          const artistIds = artists.map(artist => artist._id);
+          filter.$or.push({ artist: { $in: artistIds } });
+        }
+      } catch (error) {
+        console.log('⚠️ Erreur lors de la recherche d\'artistes:', error.message);
+      }
+      
+      console.log('🔍 Filtre de recherche:', JSON.stringify(filter, null, 2));
     }
     if (genre) {
       filter.genre = { $regex: genre, $options: 'i' };

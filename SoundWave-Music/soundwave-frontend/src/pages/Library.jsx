@@ -10,7 +10,8 @@ import {
   Clock,
   Calendar,
   User,
-  Disc
+  Disc,
+  Music
 } from 'lucide-react';
 import { useMusic } from '../store/MusicContext';
 import { useAuth } from '../hooks/useAuth';
@@ -43,36 +44,38 @@ const Library = () => {
 
   const filterTypes = ['Tout', 'Créées par vous', 'Suivies'];
 
-  // Données simulées (à remplacer par l'API)
-  const [playlists, setPlaylists] = useState([
-    {
-      id: 1,
-      name: 'Mes favoris 2024',
-      description: 'Les meilleures chansons de l\'année',
-      coverUrl: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop',
-      songCount: 25,
-      isOwned: true,
-      createdAt: '2024-01-15'
-    },
-    {
-      id: 2,
-      name: 'Workout Mix',
-      description: 'Énergique pour le sport',
-      coverUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop',
-      songCount: 18,
-      isOwned: true,
-      createdAt: '2024-01-10'
-    },
-    {
-      id: 3,
-      name: 'Chill Vibes',
-      description: 'Musique relaxante',
-      coverUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&h=300&fit=crop',
-      songCount: 32,
-      isOwned: false,
-      createdAt: '2024-01-05'
-    }
-  ]);
+  // Données réelles depuis localStorage et API
+  const [playlists, setPlaylists] = useState([]);
+
+  // Charger les playlists depuis localStorage
+  useEffect(() => {
+    const loadPlaylists = () => {
+      try {
+        const storedPlaylists = JSON.parse(localStorage.getItem('userPlaylists') || '[]');
+        console.log('📚 Library - Loading playlists from localStorage:', storedPlaylists);
+        setPlaylists(storedPlaylists);
+        console.log('📚 Playlists chargées dans Library:', storedPlaylists.length);
+      } catch (error) {
+        console.error('❌ Erreur lors du chargement des playlists:', error);
+      }
+    };
+
+    loadPlaylists();
+    
+    // Écouter les changements dans localStorage
+    const handleStorageChange = () => {
+      console.log('📚 Library - localStorageChange event received');
+      loadPlaylists();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('localStorageChange', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('localStorageChange', handleStorageChange);
+    };
+  }, []);
 
   const [albums, setAlbums] = useState([
     {
@@ -107,7 +110,12 @@ const Library = () => {
   ]);
 
   const handlePlayPlaylist = (playlist) => {
-    playPlaylist(playlist);
+    // Convertir la playlist au format attendu par playPlaylist
+    const playlistData = {
+      name: playlist.name,
+      tracks: playlist.songs || []
+    };
+    playPlaylist(playlistData);
     toast.success(`Lecture de la playlist ${playlist.name}`);
   };
 
@@ -132,15 +140,15 @@ const Library = () => {
   };
 
   const handleCreatePlaylist = () => {
-    toast.success('Création de playlist - Fonctionnalité à implémenter');
+    navigate('/create-playlist');
   };
 
   const renderPlaylists = () => {
     const filteredPlaylists = playlists.filter(playlist => {
       const matchesSearch = playlist.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesFilter = filterType === 'Tout' || 
-        (filterType === 'Créées par vous' && playlist.isOwned) ||
-        (filterType === 'Suivies' && !playlist.isOwned);
+        (filterType === 'Créées par vous' && playlist.isOwned !== false) ||
+        (filterType === 'Suivies' && playlist.isOwned === false);
       
       return matchesSearch && matchesFilter;
     });
@@ -148,7 +156,20 @@ const Library = () => {
     if (filteredPlaylists.length === 0) {
       return (
         <div className="text-center py-12">
-          <p className="text-gray-400">Aucune playlist trouvée</p>
+          <p className="text-gray-400">
+            {playlists.length === 0 
+              ? "Aucune playlist créée. Créez votre première playlist !" 
+              : "Aucune playlist trouvée avec ces critères"
+            }
+          </p>
+          {playlists.length === 0 && (
+            <button 
+              onClick={() => window.location.href = '/create-playlist'}
+              className="mt-4 px-6 py-2 bg-green-500 text-black rounded-full font-semibold hover:bg-green-400 transition-colors"
+            >
+              Créer une playlist
+            </button>
+          )}
         </div>
       );
     }
@@ -160,14 +181,20 @@ const Library = () => {
           : 'grid-cols-1'
       }`}>
         {filteredPlaylists.map((playlist) => (
-          <div key={playlist.id} className="group cursor-pointer">
+          <div key={playlist._id || playlist.id} className="group cursor-pointer">
             <div className="relative mb-3">
               <div className="aspect-square bg-gray-800 rounded-lg overflow-hidden">
-                <img
-                  src={playlist.coverUrl}
-                  alt={playlist.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                />
+                {playlist.coverImage ? (
+                  <img
+                    src={playlist.coverImage.startsWith('http') ? playlist.coverImage : `http://localhost:5000${playlist.coverImage}`}
+                    alt={playlist.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-700 to-gray-800">
+                    <Music className="h-12 w-12 text-gray-500" />
+                  </div>
+                )}
               </div>
               
               <button 
@@ -182,15 +209,13 @@ const Library = () => {
               {playlist.name}
             </h3>
             <p className="text-xs text-gray-400 truncate">
-              {playlist.description}
+              {playlist.description || 'Aucune description'}
             </p>
             <div className="flex items-center justify-between mt-1">
               <p className="text-xs text-gray-500">
-                {playlist.songCount} chansons
+                {playlist.songs?.length || 0} chansons
               </p>
-              {playlist.isOwned && (
-                <span className="text-xs text-green-400">Créée par vous</span>
-              )}
+              <span className="text-xs text-green-400">Créée par vous</span>
             </div>
           </div>
         ))}

@@ -25,6 +25,10 @@ const playlistSchema = new Schema({
     type: Boolean,
     default: true
   },
+  isDraft: {
+    type: Boolean,
+    default: false
+  },
   coverImage: {
     type: String,
     default: '' // Optional cover image for the playlist

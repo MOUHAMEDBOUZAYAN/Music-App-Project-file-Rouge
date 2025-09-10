@@ -20,6 +20,7 @@ import Library from './pages/Library';
 import LikedSongs from './pages/LikedSongs';
 import Album from './pages/Album';
 import Playlist from './pages/Playlist';
+import PlaylistView from './pages/PlaylistView';
 import CreatePlaylist from './pages/CreatePlaylist';
 import Artist from './pages/Artist';
 import Profile from './pages/Profile';
@@ -126,7 +127,7 @@ function App() {
               <Route path="/playlist/:id" element={
                 <ProtectedRoute>
                   <Layout>
-                    <Playlist />
+                    <PlaylistView />
                   </Layout>
                 </ProtectedRoute>
               } />

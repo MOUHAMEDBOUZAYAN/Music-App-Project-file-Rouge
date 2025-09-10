@@ -45,9 +45,11 @@ const songService = {
 
   // Rechercher des chansons
   searchSongs: async (query, params = {}) => {
-    const response = await api.get('/songs', { 
+    console.log('🔍 songService.searchSongs called with:', query);
+    const response = await api.get('/songs/search', { 
       params: { q: query, ...params } 
     });
+    console.log('🔍 songService response:', response.data);
     return response.data;
   },
 
