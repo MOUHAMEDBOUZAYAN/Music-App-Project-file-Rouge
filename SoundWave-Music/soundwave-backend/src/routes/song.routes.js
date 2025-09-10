@@ -30,6 +30,32 @@ router.get('/',
   songController.searchSongs
 );
 
+// @route   GET api/songs/search
+// @desc    Rechercher des chansons (endpoint alternatif)
+// @access  Public
+router.get('/search', 
+  searchLimiter, 
+  validateSearch, 
+  validatePagination, 
+  songController.searchSongs
+);
+
+// @route   GET api/search/songs
+// @desc    Rechercher des chansons (endpoint alternatif)
+// @access  Public
+router.get('/songs', 
+  searchLimiter, 
+  validateSearch, 
+  validatePagination, 
+  songController.searchSongs
+);
+
+
+// @route   GET api/songs/test
+// @desc    Tester la base de données
+// @access  Public
+router.get('/test', songController.testDatabase);
+
 // @route   GET api/songs/all
 // @desc    Obtenir toutes les chansons (pour les albums récents)
 // @access  Public

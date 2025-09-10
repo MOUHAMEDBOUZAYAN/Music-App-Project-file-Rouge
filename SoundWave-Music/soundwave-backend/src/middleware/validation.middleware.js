@@ -216,9 +216,17 @@ const validatePagination = [
  */
 const validateSearch = [
   query('q')
+    .optional()
     .trim()
-    .isLength({ min: 1, max: 100 })
-    .withMessage('Le terme de recherche doit contenir entre 1 et 100 caractères'),
+    .custom((value) => {
+      if (value && value.length > 0 && value.length < 1) {
+        throw new Error('Le terme de recherche doit contenir au moins 1 caractère');
+      }
+      if (value && value.length > 100) {
+        throw new Error('Le terme de recherche ne peut pas dépasser 100 caractères');
+      }
+      return true;
+    }),
   
   query('type')
     .optional()

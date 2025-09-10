@@ -22,6 +22,7 @@ const CreatePlaylist = () => {
   const [mode, setMode] = useState('songs');
   const [albumTracks, setAlbumTracks] = useState({});
   const [recommended, setRecommended] = useState([]);
+  const [searchFilter, setSearchFilter] = useState('all'); // 'all', 'songs', 'artists', 'albums'
 
   const [selectedSongs, setSelectedSongs] = useState([]);
   const [creating, setCreating] = useState(false);
@@ -47,58 +48,84 @@ const CreatePlaylist = () => {
     const handle = setTimeout(async () => {
       setSearching(true);
       try {
-        // Search for artists first
-        let artistsRes = null;
+        console.log('🔍 Recherche de chansons pour:', query);
+        
+        // Search for songs directly using API
+        let songsRes = null;
         try {
-          artistsRes = await apiClient.get(endpoints.search.artists, { params: { q: query, limit: 1 }, signal: controller.signal });
+          console.log('🔍 Tentative de recherche via API...');
+          // Try the correct endpoint first
+          songsRes = await apiClient.get('/songs/search', { 
+            params: { q: query, limit: 15 }, 
+            signal: controller.signal 
+          });
+          console.log('📥 Réponse de recherche API:', songsRes?.data);
         } catch (err) {
-          // ignore cancellation/timeouts
-        }
-        const artists = artistsRes?.data || artistsRes?.results || [];
-
-        if (Array.isArray(artists) && artists.length > 0) {
-          const artist = artists[0];
+          console.error('❌ Erreur de recherche API:', err);
+          // Fallback to songService
           try {
-            const albumsRes = await apiClient.get(endpoints.artists.albums(artist._id || artist.id), { params: { limit: 12 }, signal: controller.signal });
-            const artistAlbums = albumsRes?.data || [];
-            if (Array.isArray(artistAlbums) && artistAlbums.length > 0) {
-              setMode('albums');
-              setAlbums(artistAlbums);
-              setResults([]);
-              return;
+            console.log('🔄 Tentative de recherche via songService...');
+            songsRes = await songService.searchSongs({ q: query, limit: 15 });
+            console.log('📥 Fallback songService:', songsRes);
+          } catch (fallbackErr) {
+            console.error('❌ Erreur fallback songService:', fallbackErr);
+            // Try alternative endpoints
+            try {
+              console.log('🔄 Tentative de recherche alternative...');
+            songsRes = await apiClient.get('/songs', {
+              params: { q: query, limit: 15 },
+              signal: controller.signal
+            });
+              console.log('📥 Recherche alternative:', songsRes?.data);
+            } catch (altErr) {
+              console.error('❌ Erreur recherche alternative:', altErr);
+              // Try search endpoint
+              try {
+                console.log('🔄 Tentative de recherche search...');
+                songsRes = await apiClient.get('/search/songs', {
+                  params: { q: query, limit: 15 },
+                  signal: controller.signal
+                });
+                console.log('📥 Recherche search:', songsRes?.data);
+              } catch (searchErr) {
+                console.error('❌ Erreur recherche search:', searchErr);
+              }
             }
-          } catch (_) {
-            // fallback to songs
           }
         }
 
-        // Search for songs (local) puis fallback Deezer si vide
-        let localRes = null;
-        try {
-          localRes = await songService.searchSongs({ q: query, limit: 15 });
-        } catch (_) {}
+        let list = [];
+        if (songsRes?.data?.data) {
+          list = songsRes.data.data;
+        } else if (songsRes?.data) {
+          list = Array.isArray(songsRes.data) ? songsRes.data : [];
+        } else if (songsRes?.success && songsRes.data) {
+          list = Array.isArray(songsRes.data) ? songsRes.data : [];
+        } else if (songsRes?.results) {
+          list = Array.isArray(songsRes.results) ? songsRes.results : [];
+        }
 
-        let list = localRes?.success ? (localRes.data?.data || localRes.data || []) : [];
+        console.log('🎵 Chansons trouvées:', list);
+        console.log('📊 Nombre de chansons:', list.length);
 
-        // Removed Deezer fallback
-        // if (!list || list.length === 0) {
-        //   try {
-        //     const deezer = await DeezerService.search(query, 15);
-        //     list = (deezer?.data || []).map((t) => ({
-        //       id: `deezer-${t.id}`,
-        //       externalId: t.id,
-        //       provider: 'deezer',
-        //       title: t.title,
-        //       artist: t.artist?.name,
-        //       album: t.album?.title,
-        //       duration: t.duration ? `${Math.floor(t.duration / 60)}:${String(t.duration % 60).padStart(2, '0')}` : '3:00',
-        //       cover: t.album?.cover || t.album?.cover_medium,
-        //     }));
-        //   } catch (_) {}
-        // }
+        // Si aucune chanson trouvée, afficher un message d'erreur
+        if (!list || list.length === 0) {
+          console.log('ℹ️ Aucune chanson trouvée dans la base de données');
+          // Ne pas afficher toast ici car c'est normal si pas de résultats
+        }
 
+        // Apply search filter
+        let filteredResults = list;
+        if (searchFilter === 'songs') {
+          filteredResults = list.filter(song => song.title || song.name);
+        } else if (searchFilter === 'artists') {
+          filteredResults = list.filter(song => song.artist);
+        } else if (searchFilter === 'albums') {
+          filteredResults = list.filter(song => song.album);
+        }
+        
         setMode('songs');
-        setResults(list || []);
+        setResults(filteredResults);
         setAlbums([]);
       } finally {
         setSearching(false);
@@ -109,7 +136,7 @@ const CreatePlaylist = () => {
       controller.abort();
       clearTimeout(handle);
     };
-  }, [query]);
+  }, [query, searchFilter]);
 
   const fetchAlbumTracks = async (albumId) => {
     if (albumTracks[albumId]) return;
@@ -357,49 +384,54 @@ const CreatePlaylist = () => {
             </div>
           ) : (
             selectedSongs.map((song, index) => (
-              <div
-                key={song.id}
-                className="grid grid-cols-12 gap-4 px-4 py-2 rounded-md hover:bg-gray-800/50 group"
-              >
-                <div className="col-span-1 flex items-center">
-                  <span className="text-gray-400 group-hover:hidden">{index + 1}</span>
-                  <button className="hidden group-hover:block text-white">
-                    <Play className="h-4 w-4" />
-                  </button>
-                </div>
-                
-                <div className="col-span-6 flex items-center gap-3">
-                  <img 
-                    src={song.cover} 
-                    alt={song.title}
-                    className="w-10 h-10 rounded object-cover"
-                  />
-                  <div>
-                    <p className="text-white font-medium">{song.title}</p>
-                    <p className="text-gray-400 text-sm">{song.artist}</p>
-                  </div>
-                </div>
-                
-                <div className="col-span-3 flex items-center">
-                  <span className="text-gray-400 text-sm hover:text-white cursor-pointer">
-                    {song.album}
-                  </span>
-                </div>
-                
-                <div className="col-span-1 flex items-center">
-                  <span className="text-gray-400 text-sm">il y a 19 minutes</span>
-                </div>
-                
-                <div className="col-span-1 flex items-center justify-end">
-                  <button
-                    onClick={() => removeSong(song.id)}
-                    className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-white mr-2"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                  <span className="text-gray-400 text-sm">{song.duration}</span>
+            <div
+              key={song._id || song.id || index}
+              className="grid grid-cols-12 gap-4 px-4 py-2 rounded-md hover:bg-gray-800/50 group"
+            >
+              <div className="col-span-1 flex items-center">
+                <span className="text-gray-400 group-hover:hidden">{index + 1}</span>
+                <button className="hidden group-hover:block text-white">
+                  <Play className="h-4 w-4" />
+                </button>
+              </div>
+              
+              <div className="col-span-6 flex items-center gap-3">
+                <img 
+                  src={song.cover || song.coverImage || song.album?.cover || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=64&h=64&fit=crop'} 
+                  alt={song.title || song.name}
+                  className="w-10 h-10 rounded object-cover"
+                />
+                <div>
+                  <p className="text-white font-medium">{song.title || song.name}</p>
+                  <p className="text-gray-400 text-sm">
+                    {typeof song.artist === 'object' 
+                      ? (song.artist?.username || song.artist?.name || 'Artiste inconnu')
+                      : (song.artist || 'Artiste inconnu')
+                    }
+                  </p>
                 </div>
               </div>
+              
+              <div className="col-span-3 flex items-center">
+                <span className="text-gray-400 text-sm hover:text-white cursor-pointer">
+                  {song.album?.title || song.album?.name || song.album || '—'}
+                </span>
+              </div>
+              
+              <div className="col-span-1 flex items-center">
+                <span className="text-gray-400 text-sm">il y a 19 minutes</span>
+              </div>
+              
+              <div className="col-span-1 flex items-center justify-end">
+                <button
+                  onClick={() => removeSong(song.id)}
+                  className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-white mr-2"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+                <span className="text-gray-400 text-sm">{song.duration || '—'}</span>
+              </div>
+            </div>
             ))
           )}
         </div>
@@ -432,25 +464,74 @@ const CreatePlaylist = () => {
                   className="w-full bg-gray-800 text-white pl-12 pr-4 py-3 rounded-md outline-none focus:ring-2 focus:ring-green-500"
                 />
               </div>
+              
+              {/* Search Filters */}
+              <div className="flex gap-2 mt-4">
+                <button
+                  onClick={() => setSearchFilter('all')}
+                  className={`px-4 py-2 rounded-full text-sm transition-colors ${
+                    searchFilter === 'all'
+                      ? 'bg-green-500 text-black'
+                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  }`}
+                >
+                  Tout
+                </button>
+                <button
+                  onClick={() => setSearchFilter('songs')}
+                  className={`px-4 py-2 rounded-full text-sm transition-colors ${
+                    searchFilter === 'songs'
+                      ? 'bg-green-500 text-black'
+                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  }`}
+                >
+                  Titres
+                </button>
+                <button
+                  onClick={() => setSearchFilter('artists')}
+                  className={`px-4 py-2 rounded-full text-sm transition-colors ${
+                    searchFilter === 'artists'
+                      ? 'bg-green-500 text-black'
+                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  }`}
+                >
+                  Artistes
+                </button>
+                <button
+                  onClick={() => setSearchFilter('albums')}
+                  className={`px-4 py-2 rounded-full text-sm transition-colors ${
+                    searchFilter === 'albums'
+                      ? 'bg-green-500 text-black'
+                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  }`}
+                >
+                  Albums
+                </button>
+              </div>
             </div>
 
             {/* Search Results */}
             <div className="max-h-96 overflow-y-auto">
               {searching && (
                 <div className="p-6 text-center text-gray-400">
-                  Recherche en cours...
+                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto mb-4"></div>
+                  <p className="text-lg font-semibold">Recherche en cours...</p>
+                  <p className="text-sm">Recherche de chansons pour "{query}"</p>
                 </div>
               )}
 
               {!searching && query && results.length === 0 && albums.length === 0 && (
                 <div className="p-6 text-center text-gray-400">
-                  Aucun résultat trouvé
+                  <Search className="h-12 w-12 mx-auto mb-4 text-gray-600" />
+                  <h3 className="text-lg font-semibold mb-2">Aucun résultat trouvé</h3>
+                  <p className="text-sm">Essayez avec d'autres mots-clés ou vérifiez votre connexion</p>
+                  <p className="text-xs mt-2">Filtre actuel: {searchFilter}</p>
                 </div>
               )}
 
               {/* Album Results */}
               {mode === 'albums' && albums.map((album) => (
-                <div key={album._id || album.id} className="p-4 hover:bg-gray-800">
+                <div key={album._id || album.id || Math.random()} className="p-4 hover:bg-gray-800">
                   <div className="flex items-center gap-4">
                     <img 
                       src={album.cover || album.artwork || album.coverUrl} 
@@ -473,7 +554,7 @@ const CreatePlaylist = () => {
                   {albumTracks[album._id || album.id] && (
                     <div className="mt-4 ml-20 space-y-2">
                       {albumTracks[album._id || album.id].map((song) => (
-                        <div key={song._id || song.id} className="flex items-center gap-4 p-2 rounded hover:bg-gray-700/50">
+                        <div key={song._id || song.id || Math.random()} className="flex items-center gap-4 p-2 rounded hover:bg-gray-700/50">
                           <div className="w-6 text-center text-gray-500 text-sm">•</div>
                           <div className="flex-1">
                             <p className="text-white text-sm">{song.title || song.name}</p>
@@ -498,16 +579,20 @@ const CreatePlaylist = () => {
 
               {/* Song Results */}
               {mode === 'songs' && results.map((song) => (
-                <div key={song._id || song.id} className="p-4 hover:bg-gray-800">
+                <div key={song._id || song.id || Math.random()} className="p-4 hover:bg-gray-800">
                   <div className="flex items-center gap-4">
                     <img 
-                      src={song.cover || song.album?.cover || song.coverUrl || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=64&h=64&fit=crop'} 
+                      src={song.coverImage || song.cover || song.album?.cover || song.coverUrl || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=64&h=64&fit=crop'} 
                       alt="cover" 
                       className="w-16 h-16 rounded object-cover"
                     />
                     <div className="flex-1">
-                      <p className="text-white font-medium">{song.title || song.name}</p>
-                      <p className="text-gray-400 text-sm">{song.artist?.name || song.artist || 'Artiste inconnu'}</p>
+                      <p className="text-white font-medium">{typeof song.title === 'string' ? song.title : song.name || 'Titre inconnu'}</p>                       <p className="text-gray-400 text-sm">
+                        {typeof song.artist === 'object' 
+                          ? (song.artist?.username || song.artist?.name || 'Artiste inconnu')
+                          : (song.artist || 'Artiste inconnu')
+                        }
+                      </p>
                     </div>
                     <div className="text-gray-400 text-sm mr-4">
                       {song.album?.title || song.album?.name || '—'}
@@ -530,9 +615,24 @@ const CreatePlaylist = () => {
               {mode === 'songs' && results.length > 0 && (
                 <div className="p-4 border-t border-gray-800">
                   <div className="flex gap-6 text-sm">
-                    <button className="text-gray-400 hover:text-white">Voir tous les artistes</button>
-                    <button className="text-gray-400 hover:text-white">Voir tous les albums</button>
-                    <button className="text-gray-400 hover:text-white">Voir tous les titres</button>
+                    <button 
+                      onClick={() => setSearchFilter('artists')}
+                      className="text-gray-400 hover:text-white"
+                    >
+                      Voir tous les artistes
+                    </button>
+                    <button 
+                      onClick={() => setSearchFilter('albums')}
+                      className="text-gray-400 hover:text-white"
+                    >
+                      Voir tous les albums
+                    </button>
+                    <button 
+                      onClick={() => setSearchFilter('songs')}
+                      className="text-gray-400 hover:text-white"
+                    >
+                      Voir tous les titres
+                    </button>
                   </div>
                 </div>
               )}
@@ -549,18 +649,23 @@ const CreatePlaylist = () => {
         <div className="space-y-1">
           {recommended.map((song) => (
             <div
-              key={song._id || song.id}
+              key={song._id || song.id || Math.random()}
               className="grid grid-cols-12 gap-4 px-4 py-2 rounded-md hover:bg-gray-800/50 group"
             >
               <div className="col-span-6 flex items-center gap-3">
                 <img 
-                  src={song.cover || song.album?.cover || song.coverUrl || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=64&h=64&fit=crop'} 
+                  src={song.coverImage || song.cover || song.album?.cover || song.coverUrl || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=64&h=64&fit=crop'} 
                   alt="cover" 
                   className="w-10 h-10 rounded object-cover"
                 />
                 <div>
                   <p className="text-white font-medium">{song.title || song.name}</p>
-                  <p className="text-gray-400 text-sm">{song.artist?.name || song.artist?.username || (typeof song.artist === 'string' ? song.artist : 'Artiste')}</p>
+                  <p className="text-gray-400 text-sm">
+                    {typeof song.artist === 'object' 
+                      ? (song.artist?.username || song.artist?.name || 'Artiste inconnu')
+                      : (song.artist || 'Artiste inconnu')
+                    }
+                  </p>
                 </div>
               </div>
               

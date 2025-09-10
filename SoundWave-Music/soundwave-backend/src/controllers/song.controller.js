@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Song = require('../models/Song');
 const User = require('../models/User');
 const { AppError } = require('../middleware/error.middleware');
@@ -8,6 +9,35 @@ const { AppError } = require('../middleware/error.middleware');
 // @access  Public
 const searchSongs = async (req, res, next) => {
   try {
+    console.log('🔍 Recherche de chansons demandée:', req.query);
+    
+    // Vérifier si la base de données est connectée
+    console.log('🔍 État de la base de données:', mongoose.connection.readyState);
+    if (!mongoose.connection.readyState) {
+      console.log('⚠️ Base de données non connectée, tentative de connexion...');
+      
+      // Essayer de se reconnecter
+      try {
+        await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/soundwave', {
+          useNewUrlParser: true,
+          useUnifiedTopology: true,
+        });
+        console.log('✅ Reconnexion à la base de données réussie');
+      } catch (error) {
+        console.log('❌ Échec de la reconnexion:', error.message);
+        return res.json({
+          success: true,
+          data: [],
+          pagination: {
+            page: 1,
+            limit: 15,
+            total: 0,
+            pages: 0
+          }
+        });
+      }
+    }
+    
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -16,10 +46,9 @@ const searchSongs = async (req, res, next) => {
     
     // Construire le filtre
     const filter = {};
-    if (q) {
+    if (q && q.trim()) {
       filter.$or = [
         { title: { $regex: q, $options: 'i' } },
-        { artist: { $regex: q, $options: 'i' } },
         { album: { $regex: q, $options: 'i' } }
       ];
     }
@@ -31,6 +60,15 @@ const searchSongs = async (req, res, next) => {
     }
     if (album) {
       filter.album = { $regex: album, $options: 'i' };
+    }
+    
+    console.log('🔍 Filtre construit:', filter);
+    console.log('🔍 Query q:', q);
+    console.log('🔍 Filtre vide?', Object.keys(filter).length === 0);
+    
+    // Si pas de filtre, récupérer toutes les chansons
+    if (Object.keys(filter).length === 0) {
+      console.log('🔍 Aucun filtre, récupération de toutes les chansons');
     }
     
     // Construire le tri (gérer les deux formats: sortBy/sortOrder et sort/order)
@@ -64,13 +102,81 @@ const searchSongs = async (req, res, next) => {
       sortObj.createdAt = -1; // Tri par défaut
     }
     
-    const songs = await Song.find(filter)
-      .populate('uploader', 'username avatar')
-      .sort(sortObj)
-      .skip(skip)
-      .limit(limit);
+    console.log('🔍 Tentative de recherche dans la base de données...');
+    console.log('🔍 Filtre utilisé:', JSON.stringify(filter, null, 2));
+    console.log('🔍 Tri utilisé:', JSON.stringify(sortObj, null, 2));
     
-    const total = await Song.countDocuments(filter);
+    let songs = [];
+    let total = 0;
+    
+    try {
+      // Compter d'abord le total
+      total = await Song.countDocuments(filter);
+      console.log('📊 Total de chansons trouvées:', total);
+      
+      // Puis récupérer les chansons
+      songs = await Song.find(filter)
+        .populate('artist', 'username avatar')
+        .sort(sortObj)
+        .skip(skip)
+        .limit(limit);
+      
+      console.log('✅ Recherche réussie:', songs.length, 'chansons récupérées');
+      console.log('🎵 Première chanson:', songs[0] ? songs[0].title : 'Aucune');
+      
+      // Si pas de résultats et pas de filtre, essayer sans populate
+      if (songs.length === 0 && Object.keys(filter).length === 0) {
+        console.log('🔄 Tentative sans populate...');
+        songs = await Song.find(filter)
+          .sort(sortObj)
+          .skip(skip)
+          .limit(limit);
+        console.log('🎵 Chansons sans populate:', songs.length);
+      }
+      
+      // Si toujours pas de résultats, essayer sans tri
+      if (songs.length === 0 && Object.keys(filter).length === 0) {
+        console.log('🔄 Tentative sans tri...');
+        songs = await Song.find(filter)
+          .skip(skip)
+          .limit(limit);
+        console.log('🎵 Chansons sans tri:', songs.length);
+      }
+      
+      // Si toujours pas de résultats, essayer sans skip/limit
+      if (songs.length === 0 && Object.keys(filter).length === 0) {
+        console.log('🔄 Tentative sans skip/limit...');
+        songs = await Song.find(filter);
+        console.log('🎵 Chansons sans skip/limit:', songs.length);
+      }
+      
+      // Si toujours pas de résultats, essayer sans filtre du tout
+      if (songs.length === 0 && Object.keys(filter).length === 0) {
+        console.log('🔄 Tentative sans filtre du tout...');
+        songs = await Song.find();
+        console.log('🎵 Chansons sans filtre:', songs.length);
+      }
+    } catch (dbError) {
+      console.log('⚠️ Erreur de base de données:', dbError.message);
+      
+      return res.json({
+        success: true,
+        data: [],
+        pagination: {
+          page: 1,
+          limit: 15,
+          total: 0,
+          pages: 0
+        }
+      });
+    }
+    
+    // Si aucune chanson trouvée, retourner une liste vide
+    if (songs.length === 0) {
+      console.log('ℹ️ Aucune chanson trouvée dans la base de données');
+    }
+    
+    console.log('🎵 Chansons finales:', songs.length);
     
     res.json({
       success: true,
@@ -83,7 +189,49 @@ const searchSongs = async (req, res, next) => {
       }
     });
   } catch (error) {
-    next(new AppError('Erreur lors de la recherche de chansons', 500));
+    console.error('❌ Erreur dans searchSongs:', error);
+    console.error('❌ Stack trace:', error.stack);
+    res.status(500).json({
+      success: false,
+      error: 'Erreur lors de la recherche de chansons',
+      message: error.message
+    });
+  }
+};
+
+
+// @desc    Tester la base de données
+// @route   GET /api/songs/test
+// @access  Public
+const testDatabase = async (req, res, next) => {
+  try {
+    console.log('🔍 Test de la base de données...');
+    console.log('🔍 État de la connexion:', mongoose.connection.readyState);
+    
+    // Compter toutes les chansons
+    const totalSongs = await Song.countDocuments();
+    console.log('📊 Total de chansons dans la base:', totalSongs);
+    
+    // Récupérer quelques chansons
+    const songs = await Song.find().limit(3);
+    console.log('🎵 Chansons trouvées:', songs.map(s => s.title));
+    
+    res.json({
+      success: true,
+      message: 'Test de base de données réussi',
+      data: {
+        connectionState: mongoose.connection.readyState,
+        totalSongs,
+        sampleSongs: songs.map(s => ({ title: s.title, artist: s.artist }))
+      }
+    });
+  } catch (error) {
+    console.error('❌ Erreur lors du test de base de données:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Erreur lors du test de base de données',
+      message: error.message
+    });
   }
 };
 
@@ -597,6 +745,7 @@ const getUserSongs = async (req, res, next) => {
 
 module.exports = {
   searchSongs,
+  testDatabase,
   getSongById,
   uploadSong,
   updateSong,

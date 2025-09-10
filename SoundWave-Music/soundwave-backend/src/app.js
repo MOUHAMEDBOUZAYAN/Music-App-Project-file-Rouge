@@ -77,6 +77,7 @@ app.use('/api/spotify', require('./routes/spotify.routes')); // Routes Spotify p
 // app.use('/api/deezer', require('./routes/deezer.routes')); // Routes Deezer proxy (removed)
 app.use('/api/users', require('./routes/user.routes'));
 app.use('/api/songs', require('./routes/song.routes'));
+app.use('/api/search', require('./routes/song.routes')); // Routes de recherche
 app.use('/api/playlists', require('./routes/playlist.routes'));
 app.use('/api/albums', require('./routes/album.routes'));
 app.use('/api/artists', require('./routes/artist.routes'));
