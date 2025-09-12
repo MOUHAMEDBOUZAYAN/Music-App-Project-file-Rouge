@@ -318,12 +318,12 @@ const AudioPlayer = () => {
                 </button>
                 <button 
                   onClick={togglePlayPause}
-                  className="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:scale-105 transition-transform"
+                  className="w-8 h-8 bg-white rounded-full flex items-center justify-center hover:scale-105 transition-transform"
                 >
                   {isPlaying ? (
-                    <Pause className="h-5 w-5 text-black" />
+                    <Pause className="h-4 w-4 text-black" />
                   ) : (
-                    <Play className="h-5 w-5 text-black ml-1" />
+                    <Play className="h-4 w-4 text-black" style={{ marginLeft: '1px' }} />
                   )}
                 </button>
                 <button 
@@ -423,8 +423,8 @@ const AudioPlayer = () => {
                 <button type="button" onClick={(e) => { e.stopPropagation(); handleToggleLike(); }} className="p-2 text-gray-300">
                   <Heart className="h-4 w-4" fill={likedTracks.includes(currentTrack?._id || currentTrack?.id) ? 'currentColor' : 'none'} />
                 </button>
-                <button type="button" onClick={(e) => { e.stopPropagation(); togglePlayPause(); }} className="w-9 h-9 bg-white text-black rounded-full flex items-center justify-center">
-                  {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+                <button type="button" onClick={(e) => { e.stopPropagation(); togglePlayPause(); }} className="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center">
+                  {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" style={{ marginLeft: '1px' }} />}
                 </button>
               </div>
             </button>

@@ -18,7 +18,7 @@ const albumSchema = new Schema({
   },
   coverImage: {
     type: String, // URL from Cloudinary or similar
-    required: true
+    required: false
   },
   songs: [{
     type: Schema.Types.ObjectId,
@@ -32,7 +32,11 @@ const albumSchema = new Schema({
     type: String,
     default: ''
   },
-  songCount: {
+  songsCount: {
+    type: Number,
+    default: 0
+  },
+  views: {
     type: Number,
     default: 0
   }

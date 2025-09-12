@@ -149,9 +149,9 @@ const AudioPlayer = ({
           
           <button
             onClick={onPlayPause}
-            className="p-3 bg-white text-black rounded-full hover:bg-gray-200 transition-colors"
+            className="w-8 h-8 bg-white text-black rounded-full hover:bg-gray-200 transition-colors flex items-center justify-center"
           >
-            {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
+            {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" style={{ marginLeft: '1px' }} />}
           </button>
           
           <button

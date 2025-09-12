@@ -160,6 +160,10 @@ const Home = () => {
     navigate(`/artist/${artist.id}`);
   };
 
+  const handleAlbumClick = (album) => {
+    navigate(`/album/${album.id}`);
+  };
+
   const handleAddToQueue = (song) => {
     // Construire l'URL complète pour les fichiers locaux
     const baseUrl = 'http://127.0.0.1:5000';
@@ -494,7 +498,11 @@ const Home = () => {
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
                 {popularAlbums.map((album) => (
-                  <div key={album.id} className="group cursor-pointer flex-shrink-0 w-40 hover:bg-gray-800/60 p-4 transition-all duration-300 overflow-hidden">
+                  <div 
+                    key={album.id} 
+                    className="group cursor-pointer flex-shrink-0 w-40 hover:bg-gray-800/60 p-4 transition-all duration-300 overflow-hidden"
+                    onClick={() => handleAlbumClick(album)}
+                  >
                     <div className="relative mb-4 flex justify-center">
                       <div className="w-40 h-40 bg-gradient-to-br from-gray-800 to-gray-900 overflow-hidden shadow-xl group-hover:shadow-2xl transition-all duration-300 flex items-center justify-center">
                         <img
@@ -583,7 +591,11 @@ const Home = () => {
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
                 {newReleases.map((release) => (
-                  <div key={release.id} className="group cursor-pointer flex-shrink-0 w-40 hover:bg-gray-800 p-4 transition-all duration-300 overflow-hidden">
+                  <div 
+                    key={release.id} 
+                    className="group cursor-pointer flex-shrink-0 w-40 hover:bg-gray-800 p-4 transition-all duration-300 overflow-hidden"
+                    onClick={() => handleAlbumClick(release)}
+                  >
                     <div className="relative mb-4 flex justify-center">
                       <div className="w-40 h-40 bg-gradient-to-br from-gray-800 to-gray-900 overflow-hidden border-2 border-gray-700 group-hover:border-green-500 transition-all duration-300 shadow-xl group-hover:shadow-green-500/25 flex items-center justify-center">
                         <img

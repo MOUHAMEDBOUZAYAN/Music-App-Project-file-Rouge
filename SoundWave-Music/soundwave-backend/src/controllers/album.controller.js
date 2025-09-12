@@ -67,7 +67,7 @@ const getAlbumById = async (req, res, next) => {
       .populate({
         path: 'songs',
         populate: {
-          path: 'uploader',
+          path: 'artist',
           select: 'username avatar'
         }
       });
@@ -76,15 +76,18 @@ const getAlbumById = async (req, res, next) => {
       return next(new AppError('Album non trouvé', 404));
     }
     
-    // Incrémenter le nombre de vues
-    album.views += 1;
-    await album.save();
+    // Incrémenter le nombre de vues (si le champ existe)
+    if (album.views !== undefined) {
+      album.views += 1;
+      await album.save();
+    }
     
     res.json({
       success: true,
       data: album
     });
   } catch (error) {
+    console.error('❌ Erreur lors de la récupération de l\'album:', error);
     next(new AppError('Erreur lors de la récupération de l\'album', 500));
   }
 };
@@ -145,7 +148,8 @@ const createAlbum = async (req, res, next) => {
       genre,
       releaseDate: releaseDate || new Date(),
       coverImage,
-      songs: songIds
+      songs: songIds,
+      songsCount: songIds.length
     });
     
     console.log('✅ Album créé avec succès:', album._id);
@@ -274,7 +278,7 @@ const addSongToAlbum = async (req, res, next) => {
     }
     
     // Vérifier si la chanson existe et appartient à l'artiste
-    const song = await Song.findOne({ _id: songId, uploader: userId });
+    const song = await Song.findOne({ _id: songId, artist: userId });
     if (!song) {
       return next(new AppError('Chanson non trouvée ou ne vous appartient pas', 404));
     }
