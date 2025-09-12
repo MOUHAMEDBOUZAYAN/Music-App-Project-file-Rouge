@@ -23,7 +23,7 @@ import toast from 'react-hot-toast';
 
 const Home = () => {
   const { user } = useAuth();
-  const { playTrack, addToQueue, toggleLike, likedTracks } = useMusic();
+  const { playTrack, playAlbum, playPlaylist, addToQueue, toggleLike, likedTracks } = useMusic();
   const { isSidebarOpen } = useSidebar();
   const navigate = useNavigate();
   
@@ -65,48 +65,76 @@ const Home = () => {
       const albums = albumsResponse.data || [];
       const trendingSongs = trendingResponse.data || [];
 
-      // Extraire les artistes uniques des chansons
+      // Extraire les artistes uniques des chansons avec leurs tracks
       const artistsMap = new Map();
       songs.forEach(song => {
+        console.log('🎵 Song data:', { title: song.title, artist: song.artist });
         if (song.artist && song.artist._id) {
-          if (!artistsMap.has(song.artist._id)) {
-            artistsMap.set(song.artist._id, {
-              id: song.artist._id,
+          const artistId = song.artist._id;
+          if (!artistsMap.has(artistId)) {
+            artistsMap.set(artistId, {
+              id: artistId,
+              _id: artistId,
               name: song.artist.username || song.artist.name,
               picture: song.artist.profilePicture ? `http://localhost:5000${song.artist.profilePicture}` : song.artist.avatar,
-              cover: song.coverImage ? `http://localhost:5000${song.coverImage}` : (song.album?.coverImage ? `http://localhost:5000${song.album.coverImage}` : null)
+              cover: song.coverImage ? `http://localhost:5000${song.coverImage}` : (song.album?.coverImage ? `http://localhost:5000${song.album.coverImage}` : null),
+              tracks: [] // Initialiser avec un tableau vide
             });
           }
+          // Ajouter la chanson aux tracks de l'artiste
+          const artist = artistsMap.get(artistId);
+          // Utiliser le nom de l'artiste du Map plutôt que de la chanson
+          const trackArtist = artist.name || 'Artiste inconnu';
+          console.log('🎵 Track artist:', trackArtist, 'from artist.name:', artist.name, 'song.artist:', song.artist);
+          artist.tracks.push({
+            _id: song._id,
+            title: song.title,
+            artist: trackArtist,
+            audioUrl: song.audioUrl ? `http://localhost:5000${song.audioUrl}` : null,
+            cover: song.coverImage ? `http://localhost:5000${song.coverImage}` : artist.cover,
+            duration: song.duration || 180
+          });
         }
       });
 
       setPopularArtists(Array.from(artistsMap.values()));
       setPopularAlbums(albums.map(album => ({
         id: album._id,
+        _id: album._id,
         title: album.title,
         name: album.title,
         cover: album.coverImage ? `http://localhost:5000${album.coverImage}` : null,
         picture: album.coverImage ? `http://localhost:5000${album.coverImage}` : null,
         artist: {
           name: album.artist?.username || album.artist?.name || 'Artiste inconnu'
-        }
+        },
+        tracks: album.songs || [] // Ajouter les tracks de l'album
       })));
       setNewReleases(songs.slice(0, 10).map(song => ({
         id: song._id,
+        _id: song._id,
         title: song.title,
         name: song.title,
         cover: song.coverImage ? `http://localhost:5000${song.coverImage}` : null,
         picture: song.coverImage ? `http://localhost:5000${song.coverImage}` : null,
         artist: {
           name: song.artist?.username || song.artist?.name || 'Artiste inconnu'
-        }
+        },
+        audioUrl: song.audioUrl ? `http://localhost:5000${song.audioUrl}` : null,
+        duration: song.duration || 180
       })));
       setFeaturedPlaylists(trendingSongs.map(song => ({
         id: song._id,
+        _id: song._id,
         title: song.title,
         name: song.title,
         cover: song.coverImage ? `http://localhost:5000${song.coverImage}` : null,
-        picture: song.coverImage ? `http://localhost:5000${song.coverImage}` : null
+        picture: song.coverImage ? `http://localhost:5000${song.coverImage}` : null,
+        audioUrl: song.audioUrl ? `http://localhost:5000${song.audioUrl}` : null,
+        duration: song.duration || 180,
+        artist: {
+          name: song.artist?.username || song.artist?.name || 'Artiste inconnu'
+        }
       })));
 
     } catch (err) {
@@ -138,17 +166,60 @@ const Home = () => {
     }
   };
 
-  const handlePlaySong = (song) => {
-    // Construire l'URL complète pour les fichiers locaux
-    const baseUrl = 'http://127.0.0.1:5000';
+  const handlePlaySong = (item) => {
+    // Fonction pour construire l'URL correcte
+    const buildAudioUrl = (audioUrl) => {
+      if (!audioUrl) return null;
+      // Si l'URL commence déjà par http, la retourner telle quelle
+      if (audioUrl.startsWith('http')) return audioUrl;
+      // Sinon, ajouter le baseUrl seulement si nécessaire
+      const baseUrl = 'http://localhost:5000';
+      return audioUrl.startsWith('/') ? `${baseUrl}${audioUrl}` : `${baseUrl}/${audioUrl}`;
+    };
+
+    // Vérifier si c'est un album (a des tracks)
+    if (item.tracks && item.tracks.length > 0) {
+      // C'est un album - utiliser playAlbum
+      const albumWithTracks = {
+        ...item,
+        tracks: item.tracks.map(track => ({
+          ...track,
+          audioUrl: buildAudioUrl(track.audioUrl),
+          cover: track.cover || track.coverImage || item.cover || item.coverImage,
+          artist: track.artist?.name || track.artist?.username || item.artist?.name || item.artist?.username || 'Artiste inconnu'
+        }))
+      };
+      playAlbum(albumWithTracks);
+      toast.success(`Lecture de l'album ${item.title || item.name}`);
+      return;
+    }
+    
+    // Vérifier si c'est une playlist (a des tracks)
+    if (item.tracks && Array.isArray(item.tracks)) {
+      // C'est une playlist - utiliser playPlaylist
+      const playlistWithTracks = {
+        ...item,
+        tracks: item.tracks.map(track => ({
+          ...track,
+          audioUrl: buildAudioUrl(track.audioUrl),
+          cover: track.cover || track.coverImage || item.cover || item.coverImage,
+          artist: track.artist?.name || track.artist?.username || item.artist?.name || item.artist?.username || 'Artiste inconnu'
+        }))
+      };
+      playPlaylist(playlistWithTracks);
+      toast.success(`Lecture de la playlist ${item.title || item.name}`);
+      return;
+    }
+    
+    // Sinon, c'est une chanson individuelle
     const localSong = {
-      _id: song.id || song._id,
-      title: song.title || song.name,
-      artist: song.artist?.name || song.artist?.username || 'Artiste inconnu',
-      cover: song.cover || song.coverImage || song.picture,
-      audioUrl: song.audioUrl ? `${baseUrl}${song.audioUrl}` : song.audioUrl,
-      duration: song.duration || song.duration_ms,
-      album: song.album?.title || song.album?.name,
+      _id: item.id || item._id,
+      title: item.title || item.name,
+      artist: item.artist?.name || item.artist?.username || 'Artiste inconnu',
+      cover: item.cover || item.coverImage || item.picture,
+      audioUrl: buildAudioUrl(item.audioUrl),
+      duration: item.duration || item.duration_ms,
+      album: item.album?.title || item.album?.name,
       isLocal: true
     };
     
@@ -165,14 +236,22 @@ const Home = () => {
   };
 
   const handleAddToQueue = (song) => {
-    // Construire l'URL complète pour les fichiers locaux
-    const baseUrl = 'http://127.0.0.1:5000';
+    // Fonction pour construire l'URL correcte
+    const buildAudioUrl = (audioUrl) => {
+      if (!audioUrl) return null;
+      // Si l'URL commence déjà par http, la retourner telle quelle
+      if (audioUrl.startsWith('http')) return audioUrl;
+      // Sinon, ajouter le baseUrl seulement si nécessaire
+      const baseUrl = 'http://localhost:5000';
+      return audioUrl.startsWith('/') ? `${baseUrl}${audioUrl}` : `${baseUrl}/${audioUrl}`;
+    };
+
     const localSong = {
       _id: song.id || song._id,
       title: song.title || song.name,
       artist: song.artist?.name || song.artist?.username || 'Artiste inconnu',
       cover: song.cover || song.coverImage || song.picture,
-      audioUrl: song.audioUrl ? `${baseUrl}${song.audioUrl}` : song.audioUrl,
+      audioUrl: buildAudioUrl(song.audioUrl),
       duration: song.duration || song.duration_ms,
       album: song.album?.title || song.album?.name,
       isLocal: true
@@ -522,22 +601,22 @@ const Home = () => {
                             e.stopPropagation();
                             handleToggleLike(album);
                           }}
-                          className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-2xl ${
+                          className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-2xl ${
                             likedTracks.includes(album._id || album.id) 
                               ? 'bg-green-500 text-white' 
                               : 'bg-black/80 text-white hover:bg-gray-700'
                           }`}
                         >
-                          <Heart className="h-5 w-5" fill={likedTracks.includes(album._id || album.id) ? 'currentColor' : 'none'} />
+                          <Heart className="h-4 w-4" fill={likedTracks.includes(album._id || album.id) ? 'currentColor' : 'none'} />
                         </button>
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
                             handlePlaySong(album);
                           }}
-                          className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center hover:scale-110 hover:bg-green-400 shadow-2xl"
+                          className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center hover:scale-110 hover:bg-green-400 shadow-2xl"
                         >
-                          <Play className="h-6 w-6 text-black ml-0.5" />
+                          <Play className="h-4 w-4 text-black" style={{ marginLeft: '1px' }} />
                         </button>
                       </div>
                     </div>
@@ -615,22 +694,22 @@ const Home = () => {
                             e.stopPropagation();
                             handleToggleLike(release);
                           }}
-                          className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-2xl ${
+                          className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-2xl ${
                             likedTracks.includes(release._id || release.id) 
                               ? 'bg-green-500 text-white' 
                               : 'bg-black/80 text-white hover:bg-gray-700'
                           }`}
                         >
-                          <Heart className="h-5 w-5" fill={likedTracks.includes(release._id || release.id) ? 'currentColor' : 'none'} />
+                          <Heart className="h-4 w-4" fill={likedTracks.includes(release._id || release.id) ? 'currentColor' : 'none'} />
                         </button>
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
                             handlePlaySong(release);
                           }}
-                          className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center hover:scale-110 hover:bg-green-400 shadow-2xl"
+                          className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center hover:scale-110 hover:bg-green-400 shadow-2xl"
                         >
-                          <Play className="h-5 w-5 text-black ml-0.5" />
+                          <Play className="h-4 w-4 text-black" style={{ marginLeft: '1px' }} />
                         </button>
                       </div>
                     </div>
@@ -703,9 +782,9 @@ const Home = () => {
                       {/* Bouton play - Style Spotify exact */}
                       <button 
                         onClick={() => handlePlaySong(playlist)}
-                        className="absolute bottom-2 right-2 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 hover:bg-green-400 shadow-2xl transform translate-y-2 group-hover:translate-y-0"
+                        className="absolute bottom-2 right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 hover:bg-green-400 shadow-2xl transform translate-y-2 group-hover:translate-y-0"
                       >
-                        <Play className="h-5 w-5 text-black ml-0.5" />
+                        <Play className="h-4 w-4 text-black" style={{ marginLeft: '1px' }} />
                       </button>
                     </div>
                     
@@ -788,8 +867,8 @@ const Home = () => {
                   <path fillRule="evenodd" d="M7.707 3.293a1 1 0 010 1.414L5.414 7H11a7 7 0 017 7v2a1 1 0 11-2 0v-2a5 5 0 00-5-5H5.414l2.293 2.293a1 1 0 11-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd"/>
                 </svg>
               </button>
-              <button className="w-14 h-14 bg-white rounded-full flex items-center justify-center hover:scale-105 transition-all duration-200 shadow-2xl">
-                <Play className="h-7 w-7 text-black ml-0.5" />
+              <button className="w-8 h-8 bg-white rounded-full flex items-center justify-center hover:scale-105 transition-all duration-200 shadow-2xl">
+                <Play className="h-4 w-4 text-black" style={{ marginLeft: '1px' }} />
               </button>
               <button className="p-2 text-gray-400 hover:text-white transition-colors">
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">

@@ -546,7 +546,7 @@ const getLikedSongs = async (req, res, next) => {
     const ExternalFavorite = require('../models/ExternalFavorite');
 
     const songs = await Song.find({ likes: userId })
-      .populate('artist', 'username name')
+      .populate('artist', 'username name profilePicture')
       .populate('album', 'title name cover');
     
     console.log('🎵 Found liked songs:', songs.length, songs.map(s => ({ 
@@ -565,7 +565,7 @@ const getLikedSongs = async (req, res, next) => {
         type: 'local',
         _id: s._id,
         title: s.title,
-        artist: s.artist?.name || s.artist?.username,
+        artist: s.artist?.username || s.artist?.name || 'Artiste inconnu',
         album: s.album?.title || s.album?.name,
         cover: s.coverImage ? `http://localhost:5000${s.coverImage}` : (s.album?.cover ? `http://localhost:5000${s.album.cover}` : null),
         coverImage: s.coverImage ? `http://localhost:5000${s.coverImage}` : null,

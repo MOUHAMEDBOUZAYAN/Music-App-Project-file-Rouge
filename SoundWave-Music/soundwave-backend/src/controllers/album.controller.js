@@ -34,6 +34,14 @@ const getAlbums = async (req, res, next) => {
     
     const albums = await Album.find(filter)
       .populate('artist', 'username avatar')
+      .populate({
+        path: 'songs',
+        select: 'title duration audioUrl coverImage artist',
+        populate: {
+          path: 'artist',
+          select: 'username'
+        }
+      })
       .sort(sort)
       .skip(skip)
       .limit(limit);

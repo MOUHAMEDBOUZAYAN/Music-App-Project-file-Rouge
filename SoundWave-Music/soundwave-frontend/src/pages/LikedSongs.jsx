@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, Play, Shuffle, MoreVertical, Clock, User, Plus } from 'lucide-react';
+import { Heart, Play, Shuffle, MoreVertical, Clock, User, Plus, ArrowLeft, Music, Music2, Users } from 'lucide-react';
 import TrackList from '../components/music/TrackList';
 import { useMusic } from '../store/MusicContext';
 import { songService } from '../services/songService';
@@ -9,6 +9,17 @@ const LikedSongs = () => {
   const [likedSongs, setLikedSongs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [sortBy, setSortBy] = useState('dateAdded'); // dateAdded, title, artist, duration
+  
+  // Debug: Log when sortBy changes
+  useEffect(() => {
+    console.log('🔄 SortBy changed to:', sortBy);
+  }, [sortBy]);
+  
+  // Debug: Log when likedSongs changes
+  useEffect(() => {
+    console.log('🔄 LikedSongs changed, count:', likedSongs.length);
+    console.log('🔄 First few songs:', likedSongs.slice(0, 3));
+  }, [likedSongs]);
   const { likedTracks, toggleLike, refreshLikedSongs, playTrack, addToQueue } = useMusic();
 
   // تحميل الأغاني المفضلة عند تحميل الصفحة
@@ -32,7 +43,7 @@ const LikedSongs = () => {
               album: s.album?.title || s.album?.name || s.album || '—',
               duration: s.duration || 180,
               cover: s.cover || s.coverImage || s.album?.cover || `https://via.placeholder.com/40/1DB954/FFFFFF?text=${encodeURIComponent(s.title?.charAt(0) || '🎵')}`,
-              dateAdded: (s.createdAt ? new Date(s.createdAt) : new Date()).toISOString().split('T')[0],
+              dateAdded: s.createdAt ? new Date(s.createdAt).toISOString() : new Date().toISOString(),
               isLiked: true
             };
           }
@@ -94,7 +105,7 @@ const LikedSongs = () => {
                 album: s.album?.title || s.album?.name || s.album || '—',
                 duration: s.duration || 180,
                 cover: s.cover || s.coverImage || s.album?.cover || `https://via.placeholder.com/40/1DB954/FFFFFF?text=${encodeURIComponent(s.title?.charAt(0) || '🎵')}`,
-                dateAdded: (s.createdAt ? new Date(s.createdAt) : new Date()).toISOString().split('T')[0],
+                dateAdded: s.createdAt ? new Date(s.createdAt).toISOString() : new Date().toISOString(),
                 isLiked: true
               };
             }
@@ -107,7 +118,7 @@ const LikedSongs = () => {
               duration: s.duration || 180,
               cover: s.cover || s.coverImage || s.album?.cover || 'https://via.placeholder.com/40/1DB954/FFFFFF?text=🎵',
               audioUrl: s.audioUrl || `http://localhost:5000/uploads/audio/${s._id}.mp3`,
-              dateAdded: (s.createdAt ? new Date(s.createdAt) : new Date()).toISOString().split('T')[0],
+              dateAdded: s.createdAt ? new Date(s.createdAt).toISOString() : new Date().toISOString(),
               isLiked: true
             };
           });
@@ -131,16 +142,24 @@ const LikedSongs = () => {
   const sortedSongs = [...likedSongs].sort((a, b) => {
     switch (sortBy) {
       case 'title':
-        return a.title.localeCompare(b.title);
+        return (a.title || '').localeCompare(b.title || '');
       case 'artist':
-        return a.artist.localeCompare(b.artist);
+        return (a.artist || '').localeCompare(b.artist || '');
       case 'duration':
-        return a.duration - b.duration;
+        return (a.duration || 0) - (b.duration || 0);
       case 'dateAdded':
       default:
-        return new Date(b.dateAdded) - new Date(a.dateAdded);
+        // Ensure dateAdded is a valid date string
+        const dateA = a.dateAdded ? new Date(a.dateAdded) : new Date(0);
+        const dateB = b.dateAdded ? new Date(b.dateAdded) : new Date(0);
+        return dateB.getTime() - dateA.getTime();
     }
   });
+  
+  // Debug: Log sorted songs
+  useEffect(() => {
+    console.log('🔄 Sorted songs by', sortBy, ':', sortedSongs.slice(0, 3));
+  }, [sortedSongs, sortBy]);
 
   const handlePlayAll = () => {
     if (likedSongs.length > 0) {
@@ -208,170 +227,241 @@ const LikedSongs = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg p-8">
-        <div className="flex items-center space-x-6">
-          <div className="w-32 h-32 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-            <Heart className="h-16 w-16 text-white" fill="white" />
-          </div>
-          <div className="flex-1">
-            <h1 className="text-4xl font-bold text-white mb-2">Chansons aimées</h1>
-            <p className="text-white text-opacity-90 mb-4">
-              {likedSongs.length} chanson{likedSongs.length > 1 ? 's' : ''} • 
-              {formatDuration(likedSongs.reduce((total, song) => total + song.duration, 0))}
-            </p>
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={handlePlayAll}
-                className="flex items-center space-x-2 bg-white text-black px-6 py-3 rounded-full font-medium hover:bg-gray-100 transition-colors"
-              >
-                <Play className="h-5 w-5" />
-                <span>Lecture</span>
-              </button>
-              <button
-                onClick={handleShuffle}
-                className="flex items-center space-x-2 bg-white bg-opacity-20 text-white px-6 py-3 rounded-full font-medium hover:bg-opacity-30 transition-colors"
-              >
-                <Shuffle className="h-5 w-5" />
-                <span>Mélanger</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Controls */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <h2 className="text-xl font-semibold text-white">Toutes les chansons</h2>
-          <span className="text-gray-400">({likedSongs.length})</span>
-        </div>
-        
-        <div className="flex items-center space-x-2">
-          <label className="text-gray-400 text-sm">Trier par:</label>
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="bg-gray-800 text-white border border-gray-700 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+    <div className="min-h-screen bg-black text-white pb-48 md:pb-32">
+      {/* Header avec bouton retour seulement - Style Spotify */}
+      <div className="sticky top-0 z-10 bg-black/80 backdrop-blur-xl border-b border-gray-800/50">
+        <div className="px-6 py-4">
+          <button 
+            onClick={() => window.history.back()}
+            className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 transition-colors"
           >
-            <option value="dateAdded">Date d'ajout</option>
-            <option value="title">Titre</option>
-            <option value="artist">Artiste</option>
-            <option value="duration">Durée</option>
-          </select>
+            <ArrowLeft className="h-5 w-5 text-white" />
+          </button>
         </div>
       </div>
 
-      {/* Songs List */}
-      {likedSongs.length === 0 ? (
-        <div className="text-center py-12">
-          <Heart className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-          <p className="text-gray-400 text-lg">Aucune chanson aimée</p>
-          <p className="text-gray-500">Likez des chansons pour les voir ici</p>
+      {/* Bannière des chansons aimées - Style Spotify exact */}
+      <div className="relative h-96">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black"></div>
+        <img
+          src={likedSongs.length > 0 && likedSongs[0].cover 
+            ? likedSongs[0].cover 
+            : `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1200&h=400&fit=crop&crop=center`}
+          alt="Chansons aimées"
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            e.target.src = `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1200&h=400&fit=crop&crop=center`;
+          }}
+        />
+        
+        {/* Badge Chansons aimées - Style Spotify */}
+        <div className="absolute top-6 left-6 flex items-center space-x-2 bg-red-500/90 backdrop-blur-sm px-3 py-1 rounded-full">
+          <Heart className="h-4 w-4 text-white" fill="white" />
+          <span className="text-xs font-medium text-white">Chansons aimées</span>
         </div>
-      ) : (
-        <div className="bg-gray-800 rounded-lg overflow-hidden">
-          <div className="grid grid-cols-12 gap-4 p-4 border-b border-gray-700 text-gray-400 text-sm font-medium">
-            <div className="col-span-1">#</div>
-            <div className="col-span-5">Titre</div>
-            <div className="col-span-3">Artiste</div>
-            <div className="col-span-2">Album</div>
-            <div className="col-span-1 text-right">Durée</div>
+
+        {/* Informations des chansons aimées - Style Spotify */}
+        <div className="absolute bottom-6 left-6 right-6">
+          <h1 className="text-6xl font-black text-white mb-4">
+            Chansons aimées
+          </h1>
+          <p className="text-gray-300 text-lg mb-2">
+            {likedSongs.length} chanson{likedSongs.length > 1 ? 's' : ''} • {formatDuration(likedSongs.reduce((total, song) => total + song.duration, 0))}
+          </p>
+          <p className="text-gray-300 text-sm max-w-2xl line-clamp-2">
+            Une collection de vos chansons préférées soigneusement sélectionnées.
+          </p>
+        </div>
+      </div>
+
+      {/* Actions (favori comme Spotify) */}
+      <div className="px-6 pt-3">
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={handlePlayAll}
+            className="p-3 rounded-full bg-gray-800 text-white hover:bg-gray-700 transition-colors"
+            aria-label="Ajouter aux favoris"
+            title="Ajouter aux favoris"
+          >
+            <Heart className="h-5 w-5" fill="currentColor" />
+          </button>
+          
+          {/* Bouton Mélanger */}
+          <button
+            onClick={handleShuffle}
+            className="px-4 py-3 rounded-full transition-colors bg-green-500 text-black font-medium hover:bg-green-400"
+            aria-label="Mélanger"
+            title="Mélanger"
+          >
+            Mélanger
+          </button>
+          
+          <button className="p-3 rounded-full bg-gray-800 text-white hover:bg-gray-700" aria-label="Partager">
+            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17V7h2v7.17l3.59-3.59L17 10l-5 5z"/>
+            </svg>
+          </button>
+          <button className="p-3 rounded-full bg-gray-800 text-white hover:bg-gray-700" aria-label="Plus d'options">
+            <MoreVertical className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Bouton de lecture principal - Style Spotify exact */}
+      <div className="px-6 pt-4">
+        <button
+          onClick={handlePlayAll}
+          className="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center shadow-xl hover:scale-105 hover:bg-green-400 transition-all duration-200"
+          aria-label="Lecture des chansons aimées"
+        >
+          <Play className="h-8 w-8 text-black ml-1" />
+        </button>
+      </div>
+
+      {/* Logo de l'app */}
+      <div className="px-6 pt-3">
+        <div className="flex items-center space-x-2">
+          <img src="/icons/LogoS.svg" alt="SoundWave" className="w-6 h-6" />
+          <span className="text-gray-400 text-sm">SoundWave</span>
+        </div>
+      </div>
+
+      {/* Description des chansons aimées - Style Spotify */}
+      <div className="px-6 pt-2">
+        <p className="text-gray-300 text-sm leading-relaxed">
+          Une collection de {likedSongs.length} chansons que vous avez aimées, soigneusement organisées pour votre plaisir d'écoute.
+        </p>
+      </div>
+
+      {/* Statistiques des chansons aimées - Style Spotify */}
+      <div className="px-6 pt-4">
+        <div className="flex items-center space-x-6 text-sm">
+          <div className="flex items-center space-x-2">
+            <Users className="w-4 h-4 text-gray-400" />
+            <span className="text-gray-400">
+              {Math.floor(Math.random() * 50000 + 10000).toLocaleString('fr-FR')} auditeurs
+            </span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Music className="w-4 h-4 text-gray-400" />
+            <span className="text-gray-400">
+              {likedSongs.length} titres
+            </span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Clock className="w-4 h-4 text-gray-400" />
+            <span className="text-gray-400">
+              {formatDuration(likedSongs.reduce((total, song) => total + song.duration, 0))}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Section Chansons aimées - Style Spotify exact */}
+      <div className="px-6 py-6">
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold">Toutes les chansons</h2>
+            <div className="flex items-center space-x-2">
+              <label className="text-gray-400 text-sm">Trier par:</label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="bg-gray-800 text-white border border-gray-700 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              >
+                <option value="dateAdded">Date d'ajout</option>
+                <option value="title">Titre</option>
+                <option value="artist">Artiste</option>
+                <option value="duration">Durée</option>
+              </select>
+            </div>
           </div>
           
-          {sortedSongs.map((song, index) => (
-            <div
-              key={song.id}
-              className="grid grid-cols-12 gap-4 p-4 hover:bg-gray-750 transition-colors group"
-            >
-              <div className="col-span-1 flex items-center">
-                <span className="text-gray-400 text-sm">{index + 1}</span>
-              </div>
-              
-              <div className="col-span-5 flex items-center space-x-3">
-                <img
-                  src={song.cover}
-                  alt={song.title}
-                  className="w-10 h-10 rounded object-cover"
-                  onError={(e) => {
-                    console.log('🖼️ Image failed to load:', song.cover, 'for song:', song.title);
-                    e.target.src = `https://via.placeholder.com/40/1DB954/FFFFFF?text=${encodeURIComponent(song.title?.charAt(0) || '🎵')}`;
-                  }}
-                />
-                <div className="flex-1 min-w-0">
-                  <p className="text-white font-medium truncate">{song.title}</p>
-                  <p className="text-gray-400 text-sm truncate">{song.album}</p>
-                </div>
-              </div>
-              
-              <div className="col-span-3 flex items-center">
-                <p className="text-gray-300 truncate">{song.artist}</p>
-              </div>
-              
-              <div className="col-span-2 flex items-center">
-                <p className="text-gray-400 text-sm truncate">{song.album}</p>
-              </div>
-              
-              <div className="col-span-1 flex items-center justify-between">
-                <span className="text-gray-400 text-sm">
-                  {formatDuration(song.duration)}
-                </span>
-                <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={() => handlePlaySong(song)}
-                    className="p-1 text-gray-400 hover:text-white transition-colors"
-                    title="Jouer"
-                  >
-                    <Play className="h-4 w-4" />
-                  </button>
-                  
-                  <button
-                    onClick={() => handleAddToQueue(song)}
-                    className="p-1 text-gray-400 hover:text-white transition-colors"
-                    title="Ajouter à la file d'attente"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
-                  
-                  <button
-                    onClick={() => handleRemoveFromLiked(song.id)}
-                    className="p-1 text-gray-400 hover:text-red-400 transition-colors"
-                    title="Retirer des favoris"
-                  >
-                    <Heart className="h-4 w-4" fill="currentColor" />
-                  </button>
-                  
-                  <button className="p-1 text-gray-400 hover:text-white transition-colors">
-                    <MoreVertical className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
+          {likedSongs.length === 0 ? (
+            <div className="text-center py-12">
+              <Heart className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-white mb-2">Aucune chanson aimée</h3>
+              <p className="text-gray-400">Likez des chansons pour les voir ici</p>
             </div>
-          ))}
-        </div>
-      )}
+          ) : (
+            <>
+              {/* Liste compacte mobile comme Spotify */}
+              <div className="md:hidden divide-y divide-gray-800 rounded-lg overflow-hidden bg-transparent">
+                {sortedSongs.map((song, index) => (
+                  <div key={song.id} className="flex items-center px-3 py-3 hover:bg-gray-800/50 transition-colors">
+                    <span className="w-6 text-gray-400 mr-3 text-sm font-medium">{index + 1}</span>
+                    <div className="w-12 h-12 rounded bg-gray-800 overflow-hidden mr-3 flex-shrink-0">
+                      <img 
+                        src={song.cover} 
+                        alt={song.title} 
+                        className="w-full h-full object-cover" 
+                        onError={(e) => {
+                          e.target.src = `https://via.placeholder.com/40/1DB954/FFFFFF?text=${encodeURIComponent(song.title?.charAt(0) || '🎵')}`;
+                        }}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-white text-sm font-medium truncate">{song.title}</div>
+                      <div className="text-gray-400 text-xs truncate">{song.artist}</div>
+                    </div>
+                    <div className="ml-3 flex items-center space-x-3">
+                      <button onClick={() => handlePlaySong(song)} className="text-gray-300 hover:text-white transition-colors">
+                        <Play className="h-4 w-4" />
+                      </button>
+                      <button onClick={() => handlePlaySong(song)} className="w-8 h-8 rounded-full bg-green-500 text-black flex items-center justify-center hover:scale-105 transition-transform">
+                        <Play className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
 
-      {/* Stats */}
-      <div className="bg-gray-800 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-white mb-4">Statistiques</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-blue-500">{likedSongs.length}</div>
-            <div className="text-gray-400 text-sm">Chansons aimées</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-green-500">
-              {formatDuration(likedSongs.reduce((total, song) => total + song.duration, 0))}
-            </div>
-            <div className="text-gray-400 text-sm">Durée totale</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-purple-500">
-              {new Set(likedSongs.map(song => song.artist)).size}
-            </div>
-            <div className="text-gray-400 text-sm">Artistes différents</div>
-          </div>
+              {/* Liste desktop actuelle */}
+              <div className="hidden md:block space-y-1">
+                {sortedSongs.map((song, index) => (
+                  <div 
+                    key={song.id} 
+                    className="group flex items-center p-4 rounded-lg hover:bg-gray-800/50 transition-colors cursor-pointer"
+                  >
+                    <div className="w-8 h-8 flex items-center justify-center text-gray-400 group-hover:text-white transition-colors font-medium flex-shrink-0 mr-8">
+                      {index + 1}
+                    </div>
+                    <div className="w-12 h-12 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden flex-shrink-0 mr-12">
+                      <img 
+                        src={song.cover} 
+                        alt={song.title} 
+                        className="w-full h-full object-cover" 
+                        onError={(e) => {
+                          e.target.src = `https://via.placeholder.com/40/1DB954/FFFFFF?text=${encodeURIComponent(song.title?.charAt(0) || '🎵')}`;
+                        }}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0 mr-8">
+                      <div className="flex items-center space-x-2">
+                        <h3 className="font-medium text-white truncate">{song.title}</h3>
+                      </div>
+                      <p className="text-sm text-gray-400 truncate">{song.artist}</p>
+                    </div>
+                    <div className="flex items-center space-x-8 text-sm text-gray-400 flex-shrink-0">
+                      <span className="hidden lg:block w-24 text-right mr-8">{song.album}</span>
+                      <span className="w-16 text-right mr-8">{formatDuration(song.duration)}</span>
+                      <div className="flex items-center space-x-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={(e) => { e.stopPropagation(); handlePlaySong(song); }} className="p-2 rounded-full bg-green-500 hover:bg-green-400 transition-colors">
+                          <Play className="h-4 w-4 text-black ml-0.5" />
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); handleAddToQueue(song); }} className="p-2 rounded-full bg-gray-700 hover:bg-gray-600 transition-colors">
+                          <Music2 className="h-4 w-4 text-white" />
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); handleRemoveFromLiked(song.id); }} className="p-2 rounded-full bg-red-500 hover:bg-red-400 transition-colors">
+                          <Heart className="h-4 w-4 text-white" fill="currentColor" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

@@ -14,7 +14,10 @@ import {
   ArrowLeft,
   Globe,
   Lock,
-  MoreVertical
+  MoreVertical,
+  Users,
+  Clock,
+  Music2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -306,96 +309,147 @@ const PlaylistView = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      {/* Header */}
-      <div className="relative bg-gradient-to-b from-gray-800 to-black">
-        <div className="px-6 py-8">
-          <div className="flex items-center gap-4 mb-6">
-            <button
-              onClick={() => navigate('/library')}
-              className="p-2 hover:bg-gray-800 rounded-full transition-colors"
-            >
-              <ArrowLeft className="h-6 w-6" />
-            </button>
-            <h1 className="text-2xl font-bold">Playlist</h1>
+    <div className="min-h-screen bg-black text-white pb-48 md:pb-32">
+      {/* Header avec bouton retour seulement - Style Spotify */}
+      <div className="sticky top-0 z-10 bg-black/80 backdrop-blur-xl border-b border-gray-800/50">
+        <div className="px-6 py-4">
+          <button 
+            onClick={() => navigate('/library')}
+            className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 transition-colors"
+          >
+            <ArrowLeft className="h-5 w-5 text-white" />
+          </button>
+        </div>
+      </div>
+
+      {/* Bannière de la playlist - Style Spotify exact */}
+      <div className="relative h-96">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black"></div>
+        <img
+          src={playlist.songs && playlist.songs.length > 0 && playlist.songs[0].coverImage 
+            ? `http://localhost:5000${playlist.songs[0].coverImage}` 
+            : `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1200&h=400&fit=crop&crop=center`}
+          alt={playlist.name}
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            e.target.src = `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1200&h=400&fit=crop&crop=center`;
+          }}
+        />
+        
+        {/* Badge Playlist - Style Spotify */}
+        <div className="absolute top-6 left-6 flex items-center space-x-2 bg-purple-500/90 backdrop-blur-sm px-3 py-1 rounded-full">
+          <Music className="h-4 w-4 text-white" />
+          <span className="text-xs font-medium text-white">
+            {playlist.isPublic ? 'Playlist publique' : 'Playlist privée'}
+          </span>
+        </div>
+
+        {/* Informations de la playlist - Style Spotify */}
+        <div className="absolute bottom-6 left-6 right-6">
+          <h1 className="text-6xl font-black text-white mb-4">
+            {playlist.name}
+          </h1>
+          <p className="text-gray-300 text-lg mb-2">
+            {playlist.songs?.length || 0} chanson{(playlist.songs?.length || 0) > 1 ? 's' : ''} • Créée par {playlist.owner?.username || user?.username || 'Utilisateur'}
+          </p>
+          {playlist.description && (
+            <p className="text-gray-300 text-sm max-w-2xl line-clamp-2">
+              {playlist.description}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Actions (favori comme Spotify) */}
+      <div className="px-6 pt-3">
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={handlePlayPlaylist}
+            className="p-3 rounded-full bg-gray-800 text-white hover:bg-gray-700 transition-colors"
+            aria-label="Ajouter aux favoris"
+            title="Ajouter aux favoris"
+          >
+            <Heart className="h-5 w-5" />
+          </button>
+          
+          {/* Bouton S'abonner */}
+          <button
+            className="px-4 py-3 rounded-full transition-colors bg-green-500 text-black font-medium hover:bg-green-400"
+            aria-label="S'abonner"
+            title="S'abonner"
+          >
+            S'abonner
+          </button>
+          
+          <button className="p-3 rounded-full bg-gray-800 text-white hover:bg-gray-700" aria-label="Partager">
+            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17V7h2v7.17l3.59-3.59L17 10l-5 5z"/>
+            </svg>
+          </button>
+          <button className="p-3 rounded-full bg-gray-800 text-white hover:bg-gray-700" aria-label="Plus d'options">
+            <MoreVertical className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Bouton de lecture principal - Style Spotify exact */}
+      <div className="px-6 pt-4">
+        <button
+          onClick={handlePlayPlaylist}
+          className="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center shadow-xl hover:scale-105 hover:bg-green-400 transition-all duration-200"
+          aria-label="Lecture de la playlist"
+        >
+          <Play className="h-8 w-8 text-black ml-1" />
+        </button>
+      </div>
+
+      {/* Logo de l'app */}
+      <div className="px-6 pt-3">
+        <div className="flex items-center space-x-2">
+          <img src="/icons/LogoS.svg" alt="SoundWave" className="w-6 h-6" />
+          <span className="text-gray-400 text-sm">SoundWave</span>
+        </div>
+      </div>
+
+      {/* Description de la playlist - Style Spotify */}
+      <div className="px-6 pt-2">
+        <p className="text-gray-300 text-sm leading-relaxed">
+          {playlist.description || `Une collection de ${playlist.songs?.length || 0} chansons soigneusement sélectionnées.`}
+        </p>
+      </div>
+
+      {/* Statistiques de la playlist - Style Spotify */}
+      <div className="px-6 pt-4">
+        <div className="flex items-center space-x-6 text-sm">
+          <div className="flex items-center space-x-2">
+            <Users className="w-4 h-4 text-gray-400" />
+            <span className="text-gray-400">
+              {Math.floor(Math.random() * 10000 + 1000).toLocaleString('fr-FR')} auditeurs
+            </span>
           </div>
-
-          <div className="flex items-end gap-6">
-            {/* Playlist Cover */}
-            <div className="w-56 h-56 bg-gray-800 rounded-lg shadow-2xl flex items-center justify-center relative overflow-hidden">
-              <div className="flex flex-col items-center text-gray-400">
-                <Music className="h-16 w-16 mb-2" />
-                <span className="text-sm">
-                  {playlist.isPublic ? 'Playlist publique' : 'Playlist privée'}
-                </span>
-              </div>
-            </div>
-
-            {/* Playlist Details */}
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                {playlist.isPublic ? (
-                  <Globe className="h-4 w-4 text-green-500" />
-                ) : (
-                  <Lock className="h-4 w-4 text-gray-400" />
-                )}
-                <span className="text-sm font-medium text-white">
-                  {playlist.isPublic ? 'Playlist publique' : 'Playlist privée'}
-                </span>
-              </div>
-              
-              <h2 className="text-6xl font-black text-white mb-4">
-                {playlist.name}
-              </h2>
-              
-              <p className="text-gray-300 mb-4">
-                {playlist.description || 'Aucune description'}
-              </p>
-              
-              <div className="flex items-center gap-2 text-gray-300">
-                <img
-                  src={user?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face'}
-                  alt="User"
-                  className="w-6 h-6 rounded-full"
-                />
-                <span className="font-medium">{user?.username || 'Utilisateur'}</span>
-                <span>• {playlist.songs?.length || 0} titres</span>
-              </div>
-            </div>
+          <div className="flex items-center space-x-2">
+            <Music className="w-4 h-4 text-gray-400" />
+            <span className="text-gray-400">
+              {playlist.songs?.length || 0} titres
+            </span>
           </div>
-
-          {/* Action Buttons */}
-          <div className="flex items-center gap-4 mt-8">
-            <button
-              onClick={handlePlayPlaylist}
-              className="w-14 h-14 bg-green-500 rounded-full flex items-center justify-center hover:scale-105 transition-transform"
-            >
-              <Play className="h-6 w-6 text-black ml-1" fill="currentColor" />
-            </button>
-            
-            {playlist && playlist.owner && playlist.owner._id === user._id ? (
-              <button
-                onClick={() => setShowAddSongs(!showAddSongs)}
-                className="flex items-center gap-2 bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-full font-semibold transition-colors"
-              >
-                <Plus className="h-5 w-5" />
-                {showAddSongs ? 'Masquer l\'ajout' : 'Ajouter des chansons'}
-              </button>
-            ) : (
-              <div className="flex items-center gap-2 bg-gray-600 text-gray-300 px-6 py-3 rounded-full font-semibold">
-                <Lock className="h-5 w-5" />
-                Vous ne pouvez pas modifier cette playlist
-              </div>
-            )}
+          <div className="flex items-center space-x-2">
+            <Clock className="w-4 h-4 text-gray-400" />
+            <span className="text-gray-400">
+              {playlist.songs?.reduce((total, song) => total + (song.duration || 0), 0) 
+                ? `${Math.floor(playlist.songs.reduce((total, song) => total + (song.duration || 0), 0) / 60)} min`
+                : '—'
+              }
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Add Songs Section */}
+      {/* Section Ajouter des chansons - Style Spotify */}
       {showAddSongs && playlist && playlist.owner && playlist.owner._id === user._id && (
         <div className="px-6 py-6">
-          <div className="bg-gray-800 rounded-lg p-6">
-            <h3 className="text-xl font-semibold mb-4 text-white">Ajouter des chansons</h3>
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold mb-6">Ajouter des chansons</h2>
             
             {/* Search Input */}
             <div className="flex gap-2 mb-6">
@@ -404,7 +458,7 @@ const PlaylistView = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Rechercher une chanson..."
-                className="flex-1 px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-white placeholder-gray-400"
+                className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-white placeholder-gray-400"
               />
               <button
                 onClick={handleSearch}
@@ -420,31 +474,30 @@ const PlaylistView = () => {
             {searchResults.length > 0 && (
               <div className="mb-6">
                 <h4 className="text-lg font-medium text-gray-300 mb-4">Résultats de recherche ({searchResults.length}):</h4>
-                <div className="space-y-3 max-h-80 overflow-y-auto">
+                <div className="space-y-1">
                   {searchResults.map((song) => (
-                    <div key={song._id} className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
-                      <div className="flex items-center gap-4">
-                        <img
-                          src={song.coverImage || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=60&h=60&fit=crop'}
-                          alt={song.title}
-                          className="w-12 h-12 rounded object-cover"
+                    <div key={song._id} className="group flex items-center p-4 rounded-lg hover:bg-gray-800/50 transition-colors">
+                      <div className="w-12 h-12 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden flex-shrink-0 mr-4">
+                        <img 
+                          src={song.coverImage ? `http://localhost:5000${song.coverImage}` : 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=100&h=100&fit=crop'} 
+                          alt={song.title} 
+                          className="w-full h-full object-cover" 
+                          onError={(e) => {
+                            e.target.src = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=100&h=100&fit=crop';
+                          }}
                         />
-                        <div>
-                          <p className="text-white font-medium">{song.title}</p>
-                          <p className="text-gray-400 text-sm">{song.artist?.username || song.artist?.name || 'Artiste inconnu'}</p>
-                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handlePlaySong(song)}
-                          className="p-2 bg-gray-600 hover:bg-gray-500 rounded-full transition-colors"
-                        >
-                          <Play className="h-4 w-4 text-white" />
+                      <div className="flex-1 min-w-0 mr-4">
+                        <div className="flex items-center space-x-2">
+                          <h3 className="font-medium text-white truncate">{song.title}</h3>
+                        </div>
+                        <p className="text-sm text-gray-400 truncate">{song.artist?.username || song.artist?.name || 'Artiste inconnu'}</p>
+                      </div>
+                      <div className="flex items-center space-x-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => handlePlaySong(song)} className="p-2 rounded-full bg-green-500 hover:bg-green-400 transition-colors">
+                          <Play className="h-4 w-4 text-black ml-0.5" />
                         </button>
-                        <button
-                          onClick={() => handleAddSong(song)}
-                          className="bg-green-500 hover:bg-green-600 text-black px-4 py-2 rounded-lg text-sm transition-colors"
-                        >
+                        <button onClick={() => handleAddSong(song)} className="bg-green-500 hover:bg-green-600 text-black px-4 py-2 rounded-lg text-sm transition-colors">
                           Ajouter
                         </button>
                       </div>
@@ -456,7 +509,7 @@ const PlaylistView = () => {
 
             {/* No Results Message */}
             {searchQuery && !isSearching && searchResults.length === 0 && (
-              <div className="mb-6 p-4 bg-gray-700 rounded-lg text-center">
+              <div className="mb-6 p-4 bg-gray-800 rounded-lg text-center">
                 <p className="text-gray-400">Aucun résultat trouvé pour "{searchQuery}"</p>
                 <p className="text-gray-500 text-sm mt-1">Essayez avec d'autres mots-clés</p>
                 <div className="mt-3 p-3 bg-blue-900/30 rounded-lg">
@@ -472,68 +525,99 @@ const PlaylistView = () => {
                 </div>
               </div>
             )}
-
-            {/* Debug Info */}
-            {true && (
-              <div className="mb-4 p-3 bg-gray-800 rounded-lg text-xs text-gray-400">
-                <p><strong>Debug Info:</strong></p>
-                <p>Search Query: "{searchQuery}"</p>
-                <p>Is Searching: {isSearching.toString()}</p>
-                <p>Results Count: {searchResults.length}</p>
-                <p>API URL: http://localhost:5000/api</p>
-              </div>
-            )}
           </div>
         </div>
       )}
 
-      {/* Songs List */}
-      <div className="px-6 pb-6">
-        <div className="bg-gray-800 rounded-lg p-6">
-          <h3 className="text-xl font-semibold mb-4 text-white">
-            Chansons dans la playlist ({playlist.songs?.length || 0})
-          </h3>
-          
+      {/* Section Chansons de la playlist - Style Spotify exact */}
+      <div className="px-6 py-6">
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-6">Chansons de la playlist</h2>
           {playlist.songs && playlist.songs.length > 0 ? (
-            <div className="space-y-2">
-              {playlist.songs.map((song, index) => (
-                <div key={song._id} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
-                  <div className="flex items-center gap-4">
-                    <span className="text-gray-400 text-sm w-8">{index + 1}</span>
-                    <img
-                      src={song.coverImage || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=50&h=50&fit=crop'}
-                      alt={song.title}
-                      className="w-10 h-10 rounded object-cover"
-                    />
-                    <div>
-                      <p className="text-white font-medium">{song.title}</p>
-                      <p className="text-gray-400 text-sm">{song.artist?.username || song.artist?.name || 'Artiste inconnu'}</p>
+            <>
+              {/* Liste compacte mobile comme Spotify */}
+              <div className="md:hidden divide-y divide-gray-800 rounded-lg overflow-hidden bg-transparent">
+                {playlist.songs.map((song, index) => (
+                  <div key={song._id} className="flex items-center px-3 py-3 hover:bg-gray-800/50 transition-colors">
+                    <span className="w-6 text-gray-400 mr-3 text-sm font-medium">{index + 1}</span>
+                    <div className="w-12 h-12 rounded bg-gray-800 overflow-hidden mr-3 flex-shrink-0">
+                      <img 
+                        src={song.coverImage ? `http://localhost:5000${song.coverImage}` : 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=100&h=100&fit=crop'} 
+                        alt={song.title} 
+                        className="w-full h-full object-cover" 
+                        onError={(e) => {
+                          e.target.src = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=100&h=100&fit=crop';
+                        }}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-white text-sm font-medium truncate">{song.title}</div>
+                      <div className="text-gray-400 text-xs truncate">{song.artist?.username || song.artist?.name || 'Artiste inconnu'}</div>
+                    </div>
+                    <div className="ml-3 flex items-center space-x-3">
+                      <button onClick={() => handlePlaySong(song)} className="text-gray-300 hover:text-white transition-colors">
+                        <Play className="h-4 w-4" />
+                      </button>
+                      <button onClick={() => handlePlaySong(song)} className="w-8 h-8 rounded-full bg-green-500 text-black flex items-center justify-center hover:scale-105 transition-transform">
+                        <Play className="h-4 w-4" />
+                      </button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handlePlaySong(song)}
-                      className="p-2 bg-gray-600 hover:bg-gray-500 rounded-full transition-colors"
-                    >
-                      <Play className="h-4 w-4 text-white" />
-                    </button>
-                    {playlist && playlist.owner && playlist.owner._id === user._id && (
-                      <button
-                        onClick={() => handleRemoveSong(song._id)}
-                        className="p-2 text-red-400 hover:text-red-300 transition-colors"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    )}
+                ))}
+              </div>
+
+              {/* Liste desktop actuelle */}
+              <div className="hidden md:block space-y-1">
+                {playlist.songs.map((song, index) => (
+                  <div 
+                    key={song._id} 
+                    className="group flex items-center p-4 rounded-lg hover:bg-gray-800/50 transition-colors cursor-pointer"
+                  >
+                    <div className="w-8 h-8 flex items-center justify-center text-gray-400 group-hover:text-white transition-colors font-medium flex-shrink-0 mr-8">
+                      {index + 1}
+                    </div>
+                    <div className="w-12 h-12 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden flex-shrink-0 mr-12">
+                      <img 
+                        src={song.coverImage ? `http://localhost:5000${song.coverImage}` : 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=100&h=100&fit=crop'} 
+                        alt={song.title} 
+                        className="w-full h-full object-cover" 
+                        onError={(e) => {
+                          e.target.src = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=100&h=100&fit=crop';
+                        }}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0 mr-8">
+                      <div className="flex items-center space-x-2">
+                        <h3 className="font-medium text-white truncate">{song.title}</h3>
+                      </div>
+                      <p className="text-sm text-gray-400 truncate">{song.artist?.username || song.artist?.name || 'Artiste inconnu'}</p>
+                    </div>
+                    <div className="flex items-center space-x-8 text-sm text-gray-400 flex-shrink-0">
+                      <span className="hidden lg:block w-24 text-right mr-8">{song.plays || '—'}</span>
+                      <span className="w-16 text-right mr-8">{song.duration ? `${Math.floor(song.duration / 60)}:${(song.duration % 60).toString().padStart(2, '0')}` : '—'}</span>
+                      <div className="flex items-center space-x-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={(e) => { e.stopPropagation(); handlePlaySong(song); }} className="p-2 rounded-full bg-green-500 hover:bg-green-400 transition-colors">
+                          <Play className="h-4 w-4 text-black ml-0.5" />
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); handlePlaySong(song); }} className="p-2 rounded-full bg-gray-700 hover:bg-gray-600 transition-colors">
+                          <Music2 className="h-4 w-4 text-white" />
+                        </button>
+                        {playlist && playlist.owner && playlist.owner._id === user._id && (
+                          <button onClick={(e) => { e.stopPropagation(); handleRemoveSong(song._id); }} className="p-2 rounded-full bg-red-500 hover:bg-red-400 transition-colors">
+                            <X className="h-4 w-4 text-white" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </>
           ) : (
             <div className="text-center py-12">
-              <Music className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400 text-lg">Aucune chanson dans cette playlist</p>
-              <p className="text-gray-500">Utilisez le bouton "Ajouter des chansons" pour commencer</p>
+              <Music className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-white mb-2">Aucune chanson dans cette playlist</h3>
+              <p className="text-gray-400">Utilisez le bouton "Ajouter des chansons" pour commencer</p>
             </div>
           )}
         </div>

@@ -288,7 +288,7 @@ const AudioPlayer = () => {
                   {currentTrack.title || 'Aucune piste sélectionnée'}
                 </div>
                 <div className="text-xs text-gray-400 truncate">
-                  {currentTrack.artist?.name || currentTrack.artist?.username || (typeof currentTrack.artist === 'string' ? currentTrack.artist : 'Sélectionnez une musique')}
+                  {typeof currentTrack.artist === 'string' ? currentTrack.artist : (currentTrack.artist?.name || currentTrack.artist?.username || 'Sélectionnez une musique')}
                 </div>
               </div>
               <button 
@@ -417,7 +417,7 @@ const AudioPlayer = () => {
             <button onClick={() => setIsSheetOpen(true)} className="w-full flex items-center justify-between">
               <div className="min-w-0">
                 <div className="text-white text-sm font-medium truncate max-w-[12rem]">{currentTrack.title}</div>
-                <div className="text-gray-400 text-xs truncate max-w-[12rem]">{currentTrack.artist?.username || currentTrack.artist?.name || 'Artiste inconnu'}</div>
+                <div className="text-gray-400 text-xs truncate max-w-[12rem]">{typeof currentTrack.artist === 'string' ? currentTrack.artist : (currentTrack.artist?.username || currentTrack.artist?.name || 'Artiste inconnu')}</div>
               </div>
               <div className="flex items-center space-x-2 ml-3">
                 <button type="button" onClick={(e) => { e.stopPropagation(); handleToggleLike(); }} className="p-2 text-gray-300">

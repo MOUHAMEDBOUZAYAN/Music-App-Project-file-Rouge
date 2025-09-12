@@ -294,10 +294,10 @@ export const MusicProvider = ({ children }) => {
     },
 
     playArtist: (artist) => {
-      if (artist.topTracks && artist.topTracks.length > 0) {
-        dispatch({ type: ACTIONS.SET_QUEUE, payload: artist.topTracks });
-        dispatch({ type: ACTIONS.SET_CURRENT_TRACK, payload: artist.topTracks[0] });
-        dispatch({ type: ACTIONS.SET_CURRENT_TRACK, payload: 0 });
+      if (artist.tracks && artist.tracks.length > 0) {
+        dispatch({ type: ACTIONS.SET_QUEUE, payload: artist.tracks });
+        dispatch({ type: ACTIONS.SET_CURRENT_TRACK, payload: artist.tracks[0] });
+        dispatch({ type: 'SET_CURRENT_QUEUE_INDEX', payload: 0 });
         dispatch({ type: ACTIONS.SET_IS_PLAYING, payload: true });
         dispatch({ type: ACTIONS.SET_ARTIST, payload: artist });
       }
