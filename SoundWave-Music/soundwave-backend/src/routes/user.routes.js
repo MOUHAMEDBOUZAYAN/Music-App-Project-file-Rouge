@@ -80,4 +80,22 @@ router.get('/:id/following',
   userController.getFollowing
 );
 
+// @route   GET api/users/following
+// @desc    Obtenir la liste des artistes suivis par l'utilisateur connecté
+// @access  Private
+router.get('/following', 
+  protect,
+  validatePagination, 
+  userController.getMyFollowing
+);
+
+// @route   GET api/users/followed-albums
+// @desc    Obtenir la liste des albums suivis par l'utilisateur connecté
+// @access  Private
+router.get('/followed-albums', 
+  protect,
+  validatePagination, 
+  userController.getMyFollowedAlbums
+);
+
 module.exports = router; 

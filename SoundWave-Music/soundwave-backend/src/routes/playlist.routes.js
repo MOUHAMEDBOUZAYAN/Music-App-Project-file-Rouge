@@ -44,7 +44,15 @@ router.get('/draft',
 // @desc    Obtenir une playlist par son ID
 // @access  Public (si la playlist est publique) ou Private
 router.get('/:id', 
-  validateObjectId, 
+  validateObjectId,
+  // Middleware protect optionnel - ne bloque pas si pas de token
+  (req, res, next) => {
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    if (token) {
+      return protect(req, res, next);
+    }
+    next();
+  },
   playlistController.getPlaylistById
 );
 

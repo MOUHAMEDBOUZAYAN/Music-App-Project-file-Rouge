@@ -59,35 +59,55 @@ const PlaylistView = () => {
       
       setLoading(true);
       try {
+        console.log('🔍 Loading playlist with ID:', id);
         const response = await playlistService.getPlaylistById(id);
+        console.log('🔍 Playlist service response:', response);
+        
         if (response.success) {
           setPlaylist(response.data);
           console.log('✅ Playlist loaded:', response.data);
-          console.log('🔍 Playlist owner details:', {
-            ownerId: response.data.owner._id,
-            ownerUsername: response.data.owner.username,
-            ownerEmail: response.data.owner.email
-          });
-          console.log('🔍 Current user vs owner:', {
-            currentUserId: user._id,
-            playlistOwnerId: response.data.owner._id,
-            isOwner: user._id === response.data.owner._id
-          });
+          if (response.data.owner) {
+            console.log('🔍 Playlist owner details:', {
+              ownerId: response.data.owner._id,
+              ownerUsername: response.data.owner.username,
+              ownerEmail: response.data.owner.email
+            });
+            console.log('🔍 Current user vs owner:', {
+              currentUserId: user._id,
+              playlistOwnerId: response.data.owner._id,
+              isOwner: user._id === response.data.owner._id
+            });
+          }
         } else {
-          toast.error('Playlist non trouvée');
+          console.error('❌ Playlist service error:', response.error);
+          toast.error(response.error || 'Playlist non trouvée');
           navigate('/library');
         }
       } catch (error) {
-        console.error('Error loading playlist:', error);
-        toast.error('Erreur lors du chargement de la playlist');
+        console.error('❌ Error loading playlist:', error);
+        console.error('❌ Error details:', {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data
+        });
+        
+        if (error.response?.status === 403) {
+          toast.error('Accès refusé: Vous n\'avez pas les droits pour accéder à cette playlist');
+        } else if (error.response?.status === 404) {
+          toast.error('Playlist non trouvée');
+        } else {
+          toast.error('Erreur lors du chargement de la playlist');
+        }
         navigate('/library');
       } finally {
         setLoading(false);
       }
     };
 
-    loadPlaylist();
-  }, [id, navigate]);
+    if (isAuthenticated && user) {
+      loadPlaylist();
+    }
+  }, [id, navigate, isAuthenticated, user]);
 
   // Search function
   const handleSearch = async () => {

@@ -4,7 +4,7 @@ export const artistService = {
   // Rechercher des artistes
   searchArtists: async (params = {}) => {
     try {
-      const response = await apiClient.get('/api/artists/search', { params });
+      const response = await apiClient.get('/artists/search', { params });
       return {
         success: true,
         data: response.data
@@ -20,7 +20,7 @@ export const artistService = {
   // Obtenir les artistes populaires
   getPopularArtists: async (params = {}) => {
     try {
-      const response = await apiClient.get('/api/artists/popular', { params });
+      const response = await apiClient.get('/artists/popular', { params });
       return {
         success: true,
         data: response.data
@@ -36,7 +36,7 @@ export const artistService = {
   // Obtenir un artiste par ID
   getArtistById: async (id) => {
     try {
-      const response = await apiClient.get(`/api/artists/${id}`);
+      const response = await apiClient.get(`/artists/${id}`);
       return {
         success: true,
         data: response.data
@@ -52,7 +52,7 @@ export const artistService = {
   // Obtenir les chansons d'un artiste
   getArtistSongs: async (artistId, params = {}) => {
     try {
-      const response = await apiClient.get(`/api/artists/${artistId}/songs`, { params });
+      const response = await apiClient.get(`/artists/${artistId}/songs`, { params });
       return {
         success: true,
         data: response.data
@@ -68,7 +68,7 @@ export const artistService = {
   // Obtenir les albums d'un artiste
   getArtistAlbums: async (artistId, params = {}) => {
     try {
-      const response = await apiClient.get(`/api/artists/${artistId}/albums`, { params });
+      const response = await apiClient.get(`/artists/${artistId}/albums`, { params });
       return {
         success: true,
         data: response.data
@@ -84,7 +84,7 @@ export const artistService = {
   // Obtenir mes chansons (pour l'artiste connecté)
   getMySongs: async (params = {}) => {
     try {
-      const response = await apiClient.get('/api/artists/me/songs', { params });
+      const response = await apiClient.get('/artists/me/songs', { params });
       return {
         success: true,
         data: response.data
@@ -100,7 +100,7 @@ export const artistService = {
   // Obtenir mes albums (pour l'artiste connecté)
   getMyAlbums: async (params = {}) => {
     try {
-      const response = await apiClient.get('/api/artists/me/albums', { params });
+      const response = await apiClient.get('/artists/me/albums', { params });
       return {
         success: true,
         data: response.data
@@ -116,7 +116,7 @@ export const artistService = {
   // Suivre un artiste
   followArtist: async (artistId) => {
     try {
-      const response = await apiClient.post(`/api/artists/${artistId}/follow`);
+      const response = await apiClient.post(`/artists/${artistId}/follow`);
       return {
         success: true,
         data: response.data
@@ -129,10 +129,26 @@ export const artistService = {
     }
   },
 
+  // Obtenir les artistes suivis
+  getFollowedArtists: async (params = {}) => {
+    try {
+      const response = await apiClient.get('/users/following', { params });
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Erreur lors de la récupération des artistes suivis'
+      };
+    }
+  },
+
   // Ne plus suivre un artiste
   unfollowArtist: async (artistId) => {
     try {
-      const response = await apiClient.delete(`/api/artists/${artistId}/follow`);
+      const response = await apiClient.delete(`/artists/${artistId}/follow`);
       return {
         success: true,
         data: response.data

@@ -54,8 +54,14 @@ const getPlaylistById = async (req, res, next) => {
   try {
     const { id } = req.params;
     
+    console.log('🔍 Getting playlist by ID:', {
+      playlistId: id,
+      userId: req.user?._id,
+      username: req.user?.username
+    });
+    
     const playlist = await Playlist.findById(id)
-      .populate('owner', 'username avatar bio')
+      .populate('owner', 'username avatar bio email')
       .populate({
         path: 'songs',
         populate: {
@@ -65,12 +71,38 @@ const getPlaylistById = async (req, res, next) => {
       });
     
     if (!playlist) {
+      console.log('❌ Playlist not found:', id);
       return next(new AppError('Playlist non trouvée', 404));
     }
     
+    console.log('✅ Playlist found:', {
+      id: playlist._id,
+      name: playlist.name,
+      isPublic: playlist.isPublic,
+      ownerId: playlist.owner._id,
+      ownerUsername: playlist.owner.username,
+      songsCount: playlist.songs?.length || 0
+    });
+    
     // Vérifier si l'utilisateur peut accéder à la playlist
-    if (!playlist.isPublic && (!req.user || playlist.owner._id.toString() !== req.user._id.toString())) {
-      return next(new AppError('Accès non autorisé à cette playlist', 403));
+    // Si la playlist est publique, permettre l'accès à tous
+    if (!playlist.isPublic) {
+      console.log('🔒 Private playlist - checking access');
+      // Si la playlist est privée, vérifier que l'utilisateur est connecté et est le propriétaire
+      if (!req.user) {
+        console.log('❌ Access denied - no user');
+        return next(new AppError('Accès non autorisé - vous devez être connecté', 401));
+      }
+      if (playlist.owner._id.toString() !== req.user._id.toString()) {
+        console.log('❌ Access denied - not owner:', {
+          playlistOwnerId: playlist.owner._id.toString(),
+          currentUserId: req.user._id.toString()
+        });
+        return next(new AppError('Accès non autorisé à cette playlist', 403));
+      }
+      console.log('✅ Access granted - user is owner');
+    } else {
+      console.log('🌐 Public playlist - access granted');
     }
     
     // Incrémenter le nombre de vues
@@ -82,6 +114,7 @@ const getPlaylistById = async (req, res, next) => {
       data: playlist
     });
   } catch (error) {
+    console.error('❌ Error in getPlaylistById:', error);
     next(new AppError('Erreur lors de la récupération de la playlist', 500));
   }
 };
@@ -93,6 +126,14 @@ const createPlaylist = async (req, res, next) => {
   try {
     const { name, description, isPublic = true, songs = [] } = req.body;
     const ownerId = req.user._id;
+    
+    console.log('🎵 Creating playlist:', { 
+      name, 
+      description, 
+      isPublic, 
+      ownerId, 
+      songsCount: songs.length 
+    });
     
     // Vérifier si les chansons existent
     if (songs.length > 0) {
@@ -107,18 +148,33 @@ const createPlaylist = async (req, res, next) => {
       description,
       isPublic,
       owner: ownerId,
-      songs
+      songs,
+      songsCount: songs.length
+    });
+    
+    console.log('✅ Playlist created:', {
+      id: playlist._id,
+      name: playlist.name,
+      owner: playlist.owner,
+      isPublic: playlist.isPublic
     });
     
     const populatedPlaylist = await Playlist.findById(playlist._id)
-      .populate('owner', 'username avatar')
-      .populate('songs', 'title artist album duration');
+      .populate('owner', 'username avatar email')
+      .populate({
+        path: 'songs',
+        populate: {
+          path: 'artist',
+          select: 'username name'
+        }
+      });
     
     res.status(201).json({
       success: true,
       data: populatedPlaylist
     });
   } catch (error) {
+    console.error('❌ Error creating playlist:', error);
     next(new AppError('Erreur lors de la création de la playlist', 500));
   }
 };

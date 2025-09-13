@@ -122,17 +122,22 @@ const commentLimiter = rateLimit({
  */
 const socialActionLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
-  max: 10000, // Augmenté pour le développement
+  max: 1000, // Augmenté pour le développement
   message: {
     success: false,
     message: 'Trop d\'actions sociales, veuillez ralentir.'
   },
   handler: (req, res) => {
+    console.log('🚫 Rate limit exceeded for social action:', req.path);
     res.status(429).json({
       success: false,
       message: 'Trop d\'actions sociales, veuillez ralentir.',
       retryAfter: Math.ceil(req.rateLimit.resetTime / 1000)
     });
+  },
+  skip: (req) => {
+    // Skip rate limiting in development
+    return process.env.NODE_ENV === 'development';
   }
 });
 

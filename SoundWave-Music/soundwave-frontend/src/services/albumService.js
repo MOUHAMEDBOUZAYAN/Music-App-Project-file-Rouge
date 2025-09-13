@@ -68,6 +68,22 @@ const albumService = {
     });
     return response.data;
   },
+
+  // Obtenir les albums suivis
+  getFollowedAlbums: async (params = {}) => {
+    try {
+      const response = await api.get('/users/followed-albums', { params });
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Erreur lors de la récupération des albums suivis'
+      };
+    }
+  },
 };
 
 export { albumService };

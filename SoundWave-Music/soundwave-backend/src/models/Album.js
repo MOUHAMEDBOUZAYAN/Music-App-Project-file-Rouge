@@ -39,7 +39,11 @@ const albumSchema = new Schema({
   views: {
     type: Number,
     default: 0
-  }
+  },
+  followers: [{
+    type: Schema.Types.ObjectId,
+    ref: 'User'
+  }]
 }, {
   timestamps: true
 });

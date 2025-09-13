@@ -15,7 +15,8 @@ import {
   Users,
   Crown,
   BarChart3,
-  Music
+  Music,
+  X
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useSidebar } from '../../store/SidebarContext';
@@ -47,6 +48,7 @@ const Sidebar = ({ isOpen, onToggle }) => {
   const [isUserExpanded, setIsUserExpanded] = useState(true);
   const [subscribedArtists, setSubscribedArtists] = useState([]);
   const [userPlaylists, setUserPlaylists] = useState([]);
+  const [isSubscriptionsExpanded, setIsSubscriptionsExpanded] = useState(true);
 
   const isActive = (path) => location.pathname === path;
 
@@ -122,6 +124,17 @@ const Sidebar = ({ isOpen, onToggle }) => {
   const handleSettingsClick = () => {
     console.log('Settings clicked - navigating to /settings');
     navigate('/settings');
+  };
+
+  const handleUnsubscribe = (artistId) => {
+    const updatedArtists = subscribedArtists.filter(artist => artist._id !== artistId);
+    setSubscribedArtists(updatedArtists);
+    localStorage.setItem('subscribedArtists', JSON.stringify(updatedArtists));
+    
+    // Déclencher l'événement pour mettre à jour le sidebar
+    window.dispatchEvent(new Event('localStorageChange'));
+    
+    console.log('🎤 Unsubscribed from artist:', artistId);
   };
 
   return (
@@ -240,6 +253,77 @@ const Sidebar = ({ isOpen, onToggle }) => {
                     {likedTracks.length}
                   </span>
                 </Link>
+
+                {/* Artistes abonnés */}
+                {subscribedArtists.length > 0 && (
+                  <div className="space-y-1">
+                    <div 
+                      className="flex items-center justify-between px-3 py-1 cursor-pointer"
+                      onClick={() => setIsSubscriptionsExpanded(!isSubscriptionsExpanded)}
+                    >
+                      <div className="text-xs text-gray-500 font-medium">
+                        Artistes abonnés ({subscribedArtists.length})
+                      </div>
+                      {isSubscriptionsExpanded ? (
+                        <ChevronDown className="h-3 w-3 text-gray-500" />
+                      ) : (
+                        <ChevronRight className="h-3 w-3 text-gray-500" />
+                      )}
+                    </div>
+                    
+                    {isSubscriptionsExpanded && (
+                      <div className="space-y-1">
+                        {subscribedArtists.slice(0, 5).map((artist) => (
+                          <div
+                            key={artist._id || artist.id}
+                            className="group flex items-center space-x-3 px-3 py-2 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors"
+                          >
+                            <Link
+                              to={`/artist/${artist._id || artist.id}`}
+                              className="flex items-center space-x-3 flex-1 min-w-0"
+                            >
+                              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
+                                {artist.profilePicture ? (
+                                  <img 
+                                    src={artist.profilePicture.startsWith('http') ? artist.profilePicture : `http://localhost:5000${artist.profilePicture}`}
+                                    alt={artist.username || artist.name}
+                                    className="w-full h-full rounded-full object-cover"
+                                    onError={(e) => {
+                                      e.target.style.display = 'none';
+                                      e.target.nextSibling.style.display = 'flex';
+                                    }}
+                                  />
+                                ) : null}
+                                <span className="text-xs font-bold text-white hidden">
+                                  {(artist.username || artist.name || 'A').charAt(0).toUpperCase()}
+                                </span>
+                              </div>
+                              <span className="text-sm truncate">{artist.username || artist.name}</span>
+                            </Link>
+                            
+                            {/* Bouton de désabonnement */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleUnsubscribe(artist._id || artist.id);
+                              }}
+                              className="opacity-0 group-hover:opacity-100 p-1 text-red-400 hover:text-red-300 transition-all"
+                              title="Se désabonner"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ))}
+                        
+                        {subscribedArtists.length > 5 && (
+                          <div className="text-xs text-gray-500 px-3 py-1">
+                            +{subscribedArtists.length - 5} autres...
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Playlists de l'utilisateur */}
                 {userPlaylists.length > 0 && (

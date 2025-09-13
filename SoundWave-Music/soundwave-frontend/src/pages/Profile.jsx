@@ -46,6 +46,10 @@ const Profile = () => {
   useEffect(() => {
     setIsVisible(true);
     if (user) {
+      console.log('👤 User data in Profile:', user);
+      console.log('🖼️ User profilePicture:', user.profilePicture);
+      console.log('🖼️ ProfilePicture type:', typeof user.profilePicture);
+      
       setEditForm({
         username: user.username || '',
         email: user.email || '',
@@ -496,16 +500,28 @@ const Profile = () => {
                   }`}>
                     {user.profilePicture ? (
                       <img 
-                        src={`http://localhost:5000${user.profilePicture}`} 
+                        src={user.profilePicture.startsWith('http') ? user.profilePicture : `http://localhost:5000${user.profilePicture}`} 
                         alt={user.username}
                         className="w-full h-full object-cover"
                         onError={(e) => {
+                          console.log('🖼️ Profile image failed to load:', user.profilePicture);
                           e.target.style.display = 'none';
-                          e.target.nextSibling.style.display = 'flex';
+                          const fallback = document.getElementById('profile-fallback');
+                          if (fallback) {
+                            fallback.classList.remove('hidden');
+                            fallback.classList.add('flex');
+                          }
+                        }}
+                        onLoad={() => {
+                          console.log('🖼️ Profile image loaded successfully:', user.profilePicture);
                         }}
                       />
                     ) : null}
                     <span className={`text-5xl font-bold text-white ${user.profilePicture ? 'hidden' : 'flex'}`}>
+                      {user.username?.charAt(0)?.toUpperCase() || 'U'}
+                    </span>
+                    {/* Fallback span for when image fails to load */}
+                    <span className="text-5xl font-bold text-white hidden" id="profile-fallback">
                       {user.username?.charAt(0)?.toUpperCase() || 'U'}
                     </span>
                   </div>
@@ -717,9 +733,17 @@ const Profile = () => {
                         <div className="w-24 h-24 bg-gray-700 rounded-full flex items-center justify-center overflow-hidden border-2 border-gray-600">
                           {user.profilePicture ? (
                             <img 
-                              src={`http://localhost:5000${user.profilePicture}`} 
+                              src={user.profilePicture.startsWith('http') ? user.profilePicture : `http://localhost:5000${user.profilePicture}`} 
                               alt={user.username}
                               className="w-full h-full object-cover"
+                              onError={(e) => {
+                                console.log('🖼️ Profile image failed to load in edit section:', user.profilePicture);
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                              }}
+                              onLoad={() => {
+                                console.log('🖼️ Profile image loaded successfully in edit section:', user.profilePicture);
+                              }}
                             />
                           ) : (
                             <span className="text-3xl font-bold text-white">

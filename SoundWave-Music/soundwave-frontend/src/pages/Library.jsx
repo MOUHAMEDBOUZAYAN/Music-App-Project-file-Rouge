@@ -16,6 +16,9 @@ import {
 } from 'lucide-react';
 import { useMusic } from '../store/MusicContext';
 import { useAuth } from '../hooks/useAuth';
+import { songService } from '../services/songService';
+import { artistService } from '../services/artistService';
+import { albumService } from '../services/albumService';
 import toast from 'react-hot-toast';
 
 const Library = () => {
@@ -48,11 +51,15 @@ const Library = () => {
 
   // Données réelles depuis localStorage et API
   const [playlists, setPlaylists] = useState([]);
+  const [likedSongs, setLikedSongs] = useState([]);
+  const [loadingSongs, setLoadingSongs] = useState(false);
 
   // Naviguer vers une playlist
   const handlePlaylistClick = (playlist) => {
     console.log('📚 Navigating to playlist:', playlist);
-    navigate(`/playlist/${playlist.id}`);
+    const playlistId = playlist._id || playlist.id;
+    console.log('📚 Using playlist ID:', playlistId);
+    navigate(`/playlist/${playlistId}`);
   };
 
   // Charger les playlists depuis localStorage
@@ -85,8 +92,137 @@ const Library = () => {
     };
   }, []);
 
+  // Charger les chansons aimées
+  useEffect(() => {
+    const loadLikedSongs = async () => {
+      if (activeTab === 'songs') {
+        setLoadingSongs(true);
+        try {
+          console.log('🎵 Loading liked songs for Library...');
+          const response = await songService.getLikedSongs();
+          if (response.success) {
+            console.log('🎵 Raw API response:', response.data);
+            const songs = response.data.map(song => {
+              console.log('🎵 Processing song:', song);
+              return {
+                _id: song._id,
+                title: song.title,
+                artist: song.artist || 'Artiste inconnu',
+                album: song.album || '—',
+                duration: song.duration || 180,
+                cover: song.cover || song.coverImage || null,
+                audioUrl: song.audioUrl || null,
+                isLiked: true
+              };
+            });
+            setLikedSongs(songs);
+            console.log('🎵 Processed liked songs:', songs);
+          }
+        } catch (error) {
+          console.error('❌ Error loading liked songs:', error);
+        } finally {
+          setLoadingSongs(false);
+        }
+      }
+    };
+
+    loadLikedSongs();
+  }, [activeTab]);
+
+  // Charger les artistes suivis
+  useEffect(() => {
+    const loadFollowedArtists = async () => {
+      if (activeTab === 'artists') {
+        setLoadingArtists(true);
+        try {
+          console.log('🎤 Loading followed artists for Library...');
+          const response = await artistService.getFollowedArtists();
+          if (response.success) {
+            console.log('🎤 Raw followed artists response:', response.data);
+            const artistsData = response.data.map(artist => {
+              console.log('🎤 Processing artist:', artist);
+              return {
+                _id: artist._id,
+                id: artist._id,
+                name: artist.name || artist.username || 'Artiste inconnu',
+                avatar: artist.profilePicture ? 
+                  (artist.profilePicture.startsWith('http') ? 
+                    artist.profilePicture : 
+                    `http://localhost:5000${artist.profilePicture}`) : 
+                  `https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face&${Math.random()}`,
+                followers: artist.followers ? artist.followers.length : Math.floor(Math.random() * 10000) + 1000,
+                bio: artist.bio || '',
+                isFollowing: true
+              };
+            });
+            setArtists(artistsData);
+            console.log('🎤 Processed followed artists:', artistsData);
+          } else {
+            console.log('🎤 No followed artists found or error:', response.error);
+            setArtists([]);
+          }
+        } catch (error) {
+          console.error('❌ Error loading followed artists:', error);
+          setArtists([]);
+        } finally {
+          setLoadingArtists(false);
+        }
+      }
+    };
+
+    loadFollowedArtists();
+  }, [activeTab]);
+
+  // Charger les albums suivis
+  useEffect(() => {
+    const loadFollowedAlbums = async () => {
+      if (activeTab === 'albums') {
+        setLoadingAlbums(true);
+        try {
+          console.log('💿 Loading followed albums for Library...');
+          const response = await albumService.getFollowedAlbums();
+          if (response.success) {
+            console.log('💿 Raw followed albums response:', response.data);
+            const albumsData = response.data.map(album => {
+              console.log('💿 Processing album:', album);
+              return {
+                _id: album._id,
+                id: album._id,
+                name: album.title,
+                artist: album.artist ? (album.artist.name || album.artist.username) : 'Artiste inconnu',
+                coverUrl: album.coverImage ? 
+                  (album.coverImage.startsWith('http') ? 
+                    album.coverImage : 
+                    `http://localhost:5000${album.coverImage}`) : 
+                  `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&${Math.random()}`,
+                releaseDate: album.releaseDate,
+                genre: album.genre ? album.genre.join(', ') : '',
+                songsCount: album.songsCount || 0,
+                followers: album.followers ? album.followers.length : 0
+              };
+            });
+            setAlbums(albumsData);
+            console.log('💿 Processed followed albums:', albumsData);
+          } else {
+            console.log('💿 No followed albums found or error:', response.error);
+            setAlbums([]);
+          }
+        } catch (error) {
+          console.error('❌ Error loading followed albums:', error);
+          setAlbums([]);
+        } finally {
+          setLoadingAlbums(false);
+        }
+      }
+    };
+
+    loadFollowedAlbums();
+  }, [activeTab]);
+
   const [albums, setAlbums] = useState([]);
   const [artists, setArtists] = useState([]);
+  const [loadingArtists, setLoadingArtists] = useState(false);
+  const [loadingAlbums, setLoadingAlbums] = useState(false);
 
   const handlePlayPlaylist = (playlist) => {
     // Convertir la playlist au format attendu par playPlaylist
@@ -203,6 +339,17 @@ const Library = () => {
   };
 
   const renderAlbums = () => {
+    console.log('💿 Rendering albums:', albums);
+    
+    if (loadingAlbums) {
+      return (
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto mb-4"></div>
+          <p className="text-gray-400">Chargement des albums suivis...</p>
+        </div>
+      );
+    }
+    
     const filteredAlbums = albums.filter(album => 
       album.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       album.artist.toLowerCase().includes(searchQuery.toLowerCase())
@@ -211,7 +358,9 @@ const Library = () => {
     if (filteredAlbums.length === 0) {
       return (
         <div className="text-center py-12">
-          <p className="text-gray-400">Aucun album trouvé</p>
+          <Disc className="h-16 w-16 text-gray-600 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-gray-400 mb-2">Aucun album suivi</h3>
+          <p className="text-gray-500">Les albums que vous suivez apparaîtront ici</p>
         </div>
       );
     }
@@ -223,7 +372,11 @@ const Library = () => {
           : 'grid-cols-1'
       }`}>
         {filteredAlbums.map((album) => (
-          <div key={album.id} className="group cursor-pointer">
+          <div 
+            key={album.id} 
+            className="group cursor-pointer hover:bg-gray-800/50 rounded-lg p-2 transition-colors duration-200"
+            onClick={() => navigate(`/album/${album._id}`)}
+          >
             <div className="relative mb-3">
               <div className="aspect-square bg-gray-800 rounded-lg overflow-hidden">
                 <img
@@ -234,7 +387,10 @@ const Library = () => {
               </div>
               
               <button 
-                onClick={() => handlePlayAlbum(album)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePlayAlbum(album);
+                }}
                 className="absolute bottom-2 right-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 hover:bg-green-400 shadow-lg"
               >
                 <Play className="h-6 w-6 text-black ml-1" />
@@ -257,6 +413,17 @@ const Library = () => {
   };
 
   const renderArtists = () => {
+    console.log('🎤 Rendering artists:', artists);
+    
+    if (loadingArtists) {
+      return (
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto mb-4"></div>
+          <p className="text-gray-400">Chargement des artistes suivis...</p>
+        </div>
+      );
+    }
+    
     const filteredArtists = artists.filter(artist => 
       artist.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -264,7 +431,9 @@ const Library = () => {
     if (filteredArtists.length === 0) {
       return (
         <div className="text-center py-12">
-          <p className="text-gray-400">Aucun artiste trouvé</p>
+          <User className="h-16 w-16 text-gray-600 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-gray-400 mb-2">Aucun artiste suivi</h3>
+          <p className="text-gray-500">Les artistes que vous suivez apparaîtront ici</p>
         </div>
       );
     }
@@ -276,18 +445,28 @@ const Library = () => {
           : 'grid-cols-1'
       }`}>
         {filteredArtists.map((artist) => (
-          <div key={artist.id} className="text-center group cursor-pointer">
+          <div 
+            key={artist.id} 
+            className="text-center group cursor-pointer hover:bg-gray-800/50 rounded-lg p-2 transition-colors duration-200"
+            onClick={() => navigate(`/artist/${artist._id}`)}
+          >
             <div className="relative mb-3">
               <div className={`${viewMode === 'grid' ? 'w-full aspect-square' : 'w-32 h-32'} bg-gray-800 rounded-full overflow-hidden mx-auto`}>
                 <img
                   src={artist.avatar}
                   alt={artist.name}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.src = `https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face`;
+                  }}
                 />
               </div>
               
               <button 
-                onClick={() => handlePlayArtist(artist)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePlayArtist(artist);
+                }}
                 className="absolute bottom-0 right-0 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 shadow-lg"
               >
                 <Play className="h-5 w-5 text-black ml-1" />
@@ -298,7 +477,10 @@ const Library = () => {
               {artist.name}
             </h3>
             <p className="text-xs text-gray-400">
-              {artist.followers.toLocaleString()} abonnés
+              {artist.followers && artist.followers > 0 ? 
+                `${artist.followers.toLocaleString()} abonnés` : 
+                'Nouvel artiste'
+              }
             </p>
           </div>
         ))}
@@ -357,10 +539,26 @@ const Library = () => {
     );
   };
 
+  const formatDuration = (seconds) => {
+    if (!seconds) return '0:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
   const renderSongs = () => {
-    console.log('🎵 Rendering liked songs:', likedTracks);
+    console.log('🎵 Rendering liked songs:', likedSongs);
     
-    if (!likedTracks || likedTracks.length === 0) {
+    if (loadingSongs) {
+      return (
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto mb-4"></div>
+          <p className="text-gray-400">Chargement des chansons aimées...</p>
+        </div>
+      );
+    }
+    
+    if (!likedSongs || likedSongs.length === 0) {
       return (
         <div className="text-center py-12">
           <Heart className="h-16 w-16 text-gray-600 mx-auto mb-4" />
@@ -371,33 +569,44 @@ const Library = () => {
     }
 
     return (
-      <div className="space-y-4">
-        {likedTracks.map((song, index) => (
-          <div key={song._id || index} className="flex items-center space-x-4 p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors group">
-            <div className="flex-shrink-0 w-12 h-12 bg-gray-700 rounded-lg flex items-center justify-center">
-              <Music className="h-6 w-6 text-gray-400" />
+      <div className="space-y-1">
+        {likedSongs.map((song, index) => (
+          <div 
+            key={song._id || index} 
+            className="group flex items-center p-4 rounded-lg hover:bg-gray-800/50 transition-colors cursor-pointer"
+          >
+            <div className="w-8 h-8 flex items-center justify-center text-gray-400 group-hover:text-white transition-colors font-medium flex-shrink-0 mr-8">
+              {index + 1}
             </div>
-            
-            <div className="flex-1 min-w-0">
-              <h3 className="font-medium text-white truncate">{song.title}</h3>
-              <p className="text-sm text-gray-400 truncate">
-                {song.artist?.username || song.artist?.name || 'Artiste inconnu'}
-              </p>
+            <div className="w-12 h-12 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden flex-shrink-0 mr-12">
+              <img 
+                src={song.cover || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=100&h=100&fit=crop'} 
+                alt={song.title} 
+                className="w-full h-full object-cover" 
+                onError={(e) => {
+                  e.target.src = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=100&h=100&fit=crop';
+                }}
+              />
             </div>
-            
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => playTrack(song)}
-                className="p-2 bg-gray-700 rounded-full hover:bg-gray-600 transition-colors opacity-0 group-hover:opacity-100"
-              >
-                <Play className="h-4 w-4 text-white" />
-              </button>
-              <button
-                onClick={() => toggleLike(song._id)}
-                className="p-2 text-red-400 hover:text-red-300 transition-colors"
-              >
-                <Heart className="h-4 w-4 fill-current" />
-              </button>
+            <div className="flex-1 min-w-0 mr-8">
+              <div className="flex items-center space-x-2">
+                <h3 className="font-medium text-white truncate">{song.title}</h3>
+              </div>
+              <p className="text-sm text-gray-400 truncate">{song.artist}</p>
+            </div>
+            <div className="flex items-center space-x-8 text-sm text-gray-400 flex-shrink-0">
+              <span className="w-16 text-right mr-8">{formatDuration(song.duration)}</span>
+              <div className="flex items-center space-x-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={(e) => { e.stopPropagation(); handlePlaySong(song); }} className="p-2 rounded-full bg-green-500 hover:bg-green-400 transition-colors">
+                  <Play className="h-4 w-4 text-black ml-0.5" />
+                </button>
+                <button onClick={(e) => { e.stopPropagation(); handleAddToQueue(song); }} className="p-2 rounded-full bg-gray-700 hover:bg-gray-600 transition-colors">
+                  <Plus className="h-4 w-4 text-white" />
+                </button>
+                <button onClick={(e) => { e.stopPropagation(); toggleLike(song._id); }} className="p-2 rounded-full bg-red-500 hover:bg-red-400 transition-colors">
+                  <Heart className="h-4 w-4 text-white fill-white" />
+                </button>
+              </div>
             </div>
           </div>
         ))}

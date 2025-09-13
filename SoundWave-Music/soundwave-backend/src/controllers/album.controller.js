@@ -388,6 +388,47 @@ const getUserAlbums = async (req, res, next) => {
   }
 };
 
+// @desc    Aimer/ne plus aimer un album
+// @route   POST /api/albums/:id/like
+// @access  Private
+const likeUnlikeAlbum = async (req, res, next) => {
+  try {
+    const albumId = req.params.id;
+    const userId = req.user._id;
+    
+    console.log('🎵 Like/Unlike album request:', { albumId, userId });
+    
+    const album = await Album.findById(albumId);
+    if (!album) {
+      return next(new AppError('Album non trouvé', 404));
+    }
+    
+    const isLiked = album.likes.includes(userId);
+    
+    if (isLiked) {
+      // Retirer le like
+      album.likes = album.likes.filter(like => like.toString() !== userId.toString());
+      await album.save();
+      console.log('✅ Album unliked successfully');
+    } else {
+      // Ajouter le like
+      album.likes.push(userId);
+      await album.save();
+      console.log('✅ Album liked successfully');
+    }
+    
+    res.json({
+      success: true,
+      message: isLiked ? 'Album retiré de vos favoris' : 'Album ajouté à vos favoris',
+      isLiked: !isLiked,
+      likesCount: album.likes.length
+    });
+  } catch (error) {
+    console.error('❌ Error in likeUnlikeAlbum:', error);
+    next(new AppError('Erreur lors de la mise à jour des favoris', 500));
+  }
+};
+
 module.exports = {
   getAlbums,
   getAlbumById,
@@ -396,5 +437,6 @@ module.exports = {
   deleteAlbum,
   addSongToAlbum,
   removeSongFromAlbum,
-  getUserAlbums
+  getUserAlbums,
+  likeUnlikeAlbum
 }; 

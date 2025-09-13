@@ -82,6 +82,8 @@ api.interceptors.response.use(
         
       case 403:
         console.error('❌ Accès refusé:', errorInfo.message);
+        // Ne pas rediriger automatiquement pour les erreurs 403
+        // Laisser chaque composant gérer l'erreur selon le contexte
         break;
         
       case 404:

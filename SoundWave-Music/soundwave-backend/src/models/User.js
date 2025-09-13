@@ -40,6 +40,10 @@ const userSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   }],
+  followedAlbums: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Album'
+  }],
   createdAt: {
     type: Date,
     default: Date.now,

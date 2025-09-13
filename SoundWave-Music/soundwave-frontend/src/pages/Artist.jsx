@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useMusic } from '../store/MusicContext';
+import { artistService } from '../services/artistService';
 import toast from 'react-hot-toast';
 
 const Artist = () => {
@@ -63,12 +64,28 @@ const Artist = () => {
   const [showMoreInfo, setShowMoreInfo] = useState(false); // State for "Plus d'infos" expanded view
   const [isSubscribed, setIsSubscribed] = useState(false); // State for subscription status
 
-  // Vérifier si l'artiste est déjà abonné au chargement
+  // Vérifier si l'artiste est déjà suivi au chargement
   useEffect(() => {
-    const subscribedArtists = JSON.parse(localStorage.getItem('subscribedArtists') || '[]');
-    const isAlreadySubscribed = subscribedArtists.some(a => a.id === id);
-    setIsSubscribed(isAlreadySubscribed);
-  }, [id]);
+    const checkFollowStatus = async () => {
+      if (!artist || !user) return;
+      
+      try {
+        // Vérifier si l'utilisateur suit déjà cet artiste
+        const response = await artistService.getFollowedArtists();
+        if (response.success) {
+          const isFollowing = response.data.some(followedArtist => 
+            followedArtist._id === artist._id || followedArtist.id === artist._id
+          );
+          setIsSubscribed(isFollowing);
+          console.log('🎤 Follow status checked:', { artistId: artist._id, isFollowing });
+        }
+      } catch (error) {
+        console.error('❌ Error checking follow status:', error);
+      }
+    };
+    
+    checkFollowStatus();
+  }, [artist, user]);
 
   // Format mm:ss
   const formatDuration = (seconds) => {
@@ -211,30 +228,34 @@ const Artist = () => {
     toast.success(isFollowing ? 'Désabonné' : 'Abonné');
   };
 
-  const handleSubscribe = () => {
+  const handleSubscribe = async () => {
     if (!artist) return;
     
-    const subscribedArtists = JSON.parse(localStorage.getItem('subscribedArtists') || '[]');
-    
-    if (isSubscribed) {
-      // Désabonner
-      const updatedArtists = subscribedArtists.filter(a => a.id !== artist.id);
-      localStorage.setItem('subscribedArtists', JSON.stringify(updatedArtists));
-      setIsSubscribed(false);
-      toast.success(`Désabonné de ${artist.name}`);
-    } else {
-      // S'abonner
-      const newSubscribedArtist = {
-        id: artist.id,
-        name: artist.name,
-        picture: artist.picture || artist.cover,
-        nb_fan: artist.nb_fan,
-        date: new Date().toISOString()
-      };
-      const updatedArtists = [...subscribedArtists, newSubscribedArtist];
-      localStorage.setItem('subscribedArtists', JSON.stringify(updatedArtists));
-      setIsSubscribed(true);
-      toast.success(`Abonné à ${artist.name} ! Vous recevrez les notifications.`);
+    try {
+      if (isSubscribed) {
+        // Désabonner via API
+        const result = await artistService.unfollowArtist(artist._id);
+        if (result.success) {
+          setIsSubscribed(false);
+          toast.success(`Désabonné de ${artist.username || artist.name}`);
+          console.log('✅ Successfully unfollowed artist:', artist.username);
+        } else {
+          toast.error(result.error || 'Erreur lors du désabonnement');
+        }
+      } else {
+        // S'abonner via API
+        const result = await artistService.followArtist(artist._id);
+        if (result.success) {
+          setIsSubscribed(true);
+          toast.success(`Abonné à ${artist.username || artist.name} !`);
+          console.log('✅ Successfully followed artist:', artist.username);
+        } else {
+          toast.error(result.error || 'Erreur lors de l\'abonnement');
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error in handleSubscribe:', error);
+      toast.error('Erreur lors de l\'opération');
     }
   };
 

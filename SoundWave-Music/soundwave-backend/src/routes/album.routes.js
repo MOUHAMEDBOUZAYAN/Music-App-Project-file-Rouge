@@ -73,4 +73,14 @@ router.delete('/:id',
   albumController.deleteAlbum
 );
 
+// @route   POST api/albums/:id/like
+// @desc    Aimer/ne plus aimer un album
+// @access  Private
+router.post('/:id/like', 
+  protect, 
+  validateObjectId, 
+  activityLogger('like_album'), 
+  albumController.likeUnlikeAlbum
+);
+
 module.exports = router; 
