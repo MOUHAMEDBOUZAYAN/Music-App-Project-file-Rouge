@@ -740,9 +740,9 @@ const Library = () => {
     }
 
     return (
-      <div className={`grid gap-4 ${
+      <div className={`grid gap-3 lg:gap-4 ${
         viewMode === 'grid' 
-          ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5' 
+          ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6' 
           : 'grid-cols-1'
       }`}>
         {filteredPlaylists.map((playlist) => (
@@ -817,9 +817,9 @@ const Library = () => {
     }
 
     return (
-      <div className={`grid gap-4 ${
+      <div className={`grid gap-3 lg:gap-4 ${
         viewMode === 'grid' 
-          ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5' 
+          ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6' 
           : 'grid-cols-1'
       }`}>
         {filteredAlbums.map((album) => (
@@ -890,9 +890,9 @@ const Library = () => {
     }
 
     return (
-      <div className={`grid gap-4 ${
+      <div className={`grid gap-3 lg:gap-4 ${
         viewMode === 'grid' 
-          ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5' 
+          ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6' 
           : 'grid-cols-1'
       }`}>
         {filteredArtists.map((artist) => {
@@ -1039,12 +1039,12 @@ const Library = () => {
         {likedSongs.map((song, index) => (
           <div 
             key={song._id || index} 
-            className="group flex items-center p-4 rounded-lg hover:bg-gray-800/50 transition-colors cursor-pointer"
+            className="group flex items-center p-3 lg:p-4 rounded-lg hover:bg-gray-800/50 transition-colors cursor-pointer"
           >
-            <div className="w-8 h-8 flex items-center justify-center text-gray-400 group-hover:text-white transition-colors font-medium flex-shrink-0 mr-8">
+            <div className="w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center text-gray-400 group-hover:text-white transition-colors font-medium flex-shrink-0 mr-3 lg:mr-8">
               {index + 1}
             </div>
-            <div className="w-12 h-12 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden flex-shrink-0 mr-12">
+            <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden flex-shrink-0 mr-3 lg:mr-12">
               <img 
                 src={song.cover || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=100&h=100&fit=crop'} 
                 alt={song.title} 
@@ -1054,23 +1054,23 @@ const Library = () => {
                 }}
               />
             </div>
-            <div className="flex-1 min-w-0 mr-8">
+            <div className="flex-1 min-w-0 mr-3 lg:mr-8">
               <div className="flex items-center space-x-2">
-                <h3 className="font-medium text-white truncate">{song.title}</h3>
+                <h3 className="font-medium text-white truncate text-sm lg:text-base">{song.title}</h3>
               </div>
-              <p className="text-sm text-gray-400 truncate">{song.artist}</p>
+              <p className="text-xs lg:text-sm text-gray-400 truncate">{song.artist}</p>
             </div>
-            <div className="flex items-center space-x-8 text-sm text-gray-400 flex-shrink-0">
-              <span className="w-16 text-right mr-8">{formatDuration(song.duration)}</span>
-              <div className="flex items-center space-x-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={(e) => { e.stopPropagation(); handlePlaySong(song); }} className="p-2 rounded-full bg-green-500 hover:bg-green-400 transition-colors">
-                  <Play className="h-4 w-4 text-black ml-0.5" />
+            <div className="flex items-center space-x-2 lg:space-x-8 text-xs lg:text-sm text-gray-400 flex-shrink-0">
+              <span className="w-12 lg:w-16 text-right mr-2 lg:mr-8">{formatDuration(song.duration)}</span>
+              <div className="flex items-center space-x-1 lg:space-x-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={(e) => { e.stopPropagation(); handlePlaySong(song); }} className="p-1.5 lg:p-2 rounded-full bg-green-500 hover:bg-green-400 transition-colors">
+                  <Play className="h-3 w-3 lg:h-4 lg:w-4 text-black ml-0.5" />
                 </button>
-                <button onClick={(e) => { e.stopPropagation(); handleAddToQueue(song); }} className="p-2 rounded-full bg-gray-700 hover:bg-gray-600 transition-colors">
-                  <Plus className="h-4 w-4 text-white" />
+                <button onClick={(e) => { e.stopPropagation(); handleAddToQueue(song); }} className="p-1.5 lg:p-2 rounded-full bg-gray-700 hover:bg-gray-600 transition-colors">
+                  <Plus className="h-3 w-3 lg:h-4 lg:w-4 text-white" />
                 </button>
-                <button onClick={(e) => { e.stopPropagation(); toggleLike(song._id); }} className="p-2 rounded-full bg-red-500 hover:bg-red-400 transition-colors">
-                  <Heart className="h-4 w-4 text-white fill-white" />
+                <button onClick={(e) => { e.stopPropagation(); toggleLike(song._id); }} className="p-1.5 lg:p-2 rounded-full bg-red-500 hover:bg-red-400 transition-colors">
+                  <Heart className="h-3 w-3 lg:h-4 lg:w-4 text-white fill-white" />
                 </button>
               </div>
             </div>
@@ -1098,61 +1098,63 @@ const Library = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white p-6">
+    <div className="min-h-screen bg-black text-white px-4 py-6 lg:px-6">
       {/* En-tête */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold">Votre Bibliothèque</h1>
+      <div className="mb-6 lg:mb-8">
+        <div className="flex items-center justify-between mb-4 lg:mb-6">
+          <h1 className="text-2xl lg:text-3xl font-bold">Votre Bibliothèque</h1>
           <button 
             onClick={handleCreatePlaylist}
-            className="px-4 py-2 bg-white text-black rounded-full font-semibold hover:scale-105 transition-transform"
+            className="px-3 py-2 lg:px-4 bg-white text-black rounded-full font-semibold hover:scale-105 transition-transform text-sm lg:text-base"
           >
-            Créer une playlist
+            <span className="hidden sm:inline">Créer une playlist</span>
+            <span className="sm:hidden">Créer</span>
           </button>
         </div>
 
         {/* Barre de recherche */}
-        <div className="relative max-w-md mb-6">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+        <div className="relative w-full max-w-md mb-4 lg:mb-6">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 lg:h-5 lg:w-5 text-gray-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Rechercher dans votre bibliothèque"
-            className="w-full bg-gray-800 text-white placeholder-gray-400 rounded-full pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full bg-gray-800 text-white placeholder-gray-400 rounded-full pl-9 lg:pl-10 pr-4 py-2.5 lg:py-3 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm lg:text-base"
           />
         </div>
 
         {/* Onglets */}
-        <div className="flex items-center space-x-1 mb-6">
+        <div className="flex items-center space-x-1 mb-4 lg:mb-6 overflow-x-auto pb-2">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                className={`flex items-center space-x-1 lg:space-x-2 px-3 py-2 lg:px-4 rounded-full text-xs lg:text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
                   activeTab === tab.id
                     ? 'bg-white text-black'
                     : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                 }`}
               >
-                <Icon className="h-4 w-4" />
-                <span>{tab.label}</span>
+                <Icon className="h-3 w-3 lg:h-4 lg:w-4" />
+                <span className="hidden sm:inline">{tab.label}</span>
+                <span className="sm:hidden">{tab.label.split(' ')[0]}</span>
               </button>
             );
           })}
         </div>
 
         {/* Filtres et options d'affichage */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+        <div className="flex items-center justify-between mb-4 lg:mb-6">
+          <div className="flex items-center space-x-2 lg:space-x-4">
             <div className="flex items-center space-x-2">
-              <Filter className="h-4 w-4 text-gray-400" />
+              <Filter className="h-3 w-3 lg:h-4 lg:w-4 text-gray-400" />
               <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
-                className="bg-gray-800 text-white text-sm rounded px-3 py-1 focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="bg-gray-800 text-white text-xs lg:text-sm rounded px-2 py-1 lg:px-3 focus:outline-none focus:ring-2 focus:ring-green-500"
               >
                 {filterTypes.map((type) => (
                   <option key={type} value={type}>{type}</option>
@@ -1161,22 +1163,22 @@ const Library = () => {
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1 lg:space-x-2">
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-2 rounded transition-colors ${
+              className={`p-1.5 lg:p-2 rounded transition-colors ${
                 viewMode === 'grid' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'
               }`}
             >
-              <Grid className="h-5 w-5" />
+              <Grid className="h-4 w-4 lg:h-5 lg:w-5" />
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`p-2 rounded transition-colors ${
+              className={`p-1.5 lg:p-2 rounded transition-colors ${
                 viewMode === 'list' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'
               }`}
             >
-              <List className="h-5 w-5" />
+              <List className="h-4 w-4 lg:h-5 lg:w-5" />
             </button>
           </div>
         </div>

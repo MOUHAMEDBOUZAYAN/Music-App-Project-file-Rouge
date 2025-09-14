@@ -18,6 +18,8 @@ const {
   socialActionLimiter,
   activityLogger,
 } = require('../middleware');
+const { param } = require('express-validator');
+const { handleValidationErrors } = require('../middleware/validation.middleware');
 const { uploadMultiple } = require('../services/cloudinary.service');
 
 // @route   GET api/songs
@@ -87,6 +89,16 @@ router.get('/user',
   protect,
   validatePagination,
   songController.getUserSongs
+);
+
+// @route   GET api/songs/artist/:artistId
+// @desc    Obtenir les chansons d'un artiste spécifique
+// @access  Public
+router.get('/artist/:artistId',
+  param('artistId').isMongoId().withMessage('ID artiste invalide'),
+  handleValidationErrors,
+  validatePagination,
+  songController.getSongsByArtist
 );
 
 // @route   GET api/songs/:id

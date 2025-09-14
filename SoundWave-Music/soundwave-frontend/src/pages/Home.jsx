@@ -380,23 +380,39 @@ const Home = () => {
         <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <button className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 transition-colors">
-                <TrendingUp className="h-5 w-5 text-gray-300" />
+              <button 
+                onClick={() => navigate('/search?q=trending')}
+                className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 transition-colors group"
+                title="Tendances"
+              >
+                <TrendingUp className="h-5 w-5 text-gray-300 group-hover:text-white" />
               </button>
-              <button className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 transition-colors">
-                <Clock className="h-5 w-5 text-gray-300" />
+              <button 
+                onClick={() => navigate('/library?tab=recent')}
+                className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 transition-colors group"
+                title="Récents"
+              >
+                <Clock className="h-5 w-5 text-gray-300 group-hover:text-white" />
               </button>
             </div>
             
             {/* Barre de recherche supprimée - maintenant seulement dans le header principal */}
             
             <div className="flex items-center space-x-3">
-              <button className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 transition-colors">
-                <Music2 className="h-5 w-5 text-gray-300" />
+              <button 
+                onClick={() => navigate('/new-releases')}
+                className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 transition-colors group"
+                title="Nouveautés"
+              >
+                <Music2 className="h-5 w-5 text-gray-300 group-hover:text-white" />
               </button>
-              <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center">
+              <button 
+                onClick={() => navigate('/profile')}
+                className="w-8 h-8 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center hover:scale-105 transition-transform cursor-pointer"
+                title="Profil"
+              >
                 <span className="text-sm font-bold text-white">{user?.username?.charAt(0) || 'U'}</span>
-              </div>
+              </button>
             </div>
           </div>
 

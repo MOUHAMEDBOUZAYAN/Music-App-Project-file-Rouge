@@ -941,6 +941,66 @@ const getUserSongs = async (req, res, next) => {
   }
 };
 
+// @desc    Obtenir les chansons d'un artiste spécifique
+// @route   GET /api/songs/artist/:artistId
+// @access  Public
+const getSongsByArtist = async (req, res, next) => {
+  try {
+    console.log('🎵 Getting songs for artist:', req.params.artistId);
+    
+    const { artistId } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+    const sortBy = req.query.sortBy || 'createdAt';
+    const sortOrder = req.query.sortOrder || 'desc';
+    
+    // Vérifier que l'artiste existe
+    const artist = await User.findById(artistId);
+    if (!artist) {
+      return res.status(404).json({
+        success: false,
+        message: 'Artiste non trouvé'
+      });
+    }
+    
+    // Construire le filtre
+    const filter = { artist: artistId };
+    
+    // Construire l'ordre de tri
+    const sort = {};
+    sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+    
+    // Récupérer les chansons
+    const songs = await Song.find(filter)
+      .populate('artist', 'username name profilePicture')
+      .populate('album', 'title coverImage')
+      .sort(sort)
+      .skip(skip)
+      .limit(limit);
+    
+    // Compter le total
+    const total = await Song.countDocuments(filter);
+    
+    console.log(`🎵 Found ${songs.length} songs for artist ${artistId}`);
+    
+    res.json({
+      success: true,
+      data: songs,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Error getting songs by artist:', error);
+    next(new AppError('Erreur lors de la récupération des chansons de l\'artiste', 500));
+  }
+};
+
 module.exports = {
   searchSongs,
   testDatabase,
@@ -953,5 +1013,6 @@ module.exports = {
   addComment,
   getTrendingSongs,
   getAllSongs,
-  getUserSongs
+  getUserSongs,
+  getSongsByArtist
 }; 

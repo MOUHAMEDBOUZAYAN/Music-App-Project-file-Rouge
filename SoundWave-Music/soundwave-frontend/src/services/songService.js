@@ -108,6 +108,26 @@ const songService = {
     const response = await api.post(`/songs/${id}/comment`, { content });
     return response.data;
   },
+
+  // Obtenir les chansons d'un artiste spécifique
+  getSongsByArtist: async (artistId, params = {}) => {
+    try {
+      console.log('🎵 Getting songs for artist:', artistId);
+      const response = await api.get(`/songs/artist/${artistId}`, { params });
+      console.log('🎵 Songs by artist response:', response.data);
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      console.error('❌ Error getting songs by artist:', error);
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Erreur lors de la récupération des chansons de l\'artiste',
+        data: []
+      };
+    }
+  },
 };
 
 export { songService };

@@ -15,6 +15,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { useMusic } from '../store/MusicContext';
 import { songService } from '../services/songService';
 import { albumService } from '../services/albumService';
 import UploadSong from '../components/artist/UploadSong';
@@ -23,6 +24,7 @@ import toast from 'react-hot-toast';
 
 const ArtistDashboard = () => {
   const { user } = useAuth();
+  const { playTrack, playAlbum, addToQueue, toggleLike, likedTracks } = useMusic();
   const [activeTab, setActiveTab] = useState('songs');
   const [songs, setSongs] = useState([]);
   const [albums, setAlbums] = useState([]);
@@ -92,6 +94,31 @@ const ArtistDashboard = () => {
   const handleCloseUploadSong = () => {
     setShowUploadSong(false);
     setEditingSong(null);
+  };
+
+  // Handlers for music playback
+  const handlePlaySong = (song) => {
+    console.log('🎵 Playing song:', song.title);
+    playTrack(song);
+    toast.success(`Lecture de "${song.title}"`);
+  };
+
+  const handlePlayAlbum = (album) => {
+    console.log('🎵 Playing album:', album.title);
+    playAlbum(album);
+    toast.success(`Lecture de l'album "${album.title}"`);
+  };
+
+  const handleAddToQueue = (song) => {
+    console.log('🎵 Adding to queue:', song.title);
+    addToQueue(song);
+    toast.success(`"${song.title}" ajouté à la file d'attente`);
+  };
+
+  const handleToggleLike = (song) => {
+    console.log('🎵 Toggling like for:', song.title);
+    toggleLike(song._id);
+    toast.success(likedTracks.includes(song._id) ? 'Retiré des favoris' : 'Ajouté aux favoris');
   };
 
   const handleEditAlbum = (album) => {
@@ -343,7 +370,11 @@ const ArtistDashboard = () => {
                               <Music className="h-12 w-12 text-gray-400" />
                             )}
                           </div>
-                          <button className="absolute bottom-2 right-2 bg-green-500 hover:bg-green-400 text-black p-2 rounded-full shadow-lg transition-colors">
+                          <button 
+                            onClick={() => handlePlaySong(song)}
+                            className="absolute bottom-2 right-2 bg-green-500 hover:bg-green-400 text-black p-2 rounded-full shadow-lg transition-colors"
+                            title="Lire la chanson"
+                          >
                             <Play className="h-4 w-4" />
                           </button>
                         </div>
@@ -367,6 +398,22 @@ const ArtistDashboard = () => {
                         {/* أزرار الإجراءات */}
                         <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-700">
                           <div className="flex space-x-2">
+                            <button 
+                              onClick={() => handleAddToQueue(song)}
+                              className="p-2 hover:bg-green-600 rounded-lg transition-colors" 
+                              title="Ajouter à la file d'attente"
+                            >
+                              <Plus className="h-4 w-4 text-green-400" />
+                            </button>
+                            <button 
+                              onClick={() => handleToggleLike(song)}
+                              className={`p-2 hover:bg-red-600 rounded-lg transition-colors ${
+                                likedTracks.includes(song._id) ? 'bg-red-600' : ''
+                              }`}
+                              title={likedTracks.includes(song._id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                            >
+                              <Music className={`h-4 w-4 ${likedTracks.includes(song._id) ? 'text-red-400' : 'text-gray-400'}`} />
+                            </button>
                             <button 
                               onClick={() => handleEditSong(song)}
                               className="p-2 hover:bg-blue-600 rounded-lg transition-colors" 
@@ -437,7 +484,11 @@ const ArtistDashboard = () => {
                               <Disc className="h-12 w-12 text-gray-400" />
                             )}
                           </div>
-                          <button className="absolute bottom-2 right-2 bg-blue-500 hover:bg-blue-400 text-white p-2 rounded-full shadow-lg transition-colors">
+                          <button 
+                            onClick={() => handlePlayAlbum(album)}
+                            className="absolute bottom-2 right-2 bg-blue-500 hover:bg-blue-400 text-white p-2 rounded-full shadow-lg transition-colors"
+                            title="Lire l'album"
+                          >
                             <Play className="h-4 w-4" />
                           </button>
                         </div>
