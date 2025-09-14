@@ -16,7 +16,7 @@ const {
   uploadLimiter,
   commentLimiter,
   socialActionLimiter,
-  activityLogger 
+  activityLogger,
 } = require('../middleware');
 const { uploadMultiple } = require('../services/cloudinary.service');
 
@@ -131,6 +131,57 @@ router.put('/:id',
   protect, 
   artist,
   owner, 
+  (req, res, next) => {
+    console.log('🔄 Song Update Route - Request received');
+    console.log('🔄 Song Update Route - Files:', req.files);
+    next();
+  },
+  (req, res, next) => {
+    console.log('🔄 Song Update Route - Before multer, content-type:', req.headers['content-type']);
+    console.log('🔄 Song Update Route - Before multer, content-length:', req.headers['content-length']);
+    
+    // التحقق من content-type
+    if (!req.headers['content-type'] || !req.headers['content-type'].includes('multipart/form-data')) {
+      console.error('❌ Song Update Route - Invalid content-type:', req.headers['content-type']);
+      return res.status(400).json({
+        success: false,
+        message: 'Content-Type doit être multipart/form-data',
+        error: 'Invalid content-type'
+      });
+    }
+    
+    try {
+      uploadMultiple.fields([
+        { name: 'audio', maxCount: 1 },
+        { name: 'cover', maxCount: 1 }
+      ])(req, res, (err) => {
+        if (err) {
+          console.error('❌ Multer middleware error:', err);
+          console.error('❌ Multer error details:', {
+            message: err.message,
+            code: err.code,
+            field: err.field,
+            stack: err.stack
+          });
+          return res.status(400).json({
+            success: false,
+            message: 'Erreur lors du traitement des fichiers',
+            error: err.message
+          });
+        }
+        console.log('🔄 Song Update Route - After multer, files:', req.files);
+        console.log('🔄 Song Update Route - After multer, body:', req.body);
+        next();
+      });
+    } catch (error) {
+      console.error('❌ Song Update Route - Multer setup error:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Erreur lors de la configuration du traitement des fichiers',
+        error: error.message
+      });
+    }
+  },
   validateSong, 
   activityLogger('update_song'), 
   songController.updateSong

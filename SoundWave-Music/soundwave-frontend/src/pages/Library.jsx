@@ -117,13 +117,29 @@ const Library = () => {
           console.error('❌ Erreur lors du chargement des playlists:', response.error);
           // Fallback vers localStorage en cas d'erreur
           const storedPlaylists = JSON.parse(localStorage.getItem('userPlaylists') || '[]');
-          setPlaylists(storedPlaylists);
+          // إزالة التكرار من البلايليست
+          const uniquePlaylists = storedPlaylists.filter((playlist, index, self) => 
+            index === self.findIndex(p => p._id === playlist._id)
+          );
+          if (uniquePlaylists.length !== storedPlaylists.length) {
+            console.log('📚 Removed duplicate playlists, updating localStorage');
+            localStorage.setItem('userPlaylists', JSON.stringify(uniquePlaylists));
+          }
+          setPlaylists(uniquePlaylists);
         }
       } catch (error) {
         console.error('❌ Erreur lors du chargement des playlists:', error);
         // Fallback vers localStorage en cas d'erreur
         const storedPlaylists = JSON.parse(localStorage.getItem('userPlaylists') || '[]');
-        setPlaylists(storedPlaylists);
+        // إزالة التكرار من البلايليست
+        const uniquePlaylists = storedPlaylists.filter((playlist, index, self) => 
+          index === self.findIndex(p => p._id === playlist._id)
+        );
+        if (uniquePlaylists.length !== storedPlaylists.length) {
+          console.log('📚 Removed duplicate playlists in catch, updating localStorage');
+          localStorage.setItem('userPlaylists', JSON.stringify(uniquePlaylists));
+        }
+        setPlaylists(uniquePlaylists);
       }
     };
 
@@ -201,19 +217,45 @@ const Library = () => {
         try {
           console.log('🎤 Loading followed artists for Library...');
           const response = await artistService.getFollowedArtists();
+          console.log('🎤 Full response from getFollowedArtists:', response);
           if (response.success) {
             console.log('🎤 Raw followed artists response:', response.data);
+            console.log('🎤 Response data type:', typeof response.data);
+            console.log('🎤 Response data length:', response.data?.length);
+            
+            if (!response.data || response.data.length === 0) {
+              console.log('🎤 No followed artists found');
+              setArtists([]);
+              return;
+            }
+            
             const artistsData = response.data.map(artist => {
               console.log('🎤 Processing artist:', artist);
+              console.log('🎤 Artist profilePicture:', artist.profilePicture);
+              console.log('🎤 Artist profilePicture type:', typeof artist.profilePicture);
+              
+              let avatarUrl;
+              if (artist.profilePicture) {
+                if (artist.profilePicture.startsWith('http')) {
+                  avatarUrl = artist.profilePicture;
+                } else if (artist.profilePicture.startsWith('/uploads/')) {
+                  // المسار يبدأ بـ /uploads/ لذلك نضيف فقط localhost:5000
+                  avatarUrl = `http://localhost:5000${artist.profilePicture}`;
+                } else {
+                  // المسار لا يبدأ بـ /uploads/ لذلك نضيف /uploads/ أولاً
+                  avatarUrl = `http://localhost:5000/uploads/${artist.profilePicture}`;
+                }
+              } else {
+                avatarUrl = `https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face&${Math.random()}`;
+              }
+              
+              console.log('🎤 Final avatar URL:', avatarUrl);
+              
               return {
                 _id: artist._id,
-                id: artist._id,
-                name: artist.username || 'Artiste inconnu', // Utiliser seulement username car c'est le champ disponible
-                avatar: artist.profilePicture ? 
-                  (artist.profilePicture.startsWith('http') ? 
-                    artist.profilePicture : 
-                    `http://localhost:5000${artist.profilePicture}`) : 
-                  `https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face&${Math.random()}`,
+                id: `artist-${artist._id}`, // مفتاح فريد للفنانين
+                name: artist.username || artist.name || 'Artiste inconnu', // Essayer username puis name
+                avatar: avatarUrl,
                 followers: artist.followers ? artist.followers.length : Math.floor(Math.random() * 10000) + 1000,
                 bio: artist.bio || '',
                 isFollowing: true
@@ -249,13 +291,30 @@ const Library = () => {
           console.log('🎤 Reloading followed artists after follow event...');
           const response = await artistService.getFollowedArtists();
           if (response.success) {
-            const artistsData = response.data.map(artist => ({
-              _id: artist._id,
-              name: artist.name || artist.username,
-              username: artist.username,
-              profilePicture: artist.profilePicture,
-              followersCount: artist.followers ? artist.followers.length : 0
-            }));
+            const artistsData = response.data.map(artist => {
+              let avatarUrl;
+              if (artist.profilePicture) {
+                if (artist.profilePicture.startsWith('http')) {
+                  avatarUrl = artist.profilePicture;
+                } else if (artist.profilePicture.startsWith('/uploads/')) {
+                  avatarUrl = `http://localhost:5000${artist.profilePicture}`;
+                } else {
+                  avatarUrl = `http://localhost:5000/uploads/${artist.profilePicture}`;
+                }
+              } else {
+                avatarUrl = `https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face&${Math.random()}`;
+              }
+              
+              return {
+                _id: artist._id,
+                id: `artist-${artist._id}`, // مفتاح فريد للفنانين
+                name: artist.name || artist.username,
+                username: artist.username,
+                avatar: avatarUrl,
+                profilePicture: artist.profilePicture,
+                followersCount: artist.followers ? artist.followers.length : 0
+              };
+            });
             setArtists(artistsData);
             console.log('✅ Followed artists reloaded after follow event:', artistsData.length, 'artists');
           } else {
@@ -284,13 +343,30 @@ const Library = () => {
           console.log('🎤 Reloading followed artists after unfollow event...');
           const response = await artistService.getFollowedArtists();
           if (response.success) {
-            const artistsData = response.data.map(artist => ({
-              _id: artist._id,
-              name: artist.name || artist.username,
-              username: artist.username,
-              profilePicture: artist.profilePicture,
-              followersCount: artist.followers ? artist.followers.length : 0
-            }));
+            const artistsData = response.data.map(artist => {
+              let avatarUrl;
+              if (artist.profilePicture) {
+                if (artist.profilePicture.startsWith('http')) {
+                  avatarUrl = artist.profilePicture;
+                } else if (artist.profilePicture.startsWith('/uploads/')) {
+                  avatarUrl = `http://localhost:5000${artist.profilePicture}`;
+                } else {
+                  avatarUrl = `http://localhost:5000/uploads/${artist.profilePicture}`;
+                }
+              } else {
+                avatarUrl = `https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face&${Math.random()}`;
+              }
+              
+              return {
+                _id: artist._id,
+                id: `artist-${artist._id}`, // مفتاح فريد للفنانين
+                name: artist.name || artist.username,
+                username: artist.username,
+                avatar: avatarUrl,
+                profilePicture: artist.profilePicture,
+                followersCount: artist.followers ? artist.followers.length : 0
+              };
+            });
             setArtists(artistsData);
             console.log('✅ Followed artists reloaded after unfollow event:', artistsData.length, 'artists');
           } else {
@@ -323,13 +399,29 @@ const Library = () => {
           try {
             const response = await artistService.getFollowedArtists();
             if (response.success) {
-              const artistsData = response.data.map(artist => ({
-                _id: artist._id,
-                name: artist.name || artist.username,
-                username: artist.username,
-                profilePicture: artist.profilePicture,
-                followersCount: artist.followers ? artist.followers.length : 0
-              }));
+              const artistsData = response.data.map(artist => {
+                let avatarUrl;
+                if (artist.profilePicture) {
+                  if (artist.profilePicture.startsWith('http')) {
+                    avatarUrl = artist.profilePicture;
+                  } else if (artist.profilePicture.startsWith('/uploads/')) {
+                    avatarUrl = `http://localhost:5000${artist.profilePicture}`;
+                  } else {
+                    avatarUrl = `http://localhost:5000/uploads/${artist.profilePicture}`;
+                  }
+                } else {
+                  avatarUrl = `https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face&${Math.random()}`;
+                }
+                
+                return {
+                  _id: artist._id,
+                  name: artist.name || artist.username,
+                  username: artist.username,
+                  avatar: avatarUrl,
+                  profilePicture: artist.profilePicture,
+                  followersCount: artist.followers ? artist.followers.length : 0
+                };
+              });
               setArtists(artistsData);
               console.log('✅ Followed artists reloaded on tab change:', artistsData.length, 'artists');
             }
@@ -358,13 +450,30 @@ const Library = () => {
         try {
           const response = await artistService.getFollowedArtists();
           if (response.success) {
-            const artistsData = response.data.map(artist => ({
-              _id: artist._id,
-              name: artist.name || artist.username,
-              username: artist.username,
-              profilePicture: artist.profilePicture,
-              followersCount: artist.followers ? artist.followers.length : 0
-            }));
+            const artistsData = response.data.map(artist => {
+              let avatarUrl;
+              if (artist.profilePicture) {
+                if (artist.profilePicture.startsWith('http')) {
+                  avatarUrl = artist.profilePicture;
+                } else if (artist.profilePicture.startsWith('/uploads/')) {
+                  avatarUrl = `http://localhost:5000${artist.profilePicture}`;
+                } else {
+                  avatarUrl = `http://localhost:5000/uploads/${artist.profilePicture}`;
+                }
+              } else {
+                avatarUrl = `https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face&${Math.random()}`;
+              }
+              
+              return {
+                _id: artist._id,
+                id: `artist-${artist._id}`, // مفتاح فريد للفنانين
+                name: artist.name || artist.username,
+                username: artist.username,
+                avatar: avatarUrl,
+                profilePicture: artist.profilePicture,
+                followersCount: artist.followers ? artist.followers.length : 0
+              };
+            });
             setArtists(artistsData);
             console.log('✅ Followed artists reloaded on tab change:', artistsData.length, 'artists');
           }
@@ -397,8 +506,17 @@ const Library = () => {
             return;
           }
           
+          // إزالة التكرار من قائمة الألبومات
+          const uniqueAlbumsIds = [...new Set(likedAlbumsIds)];
+          console.log('💿 Unique albums IDs:', uniqueAlbumsIds);
+          
+          if (uniqueAlbumsIds.length !== likedAlbumsIds.length) {
+            console.log('💿 Removed duplicate albums, updating localStorage');
+            localStorage.setItem('likedAlbums', JSON.stringify(uniqueAlbumsIds));
+          }
+          
           // Récupérer les détails des albums likés
-          const albumsPromises = likedAlbumsIds.map(async (albumId) => {
+          const albumsPromises = uniqueAlbumsIds.map(async (albumId) => {
             try {
               const response = await albumService.getAlbumById(albumId);
               if (response.success) {
@@ -421,7 +539,7 @@ const Library = () => {
             console.log('💿 Album songs:', album.songs);
             return {
               _id: album._id,
-              id: album._id,
+              id: `album-${album._id}`, // مفتاح فريد للألبومات
               name: album.title,
               title: album.title,
               artist: album.artist ? (album.artist.name || album.artist.username) : 'Artiste inconnu',
@@ -472,7 +590,15 @@ const Library = () => {
               return;
             }
             
-            const albumsPromises = likedAlbumsIds.map(async (albumId) => {
+            // إزالة التكرار من قائمة الألبومات
+            const uniqueAlbumsIds = [...new Set(likedAlbumsIds)];
+            
+            if (uniqueAlbumsIds.length !== likedAlbumsIds.length) {
+              console.log('💿 Removed duplicate albums in storage change, updating localStorage');
+              localStorage.setItem('likedAlbums', JSON.stringify(uniqueAlbumsIds));
+            }
+            
+            const albumsPromises = uniqueAlbumsIds.map(async (albumId) => {
               try {
                 const response = await albumService.getAlbumById(albumId);
                 return response.success ? response.data : null;
@@ -487,7 +613,7 @@ const Library = () => {
             
             const albumsData = validAlbums.map(album => ({
               _id: album._id,
-              id: album._id,
+              id: `album-${album._id}`, // مفتاح فريد للألبومات
               name: album.title,
               title: album.title,
               artist: album.artist ? (album.artist.name || album.artist.username) : 'Artiste inconnu',
@@ -769,31 +895,37 @@ const Library = () => {
           ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5' 
           : 'grid-cols-1'
       }`}>
-        {filteredArtists.map((artist) => (
-          <div 
-            key={artist.id} 
-            className="text-center group cursor-pointer hover:bg-gray-800/50 rounded-lg p-2 transition-colors duration-200"
-            onClick={() => {
-              console.log('🎤 Navigating to artist:', artist._id, 'name:', artist.name);
-              if (artist._id) {
-                navigate(`/artist/${artist._id}`);
-              } else {
-                console.error('❌ No artist ID available for navigation');
-                toast.error('ID de l\'artiste non disponible');
-              }
-            }}
-          >
-            <div className="relative mb-3">
-              <div className={`${viewMode === 'grid' ? 'w-full aspect-square' : 'w-32 h-32'} bg-gray-800 rounded-full overflow-hidden mx-auto`}>
-                <img
-                  src={artist.avatar}
-                  alt={artist.name}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.target.src = `https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face`;
-                  }}
-                />
-              </div>
+        {filteredArtists.map((artist) => {
+          console.log('🎤 Rendering artist:', artist.name, 'avatar:', artist.avatar);
+          return (
+            <div 
+              key={artist.id} 
+              className="text-center group cursor-pointer hover:bg-gray-800/50 rounded-lg p-2 transition-colors duration-200"
+              onClick={() => {
+                console.log('🎤 Navigating to artist:', artist._id, 'name:', artist.name);
+                if (artist._id) {
+                  navigate(`/artist/${artist._id}`);
+                } else {
+                  console.error('❌ No artist ID available for navigation');
+                  toast.error('ID de l\'artiste non disponible');
+                }
+              }}
+            >
+              <div className="relative mb-3">
+                <div className={`${viewMode === 'grid' ? 'w-full aspect-square' : 'w-32 h-32'} bg-gray-800 rounded-full overflow-hidden mx-auto`}>
+                  <img
+                    src={artist.avatar}
+                    alt={artist.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.log('❌ Image load error for artist:', artist.name, 'URL:', artist.avatar);
+                      e.target.src = `https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face`;
+                    }}
+                    onLoad={() => {
+                      console.log('✅ Image loaded successfully for artist:', artist.name, 'URL:', artist.avatar);
+                    }}
+                  />
+                </div>
               
               <button 
                 onClick={(e) => {
@@ -816,7 +948,8 @@ const Library = () => {
               }
             </p>
           </div>
-        ))}
+          );
+        })}
       </div>
     );
   };

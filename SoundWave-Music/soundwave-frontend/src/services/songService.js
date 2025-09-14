@@ -80,7 +80,14 @@ const songService = {
 
   // Mettre à jour une chanson
   updateSong: async (id, data) => {
-    const response = await api.put(`/songs/${id}`, data);
+    console.log('🔄 Updating song with ID:', id);
+    console.log('🔄 Update data:', data);
+    const response = await api.put(`/songs/${id}`, data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    console.log('✅ Song updated successfully:', response.data);
     return response.data;
   },
 

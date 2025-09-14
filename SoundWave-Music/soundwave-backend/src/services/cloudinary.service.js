@@ -155,27 +155,62 @@ const uploadAudio = multer({
 const uploadMultiple = multer({
   storage: multer.diskStorage({
     destination: (req, file, cb) => {
-      let folder = 'uploads';
-      if (file.fieldname === 'audio') {
-        folder = 'uploads/audio';
-      } else if (file.fieldname === 'cover') {
-        folder = 'uploads/images';
+      try {
+        let folder = 'uploads';
+        if (file.fieldname === 'audio') {
+          folder = 'uploads/audio';
+        } else if (file.fieldname === 'cover') {
+          folder = 'uploads/images';
+        }
+        console.log('📁 Upload Multiple - Destination:', {
+          fieldname: file.fieldname,
+          folder,
+          originalname: file.originalname
+        });
+        
+        const fullPath = path.join(__dirname, '../../', folder);
+        console.log('📁 Upload Multiple - Full path:', fullPath);
+        
+        // إنشاء المجلد إذا لم يكن موجوداً
+        const fs = require('fs');
+        if (!fs.existsSync(fullPath)) {
+          fs.mkdirSync(fullPath, { recursive: true });
+          console.log('📁 Upload Multiple - Created directory:', fullPath);
+        }
+        
+        // التحقق من أن المجلد قابل للكتابة
+        try {
+          fs.accessSync(fullPath, fs.constants.W_OK);
+          console.log('📁 Upload Multiple - Directory is writable:', fullPath);
+        } catch (error) {
+          console.error('❌ Upload Multiple - Directory not writable:', fullPath, error);
+          return cb(new Error(`Directory not writable: ${fullPath}`));
+        }
+        
+        cb(null, fullPath);
+      } catch (error) {
+        console.error('❌ Upload Multiple - Destination error:', error);
+        cb(error);
       }
-      console.log('📁 Upload Multiple - Destination:', {
-        fieldname: file.fieldname,
-        folder,
-        originalname: file.originalname
-      });
-      cb(null, path.join(__dirname, '../../', folder));
     },
     filename: (req, file, cb) => {
-      const fileName = Date.now() + '-' + file.originalname;
-      console.log('📝 Upload Multiple - Nom de fichier:', fileName);
-      cb(null, fileName);
+      try {
+        const fileName = Date.now() + '-' + file.originalname;
+        console.log('📝 Upload Multiple - Nom de fichier:', fileName);
+        cb(null, fileName);
+      } catch (error) {
+        console.error('❌ Upload Multiple - Filename error:', error);
+        cb(error);
+      }
     }
   }),
   limits: {
-    fileSize: 50 * 1024 * 1024 // 50MB
+    fileSize: 50 * 1024 * 1024, // 50MB
+    files: 2, // Maximum 2 files (audio + cover)
+    parts: 10, // Maximum 10 parts in the form
+    fieldNameSize: 100, // Maximum field name size
+    fieldSize: 1000000, // Maximum field value size
+    fields: 10 // Maximum number of fields
   },
   fileFilter: (req, file, cb) => {
     console.log('🔍 Upload Multiple - Filtrage:', {
@@ -184,16 +219,88 @@ const uploadMultiple = multer({
       originalname: file.originalname
     });
     
-    if (file.fieldname === 'audio' && file.mimetype.startsWith('audio/')) {
-      console.log('✅ Fichier audio accepté');
-      cb(null, true);
-    } else if (file.fieldname === 'cover' && file.mimetype.startsWith('image/')) {
-      console.log('✅ Fichier image accepté');
-      cb(null, true);
-    } else {
-      console.log('❌ Type de fichier non autorisé');
-      cb(new Error(`Type de fichier non autorisé pour ${file.fieldname}`), false);
+    try {
+      if (file.fieldname === 'audio') {
+        if (file.mimetype.startsWith('audio/')) {
+          console.log('✅ Upload Multiple - Audio file accepted');
+          cb(null, true);
+        } else {
+          console.log('❌ Upload Multiple - Audio file rejected:', file.mimetype);
+          cb(new Error('Seuls les fichiers audio sont autorisés'), false);
+        }
+      } else if (file.fieldname === 'cover') {
+        if (file.mimetype.startsWith('image/')) {
+          console.log('✅ Upload Multiple - Image file accepted');
+          cb(null, true);
+        } else {
+          console.log('❌ Upload Multiple - Image file rejected:', file.mimetype);
+          cb(new Error('Seules les images sont autorisées'), false);
+        }
+      } else {
+        console.log('❌ Upload Multiple - Unknown field:', file.fieldname);
+        cb(new Error('Champ de fichier non reconnu'), false);
+      }
+    } catch (error) {
+      console.error('❌ Upload Multiple - File filter error:', error);
+      cb(error, false);
     }
+  },
+  onError: (err, next) => {
+    console.error('❌ Multer Error:', err);
+    console.error('❌ Multer Error details:', {
+      message: err.message,
+      code: err.code,
+      field: err.field,
+      stack: err.stack
+    });
+    
+    // معالجة أفضل للأخطاء
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      console.error('❌ Multer Error - File too large');
+      return next(new Error('Fichier trop volumineux (max 50MB)'));
+    }
+    
+    if (err.code === 'LIMIT_FILE_COUNT') {
+      console.error('❌ Multer Error - Too many files');
+      return next(new Error('Trop de fichiers (max 2)'));
+    }
+    
+    if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+      console.error('❌ Multer Error - Unexpected file field');
+      return next(new Error('Champ de fichier inattendu'));
+    }
+    
+    if (err.code === 'LIMIT_PART_COUNT') {
+      console.error('❌ Multer Error - Too many parts');
+      return next(new Error('Trop de parties dans le formulaire'));
+    }
+    
+    if (err.code === 'LIMIT_FIELD_KEY') {
+      console.error('❌ Multer Error - Field name too long');
+      return next(new Error('Nom de champ trop long'));
+    }
+    
+    if (err.code === 'LIMIT_FIELD_VALUE') {
+      console.error('❌ Multer Error - Field value too long');
+      return next(new Error('Valeur de champ trop longue'));
+    }
+    
+    if (err.code === 'ENOENT') {
+      console.error('❌ Multer Error - Directory not found');
+      return next(new Error('Répertoire non trouvé'));
+    }
+    
+    if (err.code === 'EACCES') {
+      console.error('❌ Multer Error - Permission denied');
+      return next(new Error('Permission refusée'));
+    }
+    
+    if (err.code === 'EMFILE') {
+      console.error('❌ Multer Error - Too many open files');
+      return next(new Error('Trop de fichiers ouverts'));
+    }
+    
+    next(err);
   }
 });
 

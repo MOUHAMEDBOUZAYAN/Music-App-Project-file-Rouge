@@ -150,16 +150,47 @@ export const artistService = {
   getFollowedArtists: async (params = {}) => {
     try {
       const response = await apiClient.get('/users/following', { params });
-      console.log('🔍 getFollowedArtists response:', response.data);
+      console.log('🔍 getFollowedArtists response:', response);
+      
+      // Vérifier si response existe
+      if (!response) {
+        console.error('❌ response is undefined');
+        return {
+          success: false,
+          error: 'Réponse du serveur invalide',
+          data: []
+        };
+      }
+      
+      // Vérifier si c'est un objet avec une propriété following
+      if (response.following) {
+        console.log('🔍 Found following property:', response.following);
+        return {
+          success: true,
+          data: response.following
+        };
+      }
+      
+      // Si c'est directement un tableau
+      if (Array.isArray(response)) {
+        console.log('🔍 response is array:', response);
+        return {
+          success: true,
+          data: response
+        };
+      }
+      
+      // Fallback
+      console.log('🔍 Using fallback empty array');
       return {
         success: true,
-        data: response.data.following || [] // Utiliser 'following' au lieu de 'data'
+        data: []
       };
     } catch (error) {
       console.error('❌ Error in getFollowedArtists:', error);
       return {
         success: false,
-        error: error.response?.data?.message || 'Erreur lors de la récupération des artistes suivis',
+        error: error.message || 'Erreur lors de la récupération des artistes suivis',
         data: []
       };
     }

@@ -196,7 +196,9 @@ function App() {
 
               <Route path="/artist-dashboard" element={
                 <ProtectedRoute>
-                  <ArtistDashboard />
+                  <Layout>
+                    <ArtistDashboard />
+                  </Layout>
                 </ProtectedRoute>
               } />
               

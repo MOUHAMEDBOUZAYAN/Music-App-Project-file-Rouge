@@ -153,6 +153,10 @@ export const AuthProvider = ({ children }) => {
           });
         } else {
           console.log('ℹ️ Aucune authentification valide trouvée');
+          console.log('🔍 Token exists:', !!token);
+          console.log('🔍 User exists:', !!user);
+          console.log('🔍 User type:', typeof user);
+          console.log('🔍 User has _id:', user && user._id);
           // Nettoyer les données invalides minimales
           if (token && !user) secureStorage.remove('authToken');
           if (user && !token) secureStorage.remove('user');

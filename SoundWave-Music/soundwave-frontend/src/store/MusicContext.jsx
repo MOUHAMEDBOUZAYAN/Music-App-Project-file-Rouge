@@ -304,6 +304,12 @@ export const MusicProvider = ({ children }) => {
     },
 
     togglePlayPause: () => {
+      if (!state.currentTrack) {
+        console.log('❌ MusicContext - No current track to play');
+        toast.error('Aucune piste sélectionnée');
+        return;
+      }
+      console.log('🎵 MusicContext - togglePlayPause:', !state.isPlaying, 'currentTrack:', state.currentTrack?.title);
       dispatch({ type: ACTIONS.SET_IS_PLAYING, payload: !state.isPlaying });
     },
 

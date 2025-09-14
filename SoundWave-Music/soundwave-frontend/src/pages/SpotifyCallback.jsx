@@ -62,6 +62,8 @@ const SpotifyCallback = () => {
     switch (status) {
       case 'success':
         return 'text-green-500';
+
+        
       case 'error':
         return 'text-red-500';
       default:

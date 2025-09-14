@@ -47,8 +47,14 @@ api.interceptors.response.use(
   },
   async (error) => {
     // Gestion spéciale des erreurs de connexion réseau
-    if (error.code === 'ECONNABORTED' || error.code === 'ERR_NETWORK') {
+    if (error.code === 'ECONNABORTED' || error.code === 'ERR_NETWORK' || !error.response) {
       console.error('❌ Erreur de connexion réseau:', error.message);
+      console.error('❌ Error details:', {
+        message: error.message,
+        code: error.code,
+        config: error.config?.url,
+        baseURL: error.config?.baseURL
+      });
       return Promise.reject({
         message: 'Erreur de connexion réseau. Vérifiez votre connexion internet et que le serveur backend fonctionne.',
         status: 'NETWORK_ERROR',

@@ -62,6 +62,9 @@ const {
   corsErrorHandler
 } = require('./cors.middleware');
 
+// Middleware d'upload
+const { uploadMultiple } = require('../services/cloudinary.service');
+
 module.exports = {
   // Authentification
   protect,
@@ -115,5 +118,8 @@ module.exports = {
   corsPublic,
   corsAuth,
   securityHeaders,
-  corsErrorHandler
+  corsErrorHandler,
+  
+  // Upload
+  upload: uploadMultiple
 }; 

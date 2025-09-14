@@ -10,7 +10,9 @@ import {
   Pause,
   MoreVertical,
   Search,
-  Filter
+  Filter,
+  X,
+  AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { songService } from '../services/songService';
@@ -29,6 +31,11 @@ const ArtistDashboard = () => {
   const [showCreateAlbum, setShowCreateAlbum] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterGenre, setFilterGenre] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [deleteType, setDeleteType] = useState(''); // 'song' or 'album'
+  const [editingSong, setEditingSong] = useState(null);
+  const [editingAlbum, setEditingAlbum] = useState(null);
 
   useEffect(() => {
     if (user?.role === 'artist' || user?.role === 'admin') {
@@ -57,6 +64,17 @@ const ArtistDashboard = () => {
   const handleSongUploaded = (newSong) => {
     setSongs(prev => [newSong, ...prev]);
     setShowUploadSong(false);
+    setEditingSong(null);
+  };
+
+  const handleSongUpdated = (updatedSong) => {
+    console.log('🔄 ArtistDashboard - Song updated:', updatedSong);
+    console.log('🔄 ArtistDashboard - Updated song coverImage:', updatedSong.coverImage);
+    setSongs(prev => prev.map(song => 
+      song._id === updatedSong._id ? updatedSong : song
+    ));
+    setShowUploadSong(false);
+    setEditingSong(null);
   };
 
   const handleAlbumCreated = (newAlbum) => {
@@ -64,33 +82,71 @@ const ArtistDashboard = () => {
     setShowCreateAlbum(false);
   };
 
-  const handleDeleteSong = async (songId) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette chanson ?')) {
-      try {
-        await songService.deleteSong(songId);
-        setSongs(prev => prev.filter(song => song._id !== songId));
+  // دوال التعديل
+  const handleEditSong = (song) => {
+    console.log('🔄 ArtistDashboard - Editing song:', song);
+    setEditingSong(song);
+    setShowUploadSong(true);
+  };
+
+  const handleCloseUploadSong = () => {
+    setShowUploadSong(false);
+    setEditingSong(null);
+  };
+
+  const handleEditAlbum = (album) => {
+    setEditingAlbum(album);
+    setShowCreateAlbum(true);
+  };
+
+  // دوال الحذف مع بطاقة التأكيد
+  const handleDeleteSong = (song) => {
+    setItemToDelete(song);
+    setDeleteType('song');
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteAlbum = (album) => {
+    setItemToDelete(album);
+    setDeleteType('album');
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
+
+    try {
+      if (deleteType === 'song') {
+        await songService.deleteSong(itemToDelete._id);
+        setSongs(prev => prev.filter(song => song._id !== itemToDelete._id));
         toast.success('Chanson supprimée avec succès');
-      } catch (error) {
-        console.error('Erreur lors de la suppression:', error);
-        toast.error('Erreur lors de la suppression de la chanson');
-      }
-    }
-  };
-
-  const handleDeleteAlbum = async (albumId) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cet album ?')) {
-      try {
-        await albumService.deleteAlbum(albumId);
-        setAlbums(prev => prev.filter(album => album._id !== albumId));
+      } else if (deleteType === 'album') {
+        await albumService.deleteAlbum(itemToDelete._id);
+        setAlbums(prev => prev.filter(album => album._id !== itemToDelete._id));
         toast.success('Album supprimé avec succès');
-      } catch (error) {
-        console.error('Erreur lors de la suppression:', error);
-        toast.error('Erreur lors de la suppression de l\'album');
       }
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      toast.error(`Erreur lors de la suppression du ${deleteType === 'song' ? 'chanson' : 'album'}`);
+    } finally {
+      setShowDeleteConfirm(false);
+      setItemToDelete(null);
+      setDeleteType('');
     }
   };
 
-  const filteredSongs = songs.filter(song => {
+  const cancelDelete = () => {
+    setShowDeleteConfirm(false);
+    setItemToDelete(null);
+    setDeleteType('');
+  };
+
+  // إزالة التكرار من الأغاني
+  const uniqueSongs = songs.filter((song, index, self) => 
+    index === self.findIndex(s => s._id === song._id)
+  );
+
+  const filteredSongs = uniqueSongs.filter(song => {
     const matchesSearch = song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          song.genre?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesGenre = !filterGenre || song.genre === filterGenre;
@@ -311,15 +367,19 @@ const ArtistDashboard = () => {
                         {/* أزرار الإجراءات */}
                         <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-700">
                           <div className="flex space-x-2">
-                            <button className="p-2 hover:bg-gray-600 rounded-lg transition-colors" title="Modifier">
-                              <Edit className="h-4 w-4 text-gray-400" />
+                            <button 
+                              onClick={() => handleEditSong(song)}
+                              className="p-2 hover:bg-blue-600 rounded-lg transition-colors" 
+                              title="Modifier"
+                            >
+                              <Edit className="h-4 w-4 text-blue-400" />
                             </button>
                             <button className="p-2 hover:bg-gray-600 rounded-lg transition-colors" title="Plus d'options">
                               <MoreVertical className="h-4 w-4 text-gray-400" />
                             </button>
                           </div>
                           <button 
-                            onClick={() => handleDeleteSong(song._id)}
+                            onClick={() => handleDeleteSong(song)}
                             className="p-2 hover:bg-red-600 rounded-lg transition-colors" 
                             title="Supprimer"
                           >
@@ -399,15 +459,19 @@ const ArtistDashboard = () => {
                         {/* أزرار الإجراءات */}
                         <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-700">
                           <div className="flex space-x-2">
-                            <button className="p-2 hover:bg-gray-600 rounded-lg transition-colors" title="Modifier">
-                              <Edit className="h-4 w-4 text-gray-400" />
+                            <button 
+                              onClick={() => handleEditAlbum(album)}
+                              className="p-2 hover:bg-blue-600 rounded-lg transition-colors" 
+                              title="Modifier"
+                            >
+                              <Edit className="h-4 w-4 text-blue-400" />
                             </button>
                             <button className="p-2 hover:bg-gray-600 rounded-lg transition-colors" title="Plus d'options">
                               <MoreVertical className="h-4 w-4 text-gray-400" />
                             </button>
                           </div>
                           <button 
-                            onClick={() => handleDeleteAlbum(album._id)}
+                            onClick={() => handleDeleteAlbum(album)}
                             className="p-2 hover:bg-red-600 rounded-lg transition-colors" 
                             title="Supprimer"
                           >
@@ -427,8 +491,10 @@ const ArtistDashboard = () => {
       {/* Modals */}
       {showUploadSong && (
         <UploadSong
-          onClose={() => setShowUploadSong(false)}
+          onClose={handleCloseUploadSong}
           onSuccess={handleSongUploaded}
+          onUpdate={handleSongUpdated}
+          editingSong={editingSong}
         />
       )}
 
@@ -436,7 +502,59 @@ const ArtistDashboard = () => {
         <CreateAlbum
           onClose={() => setShowCreateAlbum(false)}
           onSuccess={handleAlbumCreated}
+          editingAlbum={editingAlbum}
         />
+      )}
+
+      {/* بطاقة تأكيد الحذف */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4 border border-gray-700">
+            <div className="flex items-center mb-4">
+              <div className="bg-red-500/20 p-3 rounded-full mr-4">
+                <AlertTriangle className="h-6 w-6 text-red-400" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white">
+                  Confirmer la suppression
+                </h3>
+                <p className="text-gray-400 text-sm">
+                  Cette action est irréversible
+                </p>
+              </div>
+            </div>
+            
+            <div className="mb-6">
+              <p className="text-gray-300 mb-2">
+                Êtes-vous sûr de vouloir supprimer{' '}
+                <span className="font-semibold text-white">
+                  "{itemToDelete?.title}"
+                </span> ?
+              </p>
+              <p className="text-sm text-gray-500">
+                {deleteType === 'song' 
+                  ? 'Cette chanson sera définitivement supprimée de votre bibliothèque.'
+                  : 'Cet album et toutes ses chansons seront définitivement supprimés.'
+                }
+              </p>
+            </div>
+            
+            <div className="flex space-x-3">
+              <button
+                onClick={cancelDelete}
+                className="flex-1 px-4 py-3 bg-gray-600 hover:bg-gray-500 text-white rounded-lg font-medium transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-400 text-white rounded-lg font-medium transition-colors"
+              >
+                Supprimer
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

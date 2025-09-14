@@ -144,6 +144,72 @@ const owner = async (req, res, next) => {
           message: 'Accès refusé - vous n\'êtes pas autorisé à accéder à cette ressource'
         });
       }
+    } else if (req.baseUrl && req.baseUrl.includes('/songs') && req.params.id) {
+      // Pour les routes de chansons, vérifier le propriétaire de la chanson
+      const Song = require('../models/Song');
+      const song = await Song.findById(req.params.id);
+      
+      if (!song) {
+        return res.status(404).json({
+          success: false,
+          message: 'Chanson non trouvée'
+        });
+      }
+      
+      const ownerId = song.artist._id ? song.artist._id.toString() : song.artist.toString();
+      if (req.user && (ownerId === req.user._id.toString() || req.user.role === 'admin')) {
+        console.log('🔐 Owner middleware - Song access granted:', {
+          userId: req.user._id,
+          username: req.user.username,
+          songOwnerId: ownerId,
+          isOwner: ownerId === req.user._id.toString()
+        });
+        next();
+      } else {
+        console.log('🔐 Owner middleware - Song access denied:', {
+          userId: req.user?._id,
+          username: req.user?.username,
+          songOwnerId: ownerId,
+          isOwner: ownerId === req.user?._id?.toString()
+        });
+        return res.status(403).json({
+          success: false,
+          message: 'Accès refusé - vous n\'êtes pas autorisé à accéder à cette ressource'
+        });
+      }
+    } else if (req.baseUrl && req.baseUrl.includes('/albums') && req.params.id) {
+      // Pour les routes d'albums, vérifier le propriétaire de l'album
+      const Album = require('../models/Album');
+      const album = await Album.findById(req.params.id);
+      
+      if (!album) {
+        return res.status(404).json({
+          success: false,
+          message: 'Album non trouvé'
+        });
+      }
+      
+      const ownerId = album.artist._id ? album.artist._id.toString() : album.artist.toString();
+      if (req.user && (ownerId === req.user._id.toString() || req.user.role === 'admin')) {
+        console.log('🔐 Owner middleware - Album access granted:', {
+          userId: req.user._id,
+          username: req.user.username,
+          albumOwnerId: ownerId,
+          isOwner: ownerId === req.user._id.toString()
+        });
+        next();
+      } else {
+        console.log('🔐 Owner middleware - Album access denied:', {
+          userId: req.user?._id,
+          username: req.user?.username,
+          albumOwnerId: ownerId,
+          isOwner: ownerId === req.user?._id?.toString()
+        });
+        return res.status(403).json({
+          success: false,
+          message: 'Accès refusé - vous n\'êtes pas autorisé à accéder à cette ressource'
+        });
+      }
     } else {
       // Pour les autres routes, vérifier directement l'ID
       if (req.user && (req.user._id.toString() === req.params.id || req.user.role === 'admin')) {

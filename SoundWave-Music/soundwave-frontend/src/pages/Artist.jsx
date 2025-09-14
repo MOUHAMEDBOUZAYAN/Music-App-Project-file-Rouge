@@ -61,6 +61,12 @@ const Artist = () => {
       return;
     }
 
+    // Vérifier si l'utilisateur essaie de se suivre lui-même
+    if (user._id === artist._id) {
+      toast.error('Vous ne pouvez pas vous suivre vous-même');
+      return;
+    }
+
     try {
       console.log('🎤 Toggle follow for artist:', artist._id, 'isFollowing:', isFollowing);
       
@@ -641,6 +647,13 @@ const Artist = () => {
       console.log('❌ No artist ID available for subscribe');
       return;
     }
+
+    // Vérifier si l'utilisateur essaie de se suivre lui-même
+    if (user && user._id === artist._id) {
+      console.log('❌ User trying to follow themselves');
+      toast.error('Vous ne pouvez pas vous suivre vous-même');
+      return;
+    }
     
     console.log('🎤 Attempting to subscribe to artist:', artist._id, artist.username);
     
@@ -909,9 +922,14 @@ const Artist = () => {
             <Heart className="h-5 w-5" />
           </button>
           
-          {/* Nouveau bouton S'abonner */}
-          <button
-            onClick={() => {
+          {/* Nouveau bouton S'abonner - masqué si l'utilisateur essaie de se suivre lui-même */}
+          {user && user._id === artist._id ? (
+            <div className="px-4 py-3 rounded-full bg-gray-600 text-gray-400 cursor-not-allowed">
+              Votre profil
+            </div>
+          ) : (
+            <button
+              onClick={() => {
               console.log('🔄 Subscribe button clicked, current isFollowing:', isFollowing);
               console.log('🔄 Artist ID:', artist?._id);
             const localFollowedArtists = JSON.parse(localStorage.getItem('followedArtists') || '[]');
@@ -975,6 +993,7 @@ const Artist = () => {
           >
             {isFollowing ? 'Désabonner' : 'S\'abonner'}
           </button>
+          )}
           
           <button className="p-3 rounded-full bg-gray-800 text-white hover:bg-gray-700" aria-label="Partager">
             <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">

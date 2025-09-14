@@ -300,7 +300,7 @@ const getMyProfile = async (req, res, next) => {
 // @access  Private
 const getMyFollowing = async (req, res, next) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
     
     console.log(`🔍 Récupération des artistes suivis pour l'utilisateur ${userId}`);
     
@@ -335,7 +335,7 @@ const getMyFollowing = async (req, res, next) => {
 // @access  Private
 const getMyFollowedAlbums = async (req, res, next) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
     
     console.log(`🔍 Récupération des albums suivis pour l'utilisateur ${userId}`);
     
