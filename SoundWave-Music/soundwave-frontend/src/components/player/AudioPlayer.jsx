@@ -166,13 +166,13 @@ const AudioPlayer = () => {
   if (!currentTrack) {
     // Afficher un player minimal avec contrôles désactivés
     return (
-      <div className="fixed bottom-0 left-64 right-0 bg-black border-t border-gray-800 z-40 lg:left-64">
+      <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-gray-800 z-40 lg:left-64">
         <div className="px-4 py-2">
-          {/* Barre de progression vide */}
-          <div className="w-full h-1 bg-gray-600"></div>
+          {/* Barre de progression vide - cachée sur mobile */}
+          <div className="hidden md:block w-full h-1 bg-gray-600"></div>
           
-          {/* Contrôles principaux désactivés */}
-          <div className="flex items-center justify-between h-16">
+          {/* Contrôles principaux désactivés - desktop seulement */}
+          <div className="hidden md:flex items-center justify-between h-16">
             {/* Informations de la piste - vide */}
             <div className="flex items-center space-x-4 flex-1 min-w-0">
               <div className="w-14 h-14 bg-gray-800 rounded flex-shrink-0"></div>
@@ -234,6 +234,24 @@ const AudioPlayer = () => {
               </button>
             </div>
           </div>
+          
+          {/* Barre compacte mobile - vide */}
+          <div className="md:hidden mt-2">
+            <div className="w-full flex items-center justify-between">
+              <div className="min-w-0">
+                <div className="text-gray-500 text-sm font-medium truncate max-w-[12rem]">Aucune piste sélectionnée</div>
+                <div className="text-gray-600 text-xs truncate max-w-[12rem]">Sélectionnez une musique pour commencer</div>
+              </div>
+              <div className="flex items-center space-x-2 ml-3">
+                <button disabled className="p-2 text-gray-600 cursor-not-allowed">
+                  <Heart className="h-4 w-4" />
+                </button>
+                <button disabled className="w-8 h-8 bg-gray-600 text-gray-400 rounded-full flex items-center justify-center cursor-not-allowed">
+                  <Play className="h-4 w-4" style={{ marginLeft: '1px' }} />
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -251,12 +269,12 @@ const AudioPlayer = () => {
       />
 
              {/* Barre de lecture (style Spotify) */}
-       <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-gray-800 z-[35] lg:left-64 lg:z-40">
+       <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-gray-800 z-30 lg:left-64 lg:z-40">
         <div className="px-4 py-2">
-          {/* Barre de progression (desktop/tablette) */}
+          {/* Barre de progression (desktop) */}
           <div 
             ref={progressRef}
-            className="hidden md:block w-full h-1 bg-gray-600 cursor-pointer hover:h-1.5 transition-all duration-200"
+            className="hidden lg:block w-full h-1 bg-gray-600 cursor-pointer hover:h-1.5 transition-all duration-200"
             onClick={handleProgressClick}
           >
             <div 
@@ -266,7 +284,7 @@ const AudioPlayer = () => {
           </div>
 
           {/* Contrôles principaux (desktop) */}
-          <div className="hidden md:flex items-center justify-between h-16">
+          <div className="hidden lg:flex items-center justify-between h-16">
             {/* Informations de la piste */}
             <div className="flex items-center space-x-4 flex-1 min-w-0">
               <div className="w-14 h-14 bg-gray-800 rounded flex-shrink-0 flex items-center justify-center">
@@ -412,22 +430,86 @@ const AudioPlayer = () => {
               </button>
             </div>
           </div>
-          {/* Barre compacte mobile */}
-          <div className="md:hidden mt-2">
-            <button onClick={() => setIsSheetOpen(true)} className="w-full flex items-center justify-between">
-              <div className="min-w-0">
-                <div className="text-white text-sm font-medium truncate max-w-[12rem]">{currentTrack.title}</div>
-                <div className="text-gray-400 text-xs truncate max-w-[12rem]">{typeof currentTrack.artist === 'string' ? currentTrack.artist : (currentTrack.artist?.username || currentTrack.artist?.name || 'Artiste inconnu')}</div>
+          {/* Barre compacte mobile/tablet */}
+          <div className="lg:hidden mt-2 mb-16">
+            <div 
+              className="w-full bg-gray-900/80 rounded-lg border border-gray-700/50 cursor-pointer hover:bg-gray-800/80 transition-colors"
+              onClick={() => setIsSheetOpen(true)}
+            >
+              {/* Progress bar */}
+              <div 
+                ref={progressRef}
+                className="w-full h-1 bg-gray-600 cursor-pointer hover:h-1.5 transition-all duration-200 rounded-t-lg"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleProgressClick(e);
+                }}
+              >
+                <div 
+                  className="h-full bg-green-500 hover:bg-green-400 transition-colors"
+                  style={{ width: `${(currentTime / duration) * 100}%` }}
+                />
               </div>
-              <div className="flex items-center space-x-2 ml-3">
-                <button type="button" onClick={(e) => { e.stopPropagation(); handleToggleLike(); }} className="p-2 text-gray-300">
-                  <Heart className="h-4 w-4" fill={likedTracks.includes(currentTrack?._id || currentTrack?.id) ? 'currentColor' : 'none'} />
-                </button>
-                <button type="button" onClick={(e) => { e.stopPropagation(); togglePlayPause(); }} className="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center">
-                  {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" style={{ marginLeft: '1px' }} />}
-                </button>
+              
+              {/* Main player content */}
+              <div className="flex items-center justify-between py-3 px-3">
+                <div className="flex items-center space-x-3 min-w-0 flex-1">
+                  {/* Album cover */}
+                  <div className="w-12 h-12 bg-gray-800 rounded flex-shrink-0 flex items-center justify-center">
+                    {(currentTrack.cover || currentTrack.coverUrl) ? (
+                      <img 
+                        src={currentTrack.cover || currentTrack.coverUrl} 
+                        alt={currentTrack.title}
+                        className="w-full h-full object-cover rounded"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <Music className="h-6 w-6 text-gray-400" />
+                    )}
+                  </div>
+                  
+                  {/* Track info */}
+                  <div className="min-w-0 flex-1">
+                    <div className="text-white text-sm font-medium truncate">{currentTrack.title}</div>
+                    <div className="text-gray-400 text-xs truncate">{typeof currentTrack.artist === 'string' ? currentTrack.artist : (currentTrack.artist?.username || currentTrack.artist?.name || 'Artiste inconnu')}</div>
+                  </div>
+                </div>
+                
+                {/* Controls */}
+                <div className="flex items-center space-x-2 ml-3" onClick={(e) => e.stopPropagation()}>
+                  <button type="button" onClick={(e) => { e.stopPropagation(); handleToggleLike(); }} className="p-2 text-gray-300 hover:text-white transition-colors">
+                    <Heart className="h-5 w-5" fill={likedTracks.includes(currentTrack?._id || currentTrack?.id) ? 'currentColor' : 'none'} />
+                  </button>
+                  
+                  {/* Previous button */}
+                  <button type="button" onClick={(e) => { e.stopPropagation(); previousTrack(); }} className="p-2 text-gray-300 hover:text-white transition-colors">
+                    <SkipBack className="h-5 w-5" />
+                  </button>
+                  
+                  {/* Play/Pause button */}
+                  <button type="button" onClick={(e) => { e.stopPropagation(); togglePlayPause(); }} className="w-10 h-10 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 transition-transform">
+                    {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" style={{ marginLeft: '1px' }} />}
+                  </button>
+                  
+                  {/* Next button */}
+                  <button type="button" onClick={(e) => { e.stopPropagation(); nextTrack(); }} className="p-2 text-gray-300 hover:text-white transition-colors">
+                    <SkipForward className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
-            </button>
+              
+              {/* Time display */}
+              <div className="flex items-center justify-between px-3 pb-2">
+                <span className="text-xs text-gray-400">
+                  {formatTime(currentTime)}
+                </span>
+                <span className="text-xs text-gray-400">
+                  {formatTime(duration)}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

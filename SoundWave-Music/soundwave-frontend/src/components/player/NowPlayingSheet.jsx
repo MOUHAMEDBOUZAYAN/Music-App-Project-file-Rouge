@@ -4,7 +4,7 @@ const NowPlayingSheet = ({ track, isOpen, onClose, onPlayPause, isPlaying, onNex
   if (!isOpen || !track) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] sm:hidden">
+    <div className="fixed inset-0 z-[60] lg:hidden">
       <div className="absolute inset-0 bg-black/70" onClick={onClose}></div>
       <div className="absolute bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-800 rounded-t-2xl p-4 shadow-2xl">
         <div className="w-12 h-1.5 bg-gray-700 rounded-full mx-auto mb-4"></div>

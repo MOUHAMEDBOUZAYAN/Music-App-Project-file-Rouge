@@ -43,7 +43,7 @@ const Layout = ({ children }) => {
         </div>
         
         {/* Contenu principal avec scroll et espacement professionnel - Couleur uniforme */}
-        <main className="flex-1 overflow-y-auto bg-black pb-56 md:pb-28 pt-4 pl-0 lg:pl-8" style={{ margin: 0, paddingRight: 0 }}>
+        <main className="flex-1 overflow-y-auto bg-black pb-24 lg:pb-28 pt-4 pl-0 lg:pl-8" style={{ margin: 0, paddingRight: 0 }}>
           {children}
         </main>
         
