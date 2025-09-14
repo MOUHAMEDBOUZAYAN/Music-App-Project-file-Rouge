@@ -40,6 +40,14 @@ const albumSchema = new Schema({
     type: Number,
     default: 0
   },
+  likes: [{
+    type: Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  likesCount: {
+    type: Number,
+    default: 0
+  },
   followers: [{
     type: Schema.Types.ObjectId,
     ref: 'User'

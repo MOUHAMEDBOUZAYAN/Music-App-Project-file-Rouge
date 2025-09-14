@@ -19,6 +19,20 @@ const albumService = {
     return response.data;
   },
 
+  // Rechercher des albums
+  searchAlbums: async (query, params = {}) => {
+    console.log('🔍 Searching albums with query:', query);
+    const response = await api.get('/albums', { 
+      params: { 
+        search: query, 
+        limit: params.limit || 10,
+        ...params 
+      } 
+    });
+    console.log('🔍 Albums search response:', response.data);
+    return response.data;
+  },
+
   // Obtenir les albums de l'utilisateur connecté
   getUserAlbums: async (params = {}) => {
     const response = await api.get('/albums/user', { params });
@@ -33,7 +47,9 @@ const albumService = {
 
   // Obtenir un album par ID
   getAlbumById: async (id) => {
+    console.log('💿 Fetching album by ID:', id);
     const response = await api.get(`/albums/${id}`);
+    console.log('💿 Album API response:', response.data);
     return response.data;
   },
 
@@ -81,6 +97,38 @@ const albumService = {
       return {
         success: false,
         error: error.response?.data?.message || 'Erreur lors de la récupération des albums suivis'
+      };
+    }
+  },
+
+  // Suivre/ne plus suivre un album
+  followAlbum: async (albumId) => {
+    try {
+      const response = await api.post(`/albums/${albumId}/follow`);
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Erreur lors du suivi de l\'album'
+      };
+    }
+  },
+
+  // Aimer/ne plus aimer un album
+  likeAlbum: async (albumId) => {
+    try {
+      const response = await api.post(`/albums/${albumId}/like`);
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Erreur lors de la mise à jour des favoris'
       };
     }
   },

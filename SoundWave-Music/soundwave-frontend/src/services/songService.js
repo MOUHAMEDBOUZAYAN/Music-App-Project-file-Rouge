@@ -19,6 +19,25 @@ const songService = {
     return response.data;
   },
 
+  // Rechercher des chansons
+  searchSongs: async (params = {}) => {
+    try {
+      console.log('🔍 Searching songs with params:', params);
+      const response = await api.get('/songs/search', { params });
+      console.log('🔍 Songs search response:', response.data);
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      console.error('❌ Error searching songs:', error);
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Erreur lors de la recherche de chansons'
+      };
+    }
+  },
+
   // Obtenir les chansons de l'utilisateur connecté
   getUserSongs: async (params = {}) => {
     const response = await api.get('/songs/user', { params });

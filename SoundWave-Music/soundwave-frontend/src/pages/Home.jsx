@@ -33,6 +33,7 @@ const Home = () => {
   const [popularArtists, setPopularArtists] = useState([]);
   const [popularAlbums, setPopularAlbums] = useState([]);
   const [newReleases, setNewReleases] = useState([]);
+  const [likedAlbums, setLikedAlbums] = useState([]);
   const [featuredPlaylists, setFeaturedPlaylists] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -47,6 +48,22 @@ const Home = () => {
     console.log('🏠 Home - État de la sidebar:', isSidebarOpen);
     loadHomeData();
   }, [isSidebarOpen]);
+
+  // Charger les albums likés
+  useEffect(() => {
+    const loadLikedAlbums = () => {
+      try {
+        const likedAlbumsFromStorage = JSON.parse(localStorage.getItem('likedAlbums') || '[]');
+        setLikedAlbums(likedAlbumsFromStorage);
+        console.log('💿 Loaded liked albums:', likedAlbumsFromStorage);
+      } catch (error) {
+        console.error('Error loading liked albums:', error);
+        setLikedAlbums([]);
+      }
+    };
+    
+    loadLikedAlbums();
+  }, []);
 
   // Charger les données de la page d'accueil
   const loadHomeData = async () => {
@@ -232,7 +249,9 @@ const Home = () => {
   };
 
   const handleAlbumClick = (album) => {
-    navigate(`/album/${album.id}`);
+    const albumId = album._id || album.id;
+    console.log('💿 Album clicked:', { album, albumId });
+    navigate(`/album/${albumId}`);
   };
 
   const handleAddToQueue = (song) => {
@@ -278,6 +297,37 @@ const Home = () => {
       }
     } catch (error) {
       console.error('Erreur lors de la mise à jour des favoris:', error);
+      toast.error('Erreur lors de la mise à jour des favoris');
+    }
+  };
+
+  const handleToggleAlbumLike = async (album) => {
+    try {
+      const albumId = album._id || album.id;
+      console.log('💿 handleToggleAlbumLike called:', { album, albumId });
+      
+      const response = await albumService.likeAlbum(albumId);
+      
+      if (response.success) {
+        const wasLiked = response.data.isLiked;
+        
+        // Mettre à jour l'état local
+        if (wasLiked) {
+          const newLikedAlbums = [...likedAlbums, albumId];
+          setLikedAlbums(newLikedAlbums);
+          localStorage.setItem('likedAlbums', JSON.stringify(newLikedAlbums));
+          toast.success('Album ajouté aux favoris');
+        } else {
+          const newLikedAlbums = likedAlbums.filter(id => id !== albumId);
+          setLikedAlbums(newLikedAlbums);
+          localStorage.setItem('likedAlbums', JSON.stringify(newLikedAlbums));
+          toast.success('Album retiré des favoris');
+        }
+      } else {
+        toast.error(response.error || 'Erreur lors de la mise à jour des favoris');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour des favoris de l\'album:', error);
       toast.error('Erreur lors de la mise à jour des favoris');
     }
   };
@@ -599,15 +649,15 @@ const Home = () => {
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleToggleLike(album);
+                            handleToggleAlbumLike(album);
                           }}
                           className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-2xl ${
-                            likedTracks.includes(album._id || album.id) 
+                            likedAlbums.includes(album._id || album.id) 
                               ? 'bg-green-500 text-white' 
                               : 'bg-black/80 text-white hover:bg-gray-700'
                           }`}
                         >
-                          <Heart className="h-4 w-4" fill={likedTracks.includes(album._id || album.id) ? 'currentColor' : 'none'} />
+                          <Heart className="h-4 w-4" fill={likedAlbums.includes(album._id || album.id) ? 'currentColor' : 'none'} />
                         </button>
                         <button 
                           onClick={(e) => {

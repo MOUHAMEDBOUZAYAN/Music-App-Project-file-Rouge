@@ -38,6 +38,10 @@ const Library = () => {
   const [viewMode, setViewMode] = useState('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('Tout');
+  const [albums, setAlbums] = useState([]);
+  const [artists, setArtists] = useState([]);
+  const [loadingArtists, setLoadingArtists] = useState(false);
+  const [loadingAlbums, setLoadingAlbums] = useState(false);
   
   const tabs = [
     { id: 'playlists', label: 'Playlists', icon: List },
@@ -173,42 +177,75 @@ const Library = () => {
     loadFollowedArtists();
   }, [activeTab]);
 
-  // Charger les albums suivis
+  // Charger les albums likés
   useEffect(() => {
-    const loadFollowedAlbums = async () => {
+    const loadLikedAlbums = async () => {
       if (activeTab === 'albums') {
         setLoadingAlbums(true);
         try {
-          console.log('💿 Loading followed albums for Library...');
-          const response = await albumService.getFollowedAlbums();
-          if (response.success) {
-            console.log('💿 Raw followed albums response:', response.data);
-            const albumsData = response.data.map(album => {
-              console.log('💿 Processing album:', album);
-              return {
-                _id: album._id,
-                id: album._id,
-                name: album.title,
-                artist: album.artist ? (album.artist.name || album.artist.username) : 'Artiste inconnu',
-                coverUrl: album.coverImage ? 
-                  (album.coverImage.startsWith('http') ? 
-                    album.coverImage : 
-                    `http://localhost:5000${album.coverImage}`) : 
-                  `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&${Math.random()}`,
-                releaseDate: album.releaseDate,
-                genre: album.genre ? album.genre.join(', ') : '',
-                songsCount: album.songsCount || 0,
-                followers: album.followers ? album.followers.length : 0
-              };
-            });
-            setAlbums(albumsData);
-            console.log('💿 Processed followed albums:', albumsData);
-          } else {
-            console.log('💿 No followed albums found or error:', response.error);
+          console.log('💿 Loading liked albums for Library...');
+          
+          // Récupérer les IDs des albums likés depuis localStorage
+          const likedAlbumsIds = JSON.parse(localStorage.getItem('likedAlbums') || '[]');
+          console.log('💿 Liked albums IDs:', likedAlbumsIds);
+          
+          if (likedAlbumsIds.length === 0) {
+            console.log('💿 No liked albums found');
             setAlbums([]);
+            setLoadingAlbums(false);
+            return;
           }
+          
+          // Récupérer les détails des albums likés
+          const albumsPromises = likedAlbumsIds.map(async (albumId) => {
+            try {
+              const response = await albumService.getAlbumById(albumId);
+              if (response.success) {
+                return response.data;
+              }
+              return null;
+            } catch (error) {
+              console.error(`❌ Error loading album ${albumId}:`, error);
+              return null;
+            }
+          });
+          
+          const albumsResults = await Promise.all(albumsPromises);
+          const validAlbums = albumsResults.filter(album => album !== null);
+          
+          console.log('💿 Raw liked albums response:', validAlbums);
+          
+          const albumsData = validAlbums.map(album => {
+            console.log('💿 Processing liked album:', album);
+            console.log('💿 Album songs:', album.songs);
+            return {
+              _id: album._id,
+              id: album._id,
+              name: album.title,
+              title: album.title,
+              artist: album.artist ? (album.artist.name || album.artist.username) : 'Artiste inconnu',
+              coverUrl: album.coverImage ? 
+                (album.coverImage.startsWith('http') ? 
+                  album.coverImage : 
+                  `http://localhost:5000${album.coverImage}`) : 
+                `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&${Math.random()}`,
+              cover: album.coverImage ? 
+                (album.coverImage.startsWith('http') ? 
+                  album.coverImage : 
+                  `http://localhost:5000${album.coverImage}`) : 
+                `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&${Math.random()}`,
+              releaseDate: album.releaseDate,
+              genre: album.genre ? album.genre.join(', ') : '',
+              songsCount: album.songsCount || 0,
+              followers: album.followers ? album.followers.length : 0,
+              tracks: album.songs || []
+            };
+          });
+          
+          setAlbums(albumsData);
+          console.log('💿 Processed liked albums:', albumsData);
         } catch (error) {
-          console.error('❌ Error loading followed albums:', error);
+          console.error('❌ Error loading liked albums:', error);
           setAlbums([]);
         } finally {
           setLoadingAlbums(false);
@@ -216,13 +253,91 @@ const Library = () => {
       }
     };
 
-    loadFollowedAlbums();
+    loadLikedAlbums();
   }, [activeTab]);
 
-  const [albums, setAlbums] = useState([]);
-  const [artists, setArtists] = useState([]);
-  const [loadingArtists, setLoadingArtists] = useState(false);
-  const [loadingAlbums, setLoadingAlbums] = useState(false);
+  // Écouter les changements dans localStorage pour les albums likés
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'likedAlbums' && activeTab === 'albums') {
+        console.log('💿 Liked albums changed in localStorage, reloading...');
+        // Recharger les albums likés
+        const loadLikedAlbums = async () => {
+          try {
+            const likedAlbumsIds = JSON.parse(localStorage.getItem('likedAlbums') || '[]');
+            
+            if (likedAlbumsIds.length === 0) {
+              setAlbums([]);
+              return;
+            }
+            
+            const albumsPromises = likedAlbumsIds.map(async (albumId) => {
+              try {
+                const response = await albumService.getAlbumById(albumId);
+                return response.success ? response.data : null;
+              } catch (error) {
+                console.error(`❌ Error loading album ${albumId}:`, error);
+                return null;
+              }
+            });
+            
+            const albumsResults = await Promise.all(albumsPromises);
+            const validAlbums = albumsResults.filter(album => album !== null);
+            
+            const albumsData = validAlbums.map(album => ({
+              _id: album._id,
+              id: album._id,
+              name: album.title,
+              title: album.title,
+              artist: album.artist ? (album.artist.name || album.artist.username) : 'Artiste inconnu',
+              coverUrl: album.coverImage ? 
+                (album.coverImage.startsWith('http') ? 
+                  album.coverImage : 
+                  `http://localhost:5000${album.coverImage}`) : 
+                `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&${Math.random()}`,
+              cover: album.coverImage ? 
+                (album.coverImage.startsWith('http') ? 
+                  album.coverImage : 
+                  `http://localhost:5000${album.coverImage}`) : 
+                `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop&${Math.random()}`,
+              releaseDate: album.releaseDate,
+              genre: album.genre ? album.genre.join(', ') : '',
+              songsCount: album.songsCount || 0,
+              followers: album.followers ? album.followers.length : 0,
+              tracks: album.songs || []
+            }));
+            
+            setAlbums(albumsData);
+          } catch (error) {
+            console.error('❌ Error reloading liked albums:', error);
+          }
+        };
+        
+        loadLikedAlbums();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Également écouter les changements dans la même page (pas de storage event)
+    const interval = setInterval(() => {
+      if (activeTab === 'albums') {
+        const currentLiked = JSON.parse(localStorage.getItem('likedAlbums') || '[]');
+        const currentAlbumIds = albums.map(album => album._id);
+        
+        // Si les IDs ne correspondent pas, recharger
+        if (JSON.stringify(currentLiked.sort()) !== JSON.stringify(currentAlbumIds.sort())) {
+          console.log('💿 Detected change in liked albums, reloading...');
+          handleStorageChange({ key: 'likedAlbums' });
+        }
+      }
+    }, 2000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, [activeTab, albums]);
 
   const handlePlayPlaylist = (playlist) => {
     // Convertir la playlist au format attendu par playPlaylist
@@ -235,6 +350,14 @@ const Library = () => {
   };
 
   const handlePlayAlbum = (album) => {
+    console.log('🎵 Playing album from Library:', album);
+    console.log('🎵 Album tracks:', album.tracks);
+    
+    if (!album.tracks || album.tracks.length === 0) {
+      toast.error('Cet album ne contient aucune chanson');
+      return;
+    }
+    
     playAlbum(album);
     toast.success(`Lecture de l'album ${album.name}`);
   };
@@ -359,8 +482,9 @@ const Library = () => {
       return (
         <div className="text-center py-12">
           <Disc className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-gray-400 mb-2">Aucun album suivi</h3>
-          <p className="text-gray-500">Les albums que vous suivez apparaîtront ici</p>
+          <h3 className="text-xl font-semibold text-gray-400 mb-2">Aucun album favori</h3>
+          <p className="text-gray-500">Les albums que vous aimez apparaîtront ici</p>
+          <p className="text-sm text-gray-600 mt-2">Cliquez sur le cœur des albums pour les ajouter à vos favoris</p>
         </div>
       );
     }

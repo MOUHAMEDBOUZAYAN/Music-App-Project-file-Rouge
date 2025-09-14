@@ -83,4 +83,14 @@ router.post('/:id/like',
   albumController.likeUnlikeAlbum
 );
 
+// @route   POST api/albums/:id/follow
+// @desc    Suivre/ne plus suivre un album
+// @access  Private
+router.post('/:id/follow', 
+  protect, 
+  validateObjectId, 
+  activityLogger('follow_album'), 
+  albumController.followUnfollowAlbum
+);
+
 module.exports = router; 

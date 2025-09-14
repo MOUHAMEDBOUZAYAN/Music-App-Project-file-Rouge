@@ -18,11 +18,15 @@ const getAlbums = async (req, res, next) => {
     if (search) {
       filter.$or = [
         { title: { $regex: search, $options: 'i' } },
-        { artist: { $regex: search, $options: 'i' } }
+        { 'artist.name': { $regex: search, $options: 'i' } },
+        { 'artist.username': { $regex: search, $options: 'i' } }
       ];
     }
     if (artist) {
-      filter.artist = { $regex: artist, $options: 'i' };
+      filter.$or = [
+        { 'artist.name': { $regex: artist, $options: 'i' } },
+        { 'artist.username': { $regex: artist, $options: 'i' } }
+      ];
     }
     if (genre) {
       filter.genre = { $regex: genre, $options: 'i' };
@@ -33,7 +37,7 @@ const getAlbums = async (req, res, next) => {
     sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
     
     const albums = await Album.find(filter)
-      .populate('artist', 'username avatar')
+      .populate('artist', 'username name profilePicture')
       .populate({
         path: 'songs',
         select: 'title duration audioUrl coverImage artist',
@@ -408,11 +412,13 @@ const likeUnlikeAlbum = async (req, res, next) => {
     if (isLiked) {
       // Retirer le like
       album.likes = album.likes.filter(like => like.toString() !== userId.toString());
+      album.likesCount = Math.max(0, album.likesCount - 1);
       await album.save();
       console.log('✅ Album unliked successfully');
     } else {
       // Ajouter le like
       album.likes.push(userId);
+      album.likesCount = album.likes.length;
       await album.save();
       console.log('✅ Album liked successfully');
     }
@@ -429,6 +435,63 @@ const likeUnlikeAlbum = async (req, res, next) => {
   }
 };
 
+// @desc    Suivre/ne plus suivre un album
+// @route   POST /api/albums/:id/follow
+// @access  Private
+const followUnfollowAlbum = async (req, res, next) => {
+  try {
+    const albumId = req.params.id;
+    const userId = req.user._id;
+    
+    console.log('💿 Follow/Unfollow album request:', { albumId, userId });
+    
+    const album = await Album.findById(albumId);
+    if (!album) {
+      return next(new AppError('Album non trouvé', 404));
+    }
+    
+    const user = await User.findById(userId);
+    if (!user) {
+      return next(new AppError('Utilisateur non trouvé', 404));
+    }
+    
+    const isFollowing = user.followedAlbums.includes(albumId);
+    
+    if (isFollowing) {
+      // Ne plus suivre l'album
+      user.followedAlbums = user.followedAlbums.filter(id => id.toString() !== albumId);
+      album.followers = album.followers.filter(id => id.toString() !== userId);
+      await user.save();
+      await album.save();
+      console.log('✅ Album unfollowed successfully');
+      
+      res.json({
+        success: true,
+        message: 'Album retiré de vos suivis',
+        isFollowing: false,
+        followersCount: album.followers.length
+      });
+    } else {
+      // Suivre l'album
+      user.followedAlbums.push(albumId);
+      album.followers.push(userId);
+      await user.save();
+      await album.save();
+      console.log('✅ Album followed successfully');
+      
+      res.json({
+        success: true,
+        message: 'Album ajouté à vos suivis',
+        isFollowing: true,
+        followersCount: album.followers.length
+      });
+    }
+  } catch (error) {
+    console.error('❌ Error in followUnfollowAlbum:', error);
+    next(new AppError('Erreur lors de la mise à jour du suivi de l\'album', 500));
+  }
+};
+
 module.exports = {
   getAlbums,
   getAlbumById,
@@ -438,5 +501,6 @@ module.exports = {
   addSongToAlbum,
   removeSongFromAlbum,
   getUserAlbums,
-  likeUnlikeAlbum
+  likeUnlikeAlbum,
+  followUnfollowAlbum
 }; 

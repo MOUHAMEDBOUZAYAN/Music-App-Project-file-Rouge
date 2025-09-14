@@ -49,6 +49,25 @@ export const artistService = {
     }
   },
 
+  // Rechercher des artistes
+  searchArtists: async (params = {}) => {
+    try {
+      console.log('🔍 Searching artists with params:', params);
+      const response = await apiClient.get('/artists/search', { params });
+      console.log('🔍 Artists search response:', response.data);
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      console.error('❌ Error searching artists:', error);
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Erreur lors de la recherche d\'artistes'
+      };
+    }
+  },
+
   // Obtenir les chansons d'un artiste
   getArtistSongs: async (artistId, params = {}) => {
     try {

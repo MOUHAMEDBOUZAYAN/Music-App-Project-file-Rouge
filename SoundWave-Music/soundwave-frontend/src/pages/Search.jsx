@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { 
   Search as SearchIcon, 
   Play, 
@@ -11,10 +11,12 @@ import {
 import { useMusic } from '../store/MusicContext';
 import { songService } from '../services/songService';
 import { artistService } from '../services/artistService';
+import { albumService } from '../services/albumService';
 import { playlistService } from '../services/playlistService';
 import toast from 'react-hot-toast';
 
 const Search = () => {
+  const navigate = useNavigate();
   const { 
     playTrack, 
     addToQueue, 
@@ -36,6 +38,7 @@ const Search = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [searchError, setSearchError] = useState(null);
+  const [likedAlbums, setLikedAlbums] = useState([]);
 
   // Filtres exactement comme dans Spotify
   const filters = ['Tout', 'Artistes', 'Titres', 'Albums', 'Playlists', 'Podcasts et émissions', 'Profils', 'Genres et ambiances'];
@@ -208,6 +211,22 @@ const Search = () => {
             avatar: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=200&h=200&fit=crop&crop=face'
           }
         ],
+        albums: [
+          {
+            _id: 'ferda1',
+            title: 'Ferda - Debut Album',
+            name: 'Ferda - Debut Album',
+            artist: {
+              name: 'Ferda Artist',
+              username: 'Ferda Artist'
+            },
+            coverImage: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop',
+            cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop',
+            releaseDate: '2024-01-01',
+            songsCount: 12,
+            tracks: []
+          }
+        ],
         playlists: [
           {
             _id: 'ferda1',
@@ -252,6 +271,36 @@ const Search = () => {
           avatar: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=200&h=200&fit=crop&crop=face'
         }
       ],
+      albums: [
+        {
+          _id: `${searchTerm}1`,
+          title: `${query.charAt(0).toUpperCase() + query.slice(1)} - Album`,
+          name: `${query.charAt(0).toUpperCase() + query.slice(1)} - Album`,
+          artist: {
+            name: `${query.charAt(0).toUpperCase() + query.slice(1)} Artist`,
+            username: `${query.charAt(0).toUpperCase() + query.slice(1)} Artist`
+          },
+          coverImage: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop',
+          cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop',
+          releaseDate: '2024-01-01',
+          songsCount: 12,
+          tracks: []
+        },
+        {
+          _id: `${searchTerm}2`,
+          title: `${query.charAt(0).toUpperCase() + query.slice(1)} - Greatest Hits`,
+          name: `${query.charAt(0).toUpperCase() + query.slice(1)} - Greatest Hits`,
+          artist: {
+            name: `${query.charAt(0).toUpperCase() + query.slice(1)} & Band`,
+            username: `${query.charAt(0).toUpperCase() + query.slice(1)} & Band`
+          },
+          coverImage: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300&h=300&fit=crop',
+          cover: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300&h=300&fit=crop',
+          releaseDate: '2023-12-01',
+          songsCount: 15,
+          tracks: []
+        }
+      ],
       playlists: [
         {
           _id: `${searchTerm}1`,
@@ -265,12 +314,15 @@ const Search = () => {
   };
 
   const handleSearch = async (query) => {
+    console.log('🔍 handleSearch called with:', query);
     if (!query.trim()) {
+      console.log('🔍 Empty query, clearing results');
       setSearchResults({ songs: [], artists: [], albums: [], playlists: [] });
       setSearchError(null);
       return;
     }
 
+    console.log('🔍 Starting search process for:', query);
     setIsLoading(true);
     setSearchError(null);
     
@@ -287,17 +339,23 @@ const Search = () => {
           console.error('❌ Erreur recherche artistes:', err);
           return { success: false, error: err.message, data: { artists: [] } };
         }),
+        albumService.searchAlbums(query, { limit: 10 }).catch(err => {
+          console.error('❌ Erreur recherche albums:', err);
+          console.error('❌ Albums search error details:', err.response?.data);
+          return { success: false, error: err.message, data: { albums: [] } };
+        }),
         playlistService.getAllPlaylists({ q: query, limit: 10 }).catch(err => {
           console.error('❌ Erreur recherche playlists:', err);
           return { success: false, error: err.message, data: { playlists: [] } };
         })
       ];
 
-      const [songsResult, artistsResult, playlistsResult] = await Promise.all(searchPromises);
+      const [songsResult, artistsResult, albumsResult, playlistsResult] = await Promise.all(searchPromises);
 
       console.log('📊 Résultats de recherche:', {
         songs: songsResult,
         artists: artistsResult,
+        albums: albumsResult,
         playlists: playlistsResult
       });
 
@@ -305,28 +363,41 @@ const Search = () => {
       let finalResults = {
         songs: songsResult.success ? songsResult.data.songs || [] : [],
         artists: artistsResult.success ? artistsResult.data.artists || [] : [],
-        albums: [], // À implémenter avec le service d'albums
+        albums: albumsResult.success ? albumsResult.data.albums || albumsResult.data || [] : [],
         playlists: playlistsResult.success ? playlistsResult.data.playlists || [] : []
       };
+      
+      console.log('🔍 Albums result processing:', {
+        albumsResult,
+        albumsData: albumsResult.data,
+        finalAlbums: finalResults.albums
+      });
 
-      // Si aucun résultat, utiliser les données de test dynamiques
-      const hasNoResults = Object.values(finalResults).every(arr => arr.length === 0);
-      if (hasNoResults) {
-        console.log('🎯 Aucun résultat trouvé, utilisation des données de test pour:', query);
+      // Vérifier s'il y a des résultats réels
+      const hasRealResults = Object.values(finalResults).some(arr => arr.length > 0);
+      console.log('🔍 Vérification des résultats:', {
+        hasRealResults,
+        finalResults,
+        query
+      });
+      
+      // Utiliser les données de test SEULEMENT si aucun résultat réel ET que l'utilisateur veut voir des exemples
+      if (!hasRealResults && query.toLowerCase().includes('test')) {
+        console.log('🎯 Utilisation des données de test pour démonstration:', query);
         finalResults = generateMockData(query);
+        console.log('🎯 Données de test générées:', finalResults);
       }
 
+      console.log('🔍 Setting search results:', finalResults);
       setSearchResults(finalResults);
       setSearchError(null); // Pas d'erreur si on a des données de test
 
     } catch (error) {
       console.error('❌ Erreur générale lors de la recherche:', error);
       
-      // En cas d'erreur, utiliser les données de test dynamiques
-      console.log('🎯 Utilisation des données de test en cas d\'erreur pour:', query);
-      const fallbackData = generateMockData(query);
-      setSearchResults(fallbackData);
-      setSearchError(null);
+      // En cas d'erreur, afficher un message d'erreur au lieu de données de test
+      setSearchResults({ songs: [], artists: [], albums: [], playlists: [] });
+      setSearchError('Erreur lors de la recherche. Veuillez réessayer.');
     } finally {
       setIsLoading(false);
     }
@@ -357,6 +428,41 @@ const Search = () => {
     setSearchResults({ songs: [], artists: [], albums: [], playlists: [] });
   };
 
+  // useEffect لتحميل الألبومات المفضلة
+  useEffect(() => {
+    const likedAlbumsFromStorage = JSON.parse(localStorage.getItem('likedAlbums') || '[]');
+    setLikedAlbums(likedAlbumsFromStorage);
+  }, []);
+
+  // useEffect للبحث عند تحميل الصفحة أو تغيير URL
+  useEffect(() => {
+    const queryFromURL = searchParams.get('q');
+    console.log('🔍 useEffect URL change:', { queryFromURL, searchQuery });
+    if (queryFromURL && queryFromURL.trim()) {
+      console.log('🔍 Starting search from URL:', queryFromURL);
+      setSearchQuery(queryFromURL);
+      handleSearch(queryFromURL);
+    }
+  }, [searchParams]);
+
+  // useEffect للبحث عند تحميل الصفحة لأول مرة
+  useEffect(() => {
+    const queryFromURL = searchParams.get('q');
+    console.log('🔍 Initial mount useEffect:', { queryFromURL, searchQuery });
+    if (queryFromURL && queryFromURL.trim()) {
+      console.log('🔍 Initial page load with query:', queryFromURL);
+      handleSearch(queryFromURL);
+    }
+  }, []); // Run only on mount
+
+  // Force search when searchQuery changes
+  useEffect(() => {
+    if (searchQuery && searchQuery.trim()) {
+      console.log('🔍 Search query changed, triggering search:', searchQuery);
+      handleSearch(searchQuery);
+    }
+  }, [searchQuery]);
+
   const formatDuration = (seconds) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
@@ -378,9 +484,50 @@ const Search = () => {
     toast.success(`Lecture des meilleurs titres de ${artist.username || artist.name}`);
   };
 
+  const handlePlayAlbum = (album) => {
+    if (!album.tracks || album.tracks.length === 0) {
+      toast.error('Cet album ne contient aucune chanson');
+      return;
+    }
+    playAlbum(album);
+    toast.success(`Lecture de l'album ${album.title || album.name}`);
+  };
+
   const handleAddToQueue = (song) => {
     addToQueue(song);
     toast.success('Ajouté à la file d\'attente');
+  };
+
+  const handleToggleAlbumLike = async (album) => {
+    try {
+      const albumId = album._id || album.id;
+      console.log('💿 handleToggleAlbumLike called:', { album, albumId });
+      
+      const response = await albumService.likeAlbum(albumId);
+      
+      if (response.success) {
+        const wasLiked = response.data.isLiked;
+        
+        // Mettre à jour localStorage et state
+        const currentLikedAlbums = JSON.parse(localStorage.getItem('likedAlbums') || '[]');
+        if (wasLiked) {
+          const newLikedAlbums = [...currentLikedAlbums, albumId];
+          setLikedAlbums(newLikedAlbums);
+          localStorage.setItem('likedAlbums', JSON.stringify(newLikedAlbums));
+          toast.success('Album ajouté aux favoris');
+        } else {
+          const newLikedAlbums = currentLikedAlbums.filter(id => id !== albumId);
+          setLikedAlbums(newLikedAlbums);
+          localStorage.setItem('likedAlbums', JSON.stringify(newLikedAlbums));
+          toast.success('Album retiré des favoris');
+        }
+      } else {
+        toast.error(response.error || 'Erreur lors de la mise à jour des favoris');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour des favoris de l\'album:', error);
+      toast.error('Erreur lors de la mise à jour des favoris');
+    }
   };
 
   const handleToggleLike = async (song) => {
@@ -558,6 +705,72 @@ const Search = () => {
     </section>
   );
 
+  const renderAlbums = () => {
+    console.log('🔍 renderAlbums called with:', searchResults.albums);
+    return (
+      <section className="mb-10">
+        <h2 className="text-2xl font-bold mb-6 text-white">Albums</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+        {searchResults.albums.map((album) => (
+          <div 
+            key={album._id || album.id} 
+            className="group cursor-pointer hover:bg-gray-800/50 rounded-lg p-3 transition-colors duration-200"
+            onClick={() => navigate(`/album/${album._id || album.id}`)}
+          >
+            <div className="relative mb-3">
+              <div className="w-full aspect-square bg-gray-800 rounded-lg overflow-hidden shadow-lg">
+                <img
+                  src={album.coverImage || album.cover || `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop`}
+                  alt={album.title || album.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                />
+              </div>
+              
+              {/* Boutons d'action */}
+              <div className="absolute bottom-2 right-2 flex space-x-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleToggleAlbumLike(album);
+                  }}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-2xl ${
+                    likedAlbums.includes(album._id || album.id) 
+                      ? 'bg-green-500 text-white' 
+                      : 'bg-black/80 text-white hover:bg-gray-700'
+                  }`}
+                >
+                  <Heart className="h-4 w-4" fill={likedAlbums.includes(album._id || album.id) ? 'currentColor' : 'none'} />
+                </button>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handlePlayAlbum(album);
+                  }}
+                  className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center hover:scale-110 hover:bg-green-400 shadow-2xl"
+                >
+                  <Play className="h-4 w-4 text-black ml-1" />
+                </button>
+              </div>
+            </div>
+            
+            <h3 className="font-semibold text-sm mb-1 truncate group-hover:text-green-400 transition-colors text-white">
+              {album.title || album.name}
+            </h3>
+            <p className="text-xs text-gray-400 truncate">
+              {album.artist?.name || album.artist?.username || album.artist || 'Artiste inconnu'}
+            </p>
+            {album.releaseDate && (
+              <p className="text-xs text-gray-500 mt-1">
+                {new Date(album.releaseDate).getFullYear()}
+              </p>
+            )}
+          </div>
+        ))}
+      </div>
+    </section>
+    );
+  };
+
   const renderPlaylists = () => (
     <section className="mb-10">
       <h2 className="text-2xl font-bold mb-6 text-white">Avec {searchResults.artists[0]?.username || 'ElGrandeToto'}</h2>
@@ -609,6 +822,12 @@ const Search = () => {
             type="text"
             value={searchQuery}
             onChange={handleSearchChange}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                console.log('🔍 Enter key pressed');
+                handleSearch(searchQuery);
+              }
+            }}
             placeholder="Que souhaitez-vous écouter ?"
             className="w-full bg-gray-800 text-white placeholder-gray-400 rounded-full pl-12 pr-16 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-gray-800 transition-all duration-200"
           />
@@ -620,8 +839,16 @@ const Search = () => {
               <X className="h-5 w-5" />
             </button>
           )}
-          <button className="absolute right-4 top-1/2 transform -translate-y-1/2 p-2 text-gray-400 hover:text-white transition-colors">
-            <Filter className="h-5 w-5" />
+          <button 
+            onClick={() => {
+              console.log('🔍 Manual search button clicked');
+              if (searchQuery.trim()) {
+                handleSearch(searchQuery);
+              }
+            }}
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 p-2 text-gray-400 hover:text-white transition-colors"
+          >
+            <SearchIcon className="h-5 w-5" />
           </button>
         </div>
 
@@ -650,6 +877,13 @@ const Search = () => {
         </div>
       )}
 
+      {/* Debug info */}
+      <div className="mb-4 p-2 bg-gray-800 rounded text-xs text-gray-400">
+        Debug: searchQuery="{searchQuery}", isLoading={isLoading.toString()}, 
+        Results: songs={searchResults.songs.length}, artists={searchResults.artists.length}, 
+        albums={searchResults.albums.length}, playlists={searchResults.playlists.length}
+      </div>
+
       {/* Résultats de recherche - Style Spotify exact */}
       {isLoading ? (
         <div className="text-center py-12">
@@ -670,6 +904,18 @@ const Search = () => {
           {activeFilter === 'Tout' || activeFilter === 'Artistes' ? (
             searchResults.artists.length > 0 && renderArtists()
           ) : null}
+
+          {/* Albums */}
+          {activeFilter === 'Tout' || activeFilter === 'Albums' ? (
+            searchResults.albums.length > 0 && renderAlbums()
+          ) : null}
+          
+          {/* Debug Albums */}
+          <div className="text-xs text-gray-500 p-2 bg-gray-900 rounded">
+            Albums Debug: activeFilter="{activeFilter}", albums.length={searchResults.albums.length}, 
+            shouldRender={activeFilter === 'Tout' || activeFilter === 'Albums'}, 
+            hasAlbums={searchResults.albums.length > 0}
+          </div>
 
           {/* Playlists */}
           {activeFilter === 'Tout' || activeFilter === 'Playlists' ? (
