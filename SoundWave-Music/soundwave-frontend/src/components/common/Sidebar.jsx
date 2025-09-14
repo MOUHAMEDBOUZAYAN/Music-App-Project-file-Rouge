@@ -54,12 +54,66 @@ const Sidebar = ({ isOpen, onToggle }) => {
 
   // Charger les artistes abonnés
   useEffect(() => {
-    const loadSubscribedArtists = () => {
+    const loadSubscribedArtists = async () => {
       try {
-        const artists = JSON.parse(localStorage.getItem('subscribedArtists') || '[]');
-        setSubscribedArtists(artists);
+        // Essayer d'abord l'API
+        const response = await fetch('http://localhost:5000/api/users/following', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token') || localStorage.getItem('authToken')}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('📱 Sidebar - API response:', data);
+          const artists = data.following || [];
+          
+          // Traiter les données comme dans Library.jsx
+          console.log('📱 Sidebar - Processing artists:', artists);
+          const processedArtists = artists.map(artist => {
+            console.log('📱 Sidebar - Processing individual artist:', {
+              _id: artist._id,
+              username: artist.username,
+              profilePicture: artist.profilePicture
+            });
+            return {
+            _id: artist._id,
+            id: artist._id,
+            name: artist.username || 'Artiste inconnu',
+            avatar: artist.profilePicture ? 
+              (artist.profilePicture.startsWith('http') ? 
+                artist.profilePicture : 
+                `http://localhost:5000${artist.profilePicture}`) : 
+              `https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face&${Math.random()}`,
+            profilePicture: artist.profilePicture ? 
+              (artist.profilePicture.startsWith('http') ? 
+                artist.profilePicture : 
+                `http://localhost:5000${artist.profilePicture}`) : 
+              `https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face&${Math.random()}`,
+            followers: artist.followers ? artist.followers.length : Math.floor(Math.random() * 10000) + 1000,
+            bio: artist.bio || ''
+          };
+          });
+          
+          setSubscribedArtists(processedArtists);
+          console.log('📱 Sidebar - Processed artists:', processedArtists);
+        } else {
+          console.log('📱 Sidebar - API failed, using localStorage fallback');
+          // Fallback vers localStorage
+          const artists = JSON.parse(localStorage.getItem('subscribedArtists') || '[]');
+          console.log('📱 Sidebar - localStorage fallback artists:', artists);
+          setSubscribedArtists(artists);
+        }
       } catch (error) {
-        console.error('Erreur lors du chargement des artistes abonnés:', error);
+        console.error('📱 Sidebar - Error loading subscribed artists:', error);
+        // Fallback vers localStorage
+        try {
+          const artists = JSON.parse(localStorage.getItem('subscribedArtists') || '[]');
+          setSubscribedArtists(artists);
+        } catch (localError) {
+          console.error('📱 Sidebar - localStorage fallback also failed:', localError);
+          setSubscribedArtists([]);
+        }
       }
     };
 
@@ -70,12 +124,27 @@ const Sidebar = ({ isOpen, onToggle }) => {
       loadSubscribedArtists();
     };
 
+    // Écouter les événements de follow/unfollow d'artistes
+    const handleArtistFollowed = (event) => {
+      console.log('📱 Sidebar - Artist followed event received:', event.detail);
+      loadSubscribedArtists();
+    };
+
+    const handleArtistUnfollowed = (event) => {
+      console.log('📱 Sidebar - Artist unfollowed event received:', event.detail);
+      loadSubscribedArtists();
+    };
+
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('localStorageChange', handleStorageChange);
+    window.addEventListener('artistFollowed', handleArtistFollowed);
+    window.addEventListener('artistUnfollowed', handleArtistUnfollowed);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('localStorageChange', handleStorageChange);
+      window.removeEventListener('artistFollowed', handleArtistFollowed);
+      window.removeEventListener('artistUnfollowed', handleArtistUnfollowed);
     };
   }, []);
 
@@ -273,24 +342,37 @@ const Sidebar = ({ isOpen, onToggle }) => {
                     
                     {isSubscriptionsExpanded && (
                       <div className="space-y-1">
-                        {subscribedArtists.slice(0, 5).map((artist) => (
+                        {subscribedArtists.slice(0, 5).map((artist) => {
+                          console.log('📱 Sidebar - Rendering artist:', {
+                            _id: artist._id,
+                            name: artist.name,
+                            profilePicture: artist.profilePicture
+                          });
+                          return (
                           <div
                             key={artist._id || artist.id}
                             className="group flex items-center space-x-3 px-3 py-2 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors"
                           >
                             <Link
                               to={`/artist/${artist._id || artist.id}`}
+                              onClick={() => {
+                                console.log('📱 Sidebar - Navigating to artist:', artist._id || artist.id, 'name:', artist.name);
+                              }}
                               className="flex items-center space-x-3 flex-1 min-w-0"
                             >
                               <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
                                 {artist.profilePicture ? (
                                   <img 
-                                    src={artist.profilePicture.startsWith('http') ? artist.profilePicture : `http://localhost:5000${artist.profilePicture}`}
+                                    src={artist.profilePicture}
                                     alt={artist.username || artist.name}
                                     className="w-full h-full rounded-full object-cover"
                                     onError={(e) => {
+                                      console.log('📱 Sidebar - Image failed to load:', artist.profilePicture);
                                       e.target.style.display = 'none';
                                       e.target.nextSibling.style.display = 'flex';
+                                    }}
+                                    onLoad={() => {
+                                      console.log('📱 Sidebar - Image loaded successfully:', artist.profilePicture);
                                     }}
                                   />
                                 ) : null}
@@ -313,7 +395,8 @@ const Sidebar = ({ isOpen, onToggle }) => {
                               <X className="h-3 w-3" />
                             </button>
                           </div>
-                        ))}
+                          );
+                        })}
                         
                         {subscribedArtists.length > 5 && (
                           <div className="text-xs text-gray-500 px-3 py-1">

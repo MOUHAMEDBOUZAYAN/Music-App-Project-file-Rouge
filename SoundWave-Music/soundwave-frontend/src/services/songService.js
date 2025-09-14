@@ -23,7 +23,7 @@ const songService = {
   searchSongs: async (params = {}) => {
     try {
       console.log('🔍 Searching songs with params:', params);
-      const response = await api.get('/songs/search', { params });
+      const response = await api.get('/search/songs', { params });
       console.log('🔍 Songs search response:', response.data);
       return {
         success: true,
@@ -62,10 +62,10 @@ const songService = {
     return response.data;
   },
 
-  // Rechercher des chansons
-  searchSongs: async (query, params = {}) => {
-    console.log('🔍 songService.searchSongs called with:', query);
-    const response = await api.get('/songs/search', { 
+  // Rechercher des chansons (fonction alternative)
+  searchSongsByQuery: async (query, params = {}) => {
+    console.log('🔍 songService.searchSongsByQuery called with:', query);
+    const response = await api.get('/search/songs', { 
       params: { q: query, ...params } 
     });
     console.log('🔍 songService response:', response.data);

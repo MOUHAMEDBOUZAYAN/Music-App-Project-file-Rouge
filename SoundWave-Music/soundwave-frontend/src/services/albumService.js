@@ -21,16 +21,27 @@ const albumService = {
 
   // Rechercher des albums
   searchAlbums: async (query, params = {}) => {
-    console.log('🔍 Searching albums with query:', query);
-    const response = await api.get('/albums', { 
-      params: { 
-        search: query, 
-        limit: params.limit || 10,
-        ...params 
-      } 
-    });
-    console.log('🔍 Albums search response:', response.data);
-    return response.data;
+    try {
+      console.log('🔍 Searching albums with query:', query);
+      const response = await api.get('/search/albums', { 
+        params: { 
+          q: query, 
+          limit: params.limit || 10,
+          ...params 
+        } 
+      });
+      console.log('🔍 Albums search response:', response.data);
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      console.error('❌ Error searching albums:', error);
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Erreur lors de la recherche d\'albums'
+      };
+    }
   },
 
   // Obtenir les albums de l'utilisateur connecté
@@ -77,13 +88,6 @@ const albumService = {
     return response.data;
   },
 
-  // Rechercher des albums
-  searchAlbums: async (query, params = {}) => {
-    const response = await api.get('/albums', { 
-      params: { search: query, ...params } 
-    });
-    return response.data;
-  },
 
   // Obtenir les albums suivis
   getFollowedAlbums: async (params = {}) => {

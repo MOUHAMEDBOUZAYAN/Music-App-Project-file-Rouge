@@ -219,7 +219,7 @@ const validateSearch = [
     .optional()
     .trim()
     .custom((value) => {
-      if (value && value.length > 0 && value.length < 1) {
+      if (value && value.length < 1) {
         throw new Error('Le terme de recherche doit contenir au moins 1 caractère');
       }
       if (value && value.length > 100) {

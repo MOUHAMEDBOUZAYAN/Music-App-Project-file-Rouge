@@ -154,38 +154,99 @@ const searchSongs = async (req, res, next) => {
     const { q, genre, artist, album, page = 1, limit = 10, sortBy = 'views', sortOrder = 'desc' } = req.query;
     const skip = (page - 1) * limit;
     
-    if (!q) {
-      return next(new AppError('Terme de recherche requis', 400));
+    if (!q || q.trim() === '') {
+      return res.json({
+        success: true,
+        data: [],
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: 0,
+          pages: 0
+        }
+      });
     }
     
-    const filter = {
-      $or: [
-        { title: { $regex: q, $options: 'i' } },
-        { artist: { $regex: q, $options: 'i' } },
-        { album: { $regex: q, $options: 'i' } }
-      ]
-    };
+    // Use aggregation to search in artist name as well
+    const pipeline = [
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'artist',
+          foreignField: '_id',
+          as: 'artistInfo'
+        }
+      },
+      {
+        $unwind: '$artistInfo'
+      },
+      {
+        $match: {
+          $or: [
+            { title: { $regex: q, $options: 'i' } },
+            { album: { $regex: q, $options: 'i' } },
+            { genre: { $regex: q, $options: 'i' } },
+            { 'artistInfo.username': { $regex: q, $options: 'i' } }
+          ]
+        }
+      },
+      {
+        $addFields: {
+          artist: {
+            _id: '$artistInfo._id',
+            username: '$artistInfo.username',
+            avatar: '$artistInfo.avatar'
+          }
+        }
+      },
+      {
+        $project: {
+          artistInfo: 0
+        }
+      },
+      {
+        $sort: { [sortBy]: sortOrder === 'desc' ? -1 : 1 }
+      },
+      {
+        $skip: skip
+      },
+      {
+        $limit: parseInt(limit)
+      }
+    ];
     
-    if (genre) {
-      filter.genre = { $regex: genre, $options: 'i' };
-    }
-    if (artist) {
-      filter.artist = { $regex: artist, $options: 'i' };
-    }
-    if (album) {
-      filter.album = { $regex: album, $options: 'i' };
-    }
+    const songs = await Song.aggregate(pipeline);
     
-    const sort = {};
-    sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+    // Count total with same aggregation logic
+    const countPipeline = [
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'artist',
+          foreignField: '_id',
+          as: 'artistInfo'
+        }
+      },
+      {
+        $unwind: '$artistInfo'
+      },
+      {
+        $match: {
+          $or: [
+            { title: { $regex: q, $options: 'i' } },
+            { album: { $regex: q, $options: 'i' } },
+            { genre: { $regex: q, $options: 'i' } },
+            { 'artistInfo.username': { $regex: q, $options: 'i' } }
+          ]
+        }
+      },
+      {
+        $count: 'total'
+      }
+    ];
     
-    const songs = await Song.find(filter)
-      .populate('uploader', 'username avatar')
-      .sort(sort)
-      .skip(skip)
-      .limit(limit);
-    
-    const total = await Song.countDocuments(filter);
+    const countResult = await Song.aggregate(countPipeline);
+    const total = countResult.length > 0 ? countResult[0].total : 0;
     
     res.json({
       success: true,
@@ -198,7 +259,10 @@ const searchSongs = async (req, res, next) => {
       }
     });
   } catch (error) {
-    next(new AppError('Erreur lors de la recherche de chansons', 500));
+    console.error('❌ Erreur lors de la recherche de chansons:', error);
+    console.error('❌ Error details:', error.message);
+    console.error('❌ Error stack:', error.stack);
+    next(new AppError(`Erreur lors de la recherche de chansons: ${error.message}`, 500));
   }
 };
 
@@ -210,15 +274,24 @@ const searchArtists = async (req, res, next) => {
     const { q, page = 1, limit = 10, sortBy = 'followersCount', sortOrder = 'desc' } = req.query;
     const skip = (page - 1) * limit;
     
-    if (!q) {
-      return next(new AppError('Terme de recherche requis', 400));
+    if (!q || q.trim() === '') {
+      return res.json({
+        success: true,
+        data: [],
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: 0,
+          pages: 0
+        }
+      });
     }
     
     const filter = {
       role: 'artist',
       $or: [
-        { username: { $regex: q, $options: 'i' } },
-        { bio: { $regex: q, $options: 'i' } }
+        { username: { $regex: `^${q}`, $options: 'i' } },
+        { username: { $regex: q, $options: 'i' } }
       ]
     };
     
@@ -244,6 +317,7 @@ const searchArtists = async (req, res, next) => {
       }
     });
   } catch (error) {
+    console.error('❌ Erreur lors de la recherche d\'artistes:', error);
     next(new AppError('Erreur lors de la recherche d\'artistes', 500));
   }
 };
@@ -256,34 +330,99 @@ const searchAlbums = async (req, res, next) => {
     const { q, artist, genre, page = 1, limit = 10, sortBy = 'views', sortOrder = 'desc' } = req.query;
     const skip = (page - 1) * limit;
     
-    if (!q) {
-      return next(new AppError('Terme de recherche requis', 400));
+    if (!q || q.trim() === '') {
+      return res.json({
+        success: true,
+        data: [],
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: 0,
+          pages: 0
+        }
+      });
     }
     
-    const filter = {
-      $or: [
-        { title: { $regex: q, $options: 'i' } },
-        { artist: { $regex: q, $options: 'i' } }
-      ]
-    };
+    // Use aggregation to search in artist name as well
+    const pipeline = [
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'artist',
+          foreignField: '_id',
+          as: 'artistInfo'
+        }
+      },
+      {
+        $unwind: '$artistInfo'
+      },
+      {
+        $match: {
+          $or: [
+            { title: { $regex: q, $options: 'i' } },
+            { genre: { $regex: q, $options: 'i' } },
+            { description: { $regex: q, $options: 'i' } },
+            { 'artistInfo.username': { $regex: q, $options: 'i' } }
+          ]
+        }
+      },
+      {
+        $addFields: {
+          artist: {
+            _id: '$artistInfo._id',
+            username: '$artistInfo.username',
+            avatar: '$artistInfo.avatar'
+          }
+        }
+      },
+      {
+        $project: {
+          artistInfo: 0
+        }
+      },
+      {
+        $sort: { [sortBy]: sortOrder === 'desc' ? -1 : 1 }
+      },
+      {
+        $skip: skip
+      },
+      {
+        $limit: parseInt(limit)
+      }
+    ];
     
-    if (artist) {
-      filter.artist = { $regex: artist, $options: 'i' };
-    }
-    if (genre) {
-      filter.genre = { $regex: genre, $options: 'i' };
-    }
+    const albums = await Album.aggregate(pipeline);
     
-    const sort = {};
-    sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+    // Count total with same aggregation logic
+    const countPipeline = [
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'artist',
+          foreignField: '_id',
+          as: 'artistInfo'
+        }
+      },
+      {
+        $unwind: '$artistInfo'
+      },
+      {
+        $match: {
+          $or: [
+            { title: { $regex: q, $options: 'i' } },
+            { genre: { $regex: q, $options: 'i' } },
+            { description: { $regex: q, $options: 'i' } },
+            { 'artistInfo.username': { $regex: q, $options: 'i' } }
+          ]
+        }
+      },
+      {
+        $count: 'total'
+      }
+    ];
     
-    const albums = await Album.find(filter)
-      .populate('artist', 'username avatar')
-      .sort(sort)
-      .skip(skip)
-      .limit(limit);
-    
-    const total = await Album.countDocuments(filter);
+    const countResult = await Album.aggregate(countPipeline);
+    const total = countResult.length > 0 ? countResult[0].total : 0;
     
     res.json({
       success: true,
@@ -296,6 +435,7 @@ const searchAlbums = async (req, res, next) => {
       }
     });
   } catch (error) {
+    console.error('❌ Erreur lors de la recherche d\'albums:', error);
     next(new AppError('Erreur lors de la recherche d\'albums', 500));
   }
 };
@@ -308,8 +448,17 @@ const searchPlaylists = async (req, res, next) => {
     const { q, page = 1, limit = 10, sortBy = 'views', sortOrder = 'desc' } = req.query;
     const skip = (page - 1) * limit;
     
-    if (!q) {
-      return next(new AppError('Terme de recherche requis', 400));
+    if (!q || q.trim() === '') {
+      return res.json({
+        success: true,
+        data: [],
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: 0,
+          pages: 0
+        }
+      });
     }
     
     const filter = {
@@ -343,6 +492,7 @@ const searchPlaylists = async (req, res, next) => {
       }
     });
   } catch (error) {
+    console.error('❌ Erreur lors de la recherche de playlists:', error);
     next(new AppError('Erreur lors de la recherche de playlists', 500));
   }
 };

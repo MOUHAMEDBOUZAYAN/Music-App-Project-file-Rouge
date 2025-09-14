@@ -30,6 +30,10 @@ const Artist = () => {
   const { user } = useAuth();
   const { playTrack, addToQueue, toggleLike, likedTracks } = useMusic();
   
+  console.log('🎵 Artist component mounted with ID:', id);
+  console.log('🎵 Artist ID type:', typeof id);
+  console.log('🎵 Artist ID value:', id);
+  
   const handleToggleLike = async (track) => {
     try {
       const trackId = track._id || track.id;
@@ -49,6 +53,47 @@ const Artist = () => {
       toast.error('Erreur lors de la mise à jour des favoris');
     }
   };
+
+  // Fonction pour suivre/ne plus suivre l'artiste
+  const handleToggleFollow = async () => {
+    if (!user) {
+      toast.error('Vous devez être connecté pour suivre un artiste');
+      return;
+    }
+
+    try {
+      console.log('🎤 Toggle follow for artist:', artist._id, 'isFollowing:', isFollowing);
+      
+      if (isFollowing) {
+        // Ne plus suivre
+        await artistService.unfollowArtist(artist._id);
+        setIsFollowing(false);
+        
+        // Mettre à jour localStorage
+        const followedArtists = JSON.parse(localStorage.getItem('followedArtists') || '[]');
+        const updatedFollowedArtists = followedArtists.filter(id => id !== artist._id);
+        localStorage.setItem('followedArtists', JSON.stringify(updatedFollowedArtists));
+        
+        toast.success('Vous ne suivez plus cet artiste');
+      } else {
+        // Suivre
+        await artistService.followArtist(artist._id);
+        setIsFollowing(true);
+        
+        // Mettre à jour localStorage
+        const followedArtists = JSON.parse(localStorage.getItem('followedArtists') || '[]');
+        if (!followedArtists.includes(artist._id)) {
+          followedArtists.push(artist._id);
+          localStorage.setItem('followedArtists', JSON.stringify(followedArtists));
+        }
+        
+        toast.success('Vous suivez maintenant cet artiste');
+      }
+    } catch (error) {
+      console.error('Erreur lors du suivi de l\'artiste:', error);
+      toast.error('Erreur lors du suivi de l\'artiste');
+    }
+  };
   
   const [artist, setArtist] = useState(null);
   const [isFollowing, setIsFollowing] = useState(false);
@@ -64,23 +109,184 @@ const Artist = () => {
   const [showMoreInfo, setShowMoreInfo] = useState(false); // State for "Plus d'infos" expanded view
   const [isSubscribed, setIsSubscribed] = useState(false); // State for subscription status
 
+  // Fonction pour nettoyer localStorage
+  const cleanLocalStorage = () => {
+    try {
+      const followedArtists = localStorage.getItem('followedArtists');
+      const subscribedArtists = localStorage.getItem('subscribedArtists');
+      
+      if (followedArtists) {
+        // Vérifier si c'est un JSON valide
+        try {
+          JSON.parse(followedArtists);
+        } catch (e) {
+          console.log('🧹 Cleaning invalid followedArtists localStorage');
+          localStorage.removeItem('followedArtists');
+        }
+      }
+      
+      if (subscribedArtists) {
+        // Vérifier si c'est un JSON valide
+        try {
+          JSON.parse(subscribedArtists);
+        } catch (e) {
+          console.log('🧹 Cleaning invalid subscribedArtists localStorage');
+          localStorage.removeItem('subscribedArtists');
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error cleaning localStorage:', error);
+    }
+  };
+
   // Vérifier si l'artiste est déjà suivi au chargement
   useEffect(() => {
     const checkFollowStatus = async () => {
-      if (!artist || !user) return;
+      if (!artist || !user) {
+        console.log('🎤 No artist or user, setting isFollowing to false');
+        setIsFollowing(false);
+        return;
+      }
+      
+      if (!artist._id) {
+        console.log('🎤 No artist ID available for follow status check');
+        setIsFollowing(false);
+        return;
+      }
+      
+      // Nettoyer localStorage au début
+      cleanLocalStorage();
+      
+      console.log('🎤 Checking follow status for artist:', artist._id, 'user:', user.username);
+      console.log('🎤 Current localStorage state:', {
+        followedArtists: localStorage.getItem('followedArtists'),
+        subscribedArtists: localStorage.getItem('subscribedArtists')
+      });
+      
+      // Vérifier si l'utilisateur est connecté et a un token
+      const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+      if (!token) {
+        console.log('🎤 No token found, user not authenticated');
+        console.log('🎤 User object:', user);
+        console.log('🎤 Available localStorage keys:', Object.keys(localStorage));
+        console.log('🎤 Looking for token or authToken in localStorage');
+        setIsFollowing(false);
+        return;
+      }
+      
+      console.log('🎤 Token found:', token.substring(0, 20) + '...');
+      console.log('🎤 User object:', user);
       
       try {
-        // Vérifier si l'utilisateur suit déjà cet artiste
-        const response = await artistService.getFollowedArtists();
-        if (response.success) {
-          const isFollowing = response.data.some(followedArtist => 
-            followedArtist._id === artist._id || followedArtist.id === artist._id
-          );
-          setIsSubscribed(isFollowing);
-          console.log('🎤 Follow status checked:', { artistId: artist._id, isFollowing });
+        // Méthode directe: Vérifier via l'API des artistes suivis
+        console.log('🎤 Checking follow status via getFollowedArtists API...');
+        
+        const followedResponse = await fetch(`http://localhost:5000/api/users/following`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        console.log('🎤 Followed artists response status:', followedResponse.status);
+        
+        if (followedResponse.status === 401) {
+          console.log('🎤 ❌ Unauthorized - user not authenticated or token invalid');
+          setIsFollowing(false);
+          
+          // Déclencher un événement pour mettre à jour Library si nécessaire
+          window.dispatchEvent(new CustomEvent('artistFollowStatusChecked', { 
+            detail: { artistId: artist._id, isFollowing: false } 
+          }));
+          
+          return;
         }
+        
+        if (followedResponse.ok) {
+          const followedData = await followedResponse.json();
+          console.log('🎤 Followed artists data:', followedData);
+          
+          const followedArtists = followedData.following || [];
+          const isCurrentlyFollowing = followedArtists.some(followedArtist => 
+            followedArtist._id === artist._id || followedArtist === artist._id
+          );
+          
+          console.log('🎤 Is currently following:', isCurrentlyFollowing);
+          
+          if (isCurrentlyFollowing) {
+            console.log('🎤 ✅ Artist is ALREADY followed (detected via API)');
+            setIsFollowing(true);
+            
+            // Mettre à jour localStorage immédiatement
+            const localFollowedArtists = JSON.parse(localStorage.getItem('followedArtists') || '[]');
+            if (!localFollowedArtists.includes(artist._id)) {
+              localFollowedArtists.push(artist._id);
+              localStorage.setItem('followedArtists', JSON.stringify(localFollowedArtists));
+              console.log('✅ Updated localStorage with artist ID:', artist._id);
+              console.log('✅ Updated localStorage array:', localFollowedArtists);
+            }
+            
+            // Aussi mettre à jour subscribedArtists pour cohérence
+    const subscribedArtists = JSON.parse(localStorage.getItem('subscribedArtists') || '[]');
+            if (!subscribedArtists.includes(artist._id)) {
+              subscribedArtists.push(artist._id);
+              localStorage.setItem('subscribedArtists', JSON.stringify(subscribedArtists));
+              console.log('✅ Updated subscribedArtists with artist ID:', artist._id);
+            }
+            
+            // Déclencher un événement pour mettre à jour Library
+            window.dispatchEvent(new CustomEvent('artistFollowed', { 
+              detail: { artistId: artist._id, artistName: artist.username } 
+            }));
+            
+            // Forcer un re-render immédiat
+            setTimeout(() => {
+              setIsFollowing(true);
+              console.log('🔄 Forced UI update to TRUE');
+            }, 100);
+            
+            return;
+          } else {
+            console.log('🎤 ❌ Artist is NOT followed');
+            setIsFollowing(false);
+            
+            // Nettoyer localStorage si nécessaire
+            const localFollowedArtists = JSON.parse(localStorage.getItem('followedArtists') || '[]');
+            const updatedFollowedArtists = localFollowedArtists.filter(id => id !== artist._id);
+            if (updatedFollowedArtists.length !== localFollowedArtists.length) {
+              localStorage.setItem('followedArtists', JSON.stringify(updatedFollowedArtists));
+              console.log('✅ Cleaned localStorage - removed artist ID:', artist._id);
+              console.log('✅ Updated localStorage array:', updatedFollowedArtists);
+            }
+            
+            const subscribedArtists = JSON.parse(localStorage.getItem('subscribedArtists') || '[]');
+            const updatedSubscribedArtists = subscribedArtists.filter(id => id !== artist._id);
+            if (updatedSubscribedArtists.length !== subscribedArtists.length) {
+              localStorage.setItem('subscribedArtists', JSON.stringify(updatedSubscribedArtists));
+              console.log('✅ Cleaned subscribedArtists - removed artist ID:', artist._id);
+              console.log('✅ Updated subscribedArtists array:', updatedSubscribedArtists);
+            }
+            
+            return;
+          }
+        }
+        
+        // Si l'API échoue, utiliser localStorage comme fallback
+        console.log('🎤 ❌ API failed, using localStorage fallback');
+        const localFollowedArtists = JSON.parse(localStorage.getItem('followedArtists') || '[]');
+        const isCurrentlyFollowing = localFollowedArtists.includes(artist._id);
+        setIsFollowing(isCurrentlyFollowing);
+        console.log('🎤 Using localStorage fallback for follow status:', isCurrentlyFollowing);
+        console.log('🎤 localStorage array:', localFollowedArtists);
+        
       } catch (error) {
         console.error('❌ Error checking follow status:', error);
+        // En cas d'erreur, utiliser localStorage comme fallback
+        const localFollowedArtists = JSON.parse(localStorage.getItem('followedArtists') || '[]');
+        const isCurrentlyFollowing = localFollowedArtists.includes(artist._id);
+        setIsFollowing(isCurrentlyFollowing);
+        console.log('🎤 Using localStorage fallback for follow status:', isCurrentlyFollowing);
+        console.log('🎤 localStorage array:', localFollowedArtists);
       }
     };
     
@@ -98,12 +304,23 @@ const Artist = () => {
   // Charger infos artiste + top tracks + artistes similaires
   useEffect(() => {
     const loadArtist = async () => {
-      if (!id) return;
+      if (!id) {
+        console.log('❌ No artist ID provided');
+        return;
+      }
+      
+      if (id === 'undefined') {
+        console.log('❌ Artist ID is "undefined" string');
+        return;
+      }
+      
       setTracksLoading(true);
       setAlbumsLoading(true);
       
       try {
         console.log('🎵 Chargement des données de l\'artiste:', id);
+        console.log('🎵 Artist ID type:', typeof id);
+        console.log('🎵 Artist ID length:', id.length);
         
         // Charger les informations de l'artiste depuis le backend
         console.log('🔍 Recherche de l\'artiste avec ID:', id);
@@ -122,21 +339,31 @@ const Artist = () => {
         if (artistResponse.ok) {
           const artistData = await artistResponse.json();
           console.log('✅ Artiste chargé:', artistData);
+          console.log('✅ Artist data structure:', {
+            hasData: !!artistData.data,
+            hasUsername: !!(artistData.data?.username || artistData.username),
+            username: artistData.data?.username || artistData.username,
+            id: artistData.data?._id || artistData._id
+          });
           setArtist(artistData.data || artistData);
         } else {
           console.error('❌ Erreur chargement artiste:', artistResponse.status);
           const errorText = await artistResponse.text();
           console.error('❌ Détails de l\'erreur:', errorText);
+          console.error('❌ Artist ID utilisé:', id);
+          console.error('❌ URL appelée:', `http://localhost:5000/api/artists/${id}`);
           
           // Créer un artiste par défaut si non trouvé
-          setArtist({
+          const defaultArtist = {
             _id: id,
             username: 'Artiste inconnu',
             name: 'Artiste inconnu',
             bio: 'Aucune information disponible',
             profilePicture: null,
             role: 'artist'
-          });
+          };
+          console.log('🎨 Création d\'un artiste par défaut:', defaultArtist);
+          setArtist(defaultArtist);
         }
 
         // Charger les chansons de l'artiste
@@ -186,6 +413,186 @@ const Artist = () => {
     loadArtist();
   }, [id]);
 
+  // useEffect pour vérifier l'état de suivi de l'artiste
+  useEffect(() => {
+    const checkFollowStatus = async () => {
+      if (!user || !artist?._id) return;
+      
+      try {
+        console.log('🔍 Vérification du statut de suivi pour:', artist._id);
+        
+        // Appeler l'API pour vérifier le statut de suivi réel
+        const token = localStorage.getItem('token');
+        if (!token) {
+          console.log('🔍 No token found, skipping follow status check');
+          return;
+        }
+        
+        const response = await fetch(`http://localhost:5000/api/users/following`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('🔍 Following list from API:', data);
+          
+          const followedArtists = data.following || [];
+          const isCurrentlyFollowing = followedArtists.some(followedArtist => 
+            followedArtist._id === artist._id || followedArtist === artist._id
+          );
+          
+          setIsFollowing(isCurrentlyFollowing);
+          console.log('🔍 Statut de suivi réel:', isCurrentlyFollowing);
+          
+          // Mettre à jour localStorage pour cohérence
+          const localFollowedArtists = JSON.parse(localStorage.getItem('followedArtists') || '[]');
+          if (isCurrentlyFollowing && !localFollowedArtists.includes(artist._id)) {
+            localFollowedArtists.push(artist._id);
+            localStorage.setItem('followedArtists', JSON.stringify(localFollowedArtists));
+          }
+        } else {
+          console.log('🔍 API call failed, trying alternative method');
+          
+          // Méthode alternative: essayer de suivre l'artiste pour voir s'il est déjà suivi
+          try {
+            const testResponse = await fetch(`http://localhost:5000/api/artists/${artist._id}/follow`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            if (testResponse.status === 400) {
+              const errorData = await testResponse.json();
+              if (errorData.message && errorData.message.includes('déjà')) {
+                console.log('🔍 Artist is already followed (detected via error)');
+                setIsFollowing(true);
+                
+                // Mettre à jour localStorage
+                const localFollowedArtists = JSON.parse(localStorage.getItem('followedArtists') || '[]');
+                if (!localFollowedArtists.includes(artist._id)) {
+                  localFollowedArtists.push(artist._id);
+                  localStorage.setItem('followedArtists', JSON.stringify(localFollowedArtists));
+                }
+                return;
+              }
+            }
+          } catch (testError) {
+            console.log('🔍 Alternative method also failed:', testError);
+          }
+          
+          // Fallback vers localStorage si tout échoue
+          const followedArtists = JSON.parse(localStorage.getItem('followedArtists') || '[]');
+          const isCurrentlyFollowing = followedArtists.includes(artist._id);
+          setIsFollowing(isCurrentlyFollowing);
+        }
+      } catch (error) {
+        console.error('Erreur lors de la vérification du statut de suivi:', error);
+        // Fallback vers localStorage en cas d'erreur
+        const followedArtists = JSON.parse(localStorage.getItem('followedArtists') || '[]');
+        const isCurrentlyFollowing = followedArtists.includes(artist._id);
+        setIsFollowing(isCurrentlyFollowing);
+      }
+    };
+
+    checkFollowStatus();
+  }, [user, artist]);
+
+  // useEffect pour forcer la mise à jour de l'état de suivi
+  useEffect(() => {
+    if (artist?._id) {
+      console.log('🔄 Artist loaded, current isFollowing state:', isFollowing);
+      console.log('🔄 Artist ID:', artist._id);
+      
+      // Vérifier si l'utilisateur est connecté
+      const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+      if (!token) {
+        console.log('🔄 No token found, user not authenticated, setting isFollowing to false');
+        console.log('🔄 User object:', user);
+        console.log('🔄 Available localStorage keys:', Object.keys(localStorage));
+        console.log('🔄 Looking for token or authToken in localStorage');
+        setIsFollowing(false);
+        return;
+      }
+      
+      console.log('🔄 User authenticated, proceeding with follow status check');
+      console.log('🔄 User object:', user);
+      
+      // Vérifier localStorage pour cohérence
+      const localFollowedArtists = JSON.parse(localStorage.getItem('followedArtists') || '[]');
+      const subscribedArtists = JSON.parse(localStorage.getItem('subscribedArtists') || '[]');
+      const isInLocalStorage = localFollowedArtists.includes(artist._id) || subscribedArtists.includes(artist._id);
+      
+      console.log('🔄 LocalStorage check details:', {
+        artistId: artist._id,
+        localFollowedArtists,
+        subscribedArtists,
+        isInLocalStorage,
+        currentIsFollowing: isFollowing
+      });
+      
+      console.log('🔄 LocalStorage check:', {
+        isInLocalStorage,
+        localFollowedArtists,
+        currentIsFollowing: isFollowing
+      });
+      
+      // Si localStorage dit qu'on suit l'artiste mais l'état React dit le contraire
+      if (isInLocalStorage && !isFollowing) {
+        console.log('🔄 Syncing localStorage with React state - setting isFollowing to true');
+        setIsFollowing(true);
+      }
+      
+      // Force refresh every 500ms to ensure UI is up to date
+      const interval = setInterval(() => {
+        // Vérifier si l'utilisateur est connecté
+        const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+        if (!token) {
+          console.log('🔄 No token found in interval, user not authenticated');
+          console.log('🔄 User object:', user);
+          console.log('🔄 Available localStorage keys:', Object.keys(localStorage));
+          console.log('🔄 Looking for token or authToken in localStorage');
+          setIsFollowing(false);
+          return;
+        }
+        
+        console.log('🔄 User authenticated in interval, proceeding with follow status check');
+        console.log('🔄 User object:', user);
+        
+        const currentLocalStorage = JSON.parse(localStorage.getItem('followedArtists') || '[]');
+        const currentSubscribedArtists = JSON.parse(localStorage.getItem('subscribedArtists') || '[]');
+        const shouldBeFollowing = currentLocalStorage.includes(artist._id) || currentSubscribedArtists.includes(artist._id);
+        
+        console.log('🔄 Interval localStorage check details:', {
+          artistId: artist._id,
+          currentLocalStorage,
+          currentSubscribedArtists,
+          shouldBeFollowing,
+          currentIsFollowing: isFollowing
+        });
+        
+        if (shouldBeFollowing !== isFollowing) {
+          console.log('🔄 Force updating follow status from localStorage:', shouldBeFollowing);
+          setIsFollowing(shouldBeFollowing);
+        }
+        
+        // Debug info
+        console.log('🔄 Interval check:', {
+          artistId: artist._id,
+          localStorage: currentLocalStorage,
+          shouldBeFollowing,
+          currentIsFollowing: isFollowing
+        });
+      }, 500);
+      
+      return () => clearInterval(interval);
+    }
+  }, [artist, isFollowing]);
+
   const handlePlaySong = (track) => {
     if (!track?.audioUrl) {
       toast.error("Fichier audio non disponible pour cette piste");
@@ -223,21 +630,69 @@ const Artist = () => {
     toast.success('Ajouté à la file d\'attente');
   };
 
-  const handleToggleFollow = () => {
-    setIsFollowing(!isFollowing);
-    toast.success(isFollowing ? 'Désabonné' : 'Abonné');
-  };
 
   const handleSubscribe = async () => {
-    if (!artist) return;
+    if (!artist) {
+      console.log('❌ No artist data available for subscribe');
+      return;
+    }
+    
+    if (!artist._id) {
+      console.log('❌ No artist ID available for subscribe');
+      return;
+    }
+    
+    console.log('🎤 Attempting to subscribe to artist:', artist._id, artist.username);
+    
+    // Vérifier si l'utilisateur est connecté
+    const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+    if (!token) {
+      console.log('🎤 No token found, user not authenticated');
+      console.log('🎤 User object:', user);
+      console.log('🎤 Available localStorage keys:', Object.keys(localStorage));
+      console.log('🎤 Looking for token or authToken in localStorage');
+      toast.error('Veuillez vous connecter pour suivre un artiste');
+      return;
+    }
+    
+    console.log('🎤 User authenticated, proceeding with follow/unfollow');
+    console.log('🎤 User object:', user);
     
     try {
-      if (isSubscribed) {
+      if (isFollowing) {
         // Désabonner via API
         const result = await artistService.unfollowArtist(artist._id);
         if (result.success) {
-          setIsSubscribed(false);
-          toast.success(`Désabonné de ${artist.username || artist.name}`);
+          setIsFollowing(false);
+          
+          // Mettre à jour localStorage
+          const followedArtists = JSON.parse(localStorage.getItem('followedArtists') || '[]');
+          const updatedFollowedArtists = followedArtists.filter(id => id !== artist._id);
+          localStorage.setItem('followedArtists', JSON.stringify(updatedFollowedArtists));
+          console.log('✅ Removed artist from followedArtists:', artist._id);
+          
+          // Aussi mettre à jour subscribedArtists pour cohérence
+    const subscribedArtists = JSON.parse(localStorage.getItem('subscribedArtists') || '[]');
+          const updatedSubscribedArtists = subscribedArtists.filter(id => id !== artist._id);
+          localStorage.setItem('subscribedArtists', JSON.stringify(updatedSubscribedArtists));
+          console.log('✅ Removed artist from subscribedArtists:', artist._id);
+          
+          // Déclencher un événement pour mettre à jour Library
+          window.dispatchEvent(new CustomEvent('artistUnfollowed', { 
+            detail: { artistId: artist._id, artistName: artist.username } 
+          }));
+          
+          // Déclencher un événement pour mettre à jour localStorage
+          window.dispatchEvent(new CustomEvent('localStorageChange', { 
+            detail: { key: 'subscribedArtists', value: updatedSubscribedArtists } 
+          }));
+          
+          // Déclencher un événement pour mettre à jour l'état global
+          window.dispatchEvent(new CustomEvent('artistFollowStatusChecked', { 
+            detail: { artistId: artist._id, isFollowing: false } 
+          }));
+          
+      toast.success(`Désabonné de ${artist.username}`);
           console.log('✅ Successfully unfollowed artist:', artist.username);
         } else {
           toast.error(result.error || 'Erreur lors du désabonnement');
@@ -246,16 +701,118 @@ const Artist = () => {
         // S'abonner via API
         const result = await artistService.followArtist(artist._id);
         if (result.success) {
-          setIsSubscribed(true);
-          toast.success(`Abonné à ${artist.username || artist.name} !`);
-          console.log('✅ Successfully followed artist:', artist.username);
+          setIsFollowing(true);
+          
+          // Mettre à jour localStorage immédiatement
+          const followedArtists = JSON.parse(localStorage.getItem('followedArtists') || '[]');
+          if (!followedArtists.includes(artist._id)) {
+            followedArtists.push(artist._id);
+            localStorage.setItem('followedArtists', JSON.stringify(followedArtists));
+            console.log('✅ Updated localStorage with artist ID:', artist._id);
+          }
+          
+          // Aussi mettre à jour subscribedArtists pour cohérence
+          const subscribedArtists = JSON.parse(localStorage.getItem('subscribedArtists') || '[]');
+          if (!subscribedArtists.includes(artist._id)) {
+            subscribedArtists.push(artist._id);
+            localStorage.setItem('subscribedArtists', JSON.stringify(subscribedArtists));
+            console.log('✅ Updated subscribedArtists with artist ID:', artist._id);
+          }
+          
+          // Déclencher un événement pour mettre à jour Library
+          window.dispatchEvent(new CustomEvent('artistFollowed', { 
+            detail: { artistId: artist._id, artistName: artist.username } 
+          }));
+          
+          // Déclencher un événement pour mettre à jour localStorage
+          window.dispatchEvent(new CustomEvent('localStorageChange', { 
+            detail: { key: 'subscribedArtists', value: subscribedArtists } 
+          }));
+          
+          // Déclencher un événement pour mettre à jour l'état global
+          window.dispatchEvent(new CustomEvent('artistFollowStatusChecked', { 
+            detail: { artistId: artist._id, isFollowing: true } 
+          }));
+          
+          if (result.alreadyFollowing) {
+            toast.success(`Vous suivez déjà ${artist.username}`);
+            console.log('✅ User already follows artist:', artist.username);
+    } else {
+            toast.success(`Abonné à ${artist.username} !`);
+            console.log('✅ Successfully followed artist:', artist.username);
+          }
+          
+          // Forcer un re-render immédiat
+          setTimeout(() => {
+            setIsFollowing(true);
+            console.log('🔄 Forced UI update to TRUE after successful follow');
+          }, 50);
         } else {
-          toast.error(result.error || 'Erreur lors de l\'abonnement');
+          // Si l'erreur indique que l'utilisateur suit déjà l'artiste, mettre à jour l'état
+          if (result.error && result.error.includes('déjà')) {
+            console.log('🔄 Updating follow status to true after detecting already followed');
+            setIsFollowing(true);
+            
+            // Mettre à jour localStorage immédiatement
+            const followedArtists = JSON.parse(localStorage.getItem('followedArtists') || '[]');
+            if (!followedArtists.includes(artist._id)) {
+              followedArtists.push(artist._id);
+              localStorage.setItem('followedArtists', JSON.stringify(followedArtists));
+              console.log('✅ Updated localStorage with artist ID after error:', artist._id);
+            }
+            
+            // Aussi mettre à jour subscribedArtists pour cohérence
+            const subscribedArtists = JSON.parse(localStorage.getItem('subscribedArtists') || '[]');
+            if (!subscribedArtists.includes(artist._id)) {
+              subscribedArtists.push(artist._id);
+              localStorage.setItem('subscribedArtists', JSON.stringify(subscribedArtists));
+              console.log('✅ Updated subscribedArtists with artist ID after error:', artist._id);
+            }
+            
+            // Déclencher un événement pour mettre à jour Library
+            window.dispatchEvent(new CustomEvent('artistFollowed', { 
+              detail: { artistId: artist._id, artistName: artist.username } 
+            }));
+            
+            toast.success(`Vous suivez déjà ${artist.username}`);
+            console.log('✅ Follow status updated to true after detecting already followed');
+            
+            // Forcer un re-render immédiat
+            setTimeout(() => {
+              setIsFollowing(true);
+              console.log('🔄 Forced UI update to TRUE after detecting already followed');
+            }, 50);
+          } else {
+            toast.error(result.error || 'Erreur lors de l\'abonnement');
+          }
         }
       }
     } catch (error) {
       console.error('❌ Error in handleSubscribe:', error);
-      toast.error('Erreur lors de l\'opération');
+      
+      // Si l'erreur indique que l'utilisateur suit déjà l'artiste
+      if (error.message && error.message.includes('déjà')) {
+        console.log('🔄 Updating follow status to true after detecting already followed in catch');
+        setIsFollowing(true);
+        
+        // Mettre à jour localStorage
+        const followedArtists = JSON.parse(localStorage.getItem('followedArtists') || '[]');
+        if (!followedArtists.includes(artist._id)) {
+          followedArtists.push(artist._id);
+          localStorage.setItem('followedArtists', JSON.stringify(followedArtists));
+        }
+        
+        toast.success(`Vous suivez déjà ${artist.username}`);
+        console.log('✅ Follow status updated to true after detecting already followed in catch');
+        
+        // Forcer un re-render pour s'assurer que l'UI se met à jour
+        setTimeout(() => {
+          console.log('🔄 Forcing UI update after follow status change in catch');
+          setIsFollowing(true);
+        }, 100);
+      } else {
+        toast.error('Erreur lors de l\'opération');
+      }
     }
   };
 
@@ -305,7 +862,7 @@ const Artist = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black"></div>
         <img
           src={artist.profilePicture ? `http://localhost:5000${artist.profilePicture}` : `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1200&h=400&fit=crop&crop=center`}
-          alt={artist.username || artist.name}
+          alt={artist.username}
           className="w-full h-full object-cover"
           onError={(e) => {
             e.target.src = `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1200&h=400&fit=crop&crop=center`;
@@ -321,7 +878,7 @@ const Artist = () => {
         {/* Informations de l'artiste - Style Spotify */}
         <div className="absolute bottom-6 left-6 right-6">
           <h1 className="text-5xl font-bold mb-2 text-white">
-            {artist?.username || artist?.name || 'Artiste'}
+            {artist?.username || 'Artiste'}
           </h1>
           <p className="text-gray-300 text-lg mb-2">
             {topTracks.length} chanson{topTracks.length > 1 ? 's' : ''} • {albums.length} album{albums.length > 1 ? 's' : ''}
@@ -334,30 +891,89 @@ const Artist = () => {
         </div>
       </div>
 
+
       {/* Actions (favori comme Spotify) */}
       <div className="px-6 pt-3">
         <div className="flex items-center space-x-4">
+          {/* Bouton favori (coeur) - for favorites only */}
           <button
-            onClick={handleToggleFollow}
-            className={`p-3 rounded-full transition-colors ${
-              isFollowing ? 'bg-green-500 text-black' : 'bg-gray-800 text-white hover:bg-gray-700'
-            }`}
-            aria-label={isFollowing ? 'Retirer des favoris' : 'Ajouter aux favoris'}
-            title={isFollowing ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+            onClick={() => {
+              console.log('🔄 Heart button clicked - this is for favorites only');
+              // This is for favorites, not follow - you can implement favorite logic here
+              toast.info('Fonctionnalité favoris à implémenter');
+            }}
+            className="p-3 rounded-full border border-gray-600 hover:border-white transition-colors"
+            aria-label="Favori"
+            title="Ajouter aux favoris"
           >
-            <Heart className={`h-5 w-5 ${isFollowing ? 'fill-current' : ''}`} />
+            <Heart className="h-5 w-5" />
           </button>
           
           {/* Nouveau bouton S'abonner */}
           <button
-            onClick={handleSubscribe}
+            onClick={() => {
+              console.log('🔄 Subscribe button clicked, current isFollowing:', isFollowing);
+              console.log('🔄 Artist ID:', artist?._id);
+            const localFollowedArtists = JSON.parse(localStorage.getItem('followedArtists') || '[]');
+            const subscribedArtists = JSON.parse(localStorage.getItem('subscribedArtists') || '[]');
+            const isInLocalStorage = localFollowedArtists.includes(artist?._id) || subscribedArtists.includes(artist?._id);
+            console.log('🔄 LocalStorage check:', isInLocalStorage);
+            console.log('🔄 LocalStorage array:', localFollowedArtists);
+            console.log('🔄 SubscribedArtists array:', subscribedArtists);
+            console.log('🔄 Current isFollowing state:', isFollowing);
+            
+            // Force update localStorage if there's a mismatch
+            if (isInLocalStorage && !isFollowing) {
+              console.log('🔄 Force updating isFollowing to true from localStorage');
+              setIsFollowing(true);
+              
+              // Double check avec setTimeout
+              setTimeout(() => {
+                setIsFollowing(true);
+                console.log('🔄 Double forced UI update to TRUE from localStorage');
+              }, 100);
+              
+              // Don't call handleSubscribe if already following
+              return;
+            }
+            
+            // Force update localStorage if there's a mismatch (opposite case)
+            if (!isInLocalStorage && isFollowing) {
+              console.log('🔄 Force updating isFollowing to false from localStorage');
+              setIsFollowing(false);
+              
+              // Double check avec setTimeout
+              setTimeout(() => {
+                setIsFollowing(false);
+                console.log('🔄 Double forced UI update to FALSE from localStorage');
+              }, 100);
+              
+              // Don't call handleSubscribe if already unfollowed
+              return;
+            }
+            
+            // Vérifier si l'utilisateur est connecté avant d'appeler handleSubscribe
+            const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+            if (!token) {
+              console.log('🎤 No token found, user not authenticated');
+              console.log('🎤 User object:', user);
+              console.log('🎤 Available localStorage keys:', Object.keys(localStorage));
+              console.log('🎤 Looking for token or authToken in localStorage');
+              toast.error('Veuillez vous connecter pour suivre un artiste');
+              return;
+            }
+            
+            console.log('🎤 Token found, user is authenticated');
+            
+            handleSubscribe();
+            }}
             className={`px-4 py-3 rounded-full transition-colors ${
-              isSubscribed ? 'bg-red-500 text-white hover:bg-red-400' : 'bg-green-500 text-black font-medium hover:bg-green-400'
+              isFollowing ? 'bg-red-500 text-white hover:bg-red-400' : 'bg-green-500 text-black font-medium hover:bg-green-400'
             }`}
-            aria-label={isSubscribed ? 'Désabonner' : 'S\'abonner'}
-            title={isSubscribed ? 'Désabonner' : 'S\'abonner'}
+            aria-label={isFollowing ? 'Désabonner' : 'S\'abonner'}
+            title={isFollowing ? 'Désabonner' : 'S\'abonner'}
           >
-            {isSubscribed ? 'Désabonner' : 'S\'abonner'}
+            {isFollowing ? 'Désabonner' : 'S\'abonner'}
           </button>
           
           <button className="p-3 rounded-full bg-gray-800 text-white hover:bg-gray-700" aria-label="Partager">

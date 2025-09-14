@@ -17,6 +17,25 @@ export const playlistService = {
     }
   },
 
+  // Rechercher des playlists
+  searchPlaylists: async (params = {}) => {
+    try {
+      console.log('🔍 Searching playlists with params:', params);
+      const response = await apiClient.get('/search/playlists', { params });
+      console.log('🔍 Playlists search response:', response.data);
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      console.error('❌ Error searching playlists:', error);
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Erreur lors de la recherche de playlists'
+      };
+    }
+  },
+
   // Obtenir une playlist par ID
   getPlaylistById: async (id) => {
     try {
@@ -221,6 +240,22 @@ export const playlistService = {
       return {
         success: false,
         error: error.response?.data?.message || 'Erreur lors de la suppression de la playlist brouillon'
+      };
+    }
+  },
+
+  // Obtenir les playlists publiques
+  getPublicPlaylists: async (params = {}) => {
+    try {
+      const response = await apiClient.get('/playlists/public', { params });
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Erreur lors de la récupération des playlists publiques'
       };
     }
   }

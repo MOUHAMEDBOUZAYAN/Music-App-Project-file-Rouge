@@ -43,276 +43,6 @@ const Search = () => {
   // Filtres exactement comme dans Spotify
   const filters = ['Tout', 'Artistes', 'Titres', 'Albums', 'Playlists', 'Podcasts et émissions', 'Profils', 'Genres et ambiances'];
 
-  // Données de test exactement comme dans l'image
-  const mockData = {
-    songs: [
-      {
-        _id: '1',
-        title: 'BOUHALI',
-        artist: 'ElGrandeToto',
-        cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop',
-        duration: 172
-      },
-      {
-        _id: '2',
-        title: 'Grammy',
-        artist: 'Anys, ElGrandeToto',
-        cover: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300&h=300&fit=crop',
-        duration: 197
-      },
-      {
-        _id: '3',
-        title: 'Grand bain',
-        artist: 'Dadju, Ninho',
-        cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop',
-        duration: 207
-      },
-      {
-        _id: '4',
-        title: "That's So True",
-        artist: 'Gracie Abrams',
-        cover: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300&h=300&fit=crop',
-        duration: 166
-      }
-    ],
-    artists: [
-      {
-        _id: '1',
-        username: 'ElGrandeToto',
-        name: 'ElGrandeToto',
-        avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=200&h=200&fit=crop&crop=face'
-      },
-      {
-        _id: '2',
-        username: 'Gracie Abrams',
-        name: 'Gracie Abrams',
-        avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=200&h=200&fit=crop&crop=face'
-      },
-      {
-        _id: '3',
-        username: 'Gradur',
-        name: 'Gradur',
-        avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=200&h=200&fit=crop&crop=face'
-      },
-      {
-        _id: '4',
-        username: 'Grand Corps Malade',
-        name: 'Grand Corps Malade',
-        avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=200&h=200&fit=crop&crop=face'
-      },
-      {
-        _id: '5',
-        username: 'Craig David',
-        name: 'Craig David',
-        avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=200&h=200&fit=crop&crop=face'
-      },
-      {
-        _id: '6',
-        username: 'Grace Deeb',
-        name: 'Grace Deeb',
-        avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=200&h=200&fit=crop&crop=face'
-      },
-      {
-        _id: '7',
-        username: 'Ariana Grande',
-        name: 'Ariana Grande',
-        avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=200&h=200&fit=crop&crop=face'
-      },
-      {
-        _id: '8',
-        username: 'Gravagerz',
-        name: 'Gravagerz',
-        avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=200&h=200&fit=crop&crop=face'
-      },
-      {
-        _id: '9',
-        username: 'Conan Gray',
-        name: 'Conan Gray',
-        avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=200&h=200&fit=crop&crop=face'
-      },
-      {
-        _id: '10',
-        username: 'Grimes',
-        name: 'Grimes',
-        avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=200&h=200&fit=crop&crop=face'
-      }
-    ],
-    playlists: [
-      {
-        _id: '1',
-        name: 'THIS IS ElGrandeToto',
-        description: 'Playlist officielle',
-        cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop',
-        songCount: 25
-      },
-      {
-        _id: '2',
-        name: 'Radio ElGrandeToto',
-        description: 'Radio personnalisée',
-        cover: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300&h=300&fit=crop',
-        songCount: 30
-      },
-      {
-        _id: '3',
-        name: 'Hit Sayf 2025',
-        description: 'Hits du moment',
-        cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop',
-        songCount: 20
-      },
-      {
-        _id: '4',
-        name: 'SEHD',
-        description: 'Nouveautés',
-        cover: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300&h=300&fit=crop',
-        songCount: 15
-      }
-    ]
-  };
-
-  // Fonction pour générer des données de test dynamiques basées sur la recherche
-  const generateMockData = (query) => {
-    const searchTerm = query.toLowerCase();
-    
-    // Données spéciales pour "gra" (comme avant)
-    if (searchTerm.includes('gra')) {
-      return mockData;
-    }
-    
-    // Données spéciales pour "ferda"
-    if (searchTerm.includes('ferda')) {
-      return {
-        songs: [
-          {
-            _id: 'ferda1',
-            title: 'Ferda Style',
-            artist: 'Ferda Artist',
-            cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop',
-            duration: 185
-          },
-          {
-            _id: 'ferda2',
-            title: 'Ferda Vibes',
-            artist: 'Ferda & Friends',
-            cover: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300&h=300&fit=crop',
-            duration: 203
-          }
-        ],
-        artists: [
-          {
-            _id: 'ferda1',
-            username: 'Ferda Artist',
-            name: 'Ferda Artist',
-            avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=200&h=200&fit=crop&crop=face'
-          },
-          {
-            _id: 'ferda2',
-            username: 'Ferda Producer',
-            name: 'Ferda Producer',
-            avatar: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=200&h=200&fit=crop&crop=face'
-          }
-        ],
-        albums: [
-          {
-            _id: 'ferda1',
-            title: 'Ferda - Debut Album',
-            name: 'Ferda - Debut Album',
-            artist: {
-              name: 'Ferda Artist',
-              username: 'Ferda Artist'
-            },
-            coverImage: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop',
-            cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop',
-            releaseDate: '2024-01-01',
-            songsCount: 12,
-            tracks: []
-          }
-        ],
-        playlists: [
-          {
-            _id: 'ferda1',
-            name: 'THIS IS Ferda',
-            description: 'Les meilleurs titres de Ferda',
-            cover: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300&h=300&fit=crop',
-            songCount: 18
-          }
-        ]
-      };
-    }
-    
-    // Données génériques pour n'importe quelle recherche
-    return {
-      songs: [
-        {
-          _id: `${searchTerm}1`,
-          title: `${query.charAt(0).toUpperCase() + query.slice(1)} - Hit Song`,
-          artist: `${query.charAt(0).toUpperCase() + query.slice(1)} Artist`,
-          cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop',
-          duration: 180 + Math.floor(Math.random() * 60)
-        },
-        {
-          _id: `${searchTerm}2`,
-          title: `${query.charAt(0).toUpperCase() + query.slice(1)} - Another Track`,
-          artist: `${query.charAt(0).toUpperCase() + query.slice(1)} & Friends`,
-          cover: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300&h=300&fit=crop',
-          duration: 200 + Math.floor(Math.random() * 60)
-        }
-      ],
-      artists: [
-        {
-          _id: `${searchTerm}1`,
-          username: `${query.charAt(0).toUpperCase() + query.slice(1)} Artist`,
-          name: `${query.charAt(0).toUpperCase() + query.slice(1)} Artist`,
-          avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=200&h=200&fit=crop&crop=face'
-        },
-        {
-          _id: `${searchTerm}2`,
-          username: `${query.charAt(0).toUpperCase() + query.slice(1)} Producer`,
-          name: `${query.charAt(0).toUpperCase() + query.slice(1)} Producer`,
-          avatar: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=200&h=200&fit=crop&crop=face'
-        }
-      ],
-      albums: [
-        {
-          _id: `${searchTerm}1`,
-          title: `${query.charAt(0).toUpperCase() + query.slice(1)} - Album`,
-          name: `${query.charAt(0).toUpperCase() + query.slice(1)} - Album`,
-          artist: {
-            name: `${query.charAt(0).toUpperCase() + query.slice(1)} Artist`,
-            username: `${query.charAt(0).toUpperCase() + query.slice(1)} Artist`
-          },
-          coverImage: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop',
-          cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop',
-          releaseDate: '2024-01-01',
-          songsCount: 12,
-          tracks: []
-        },
-        {
-          _id: `${searchTerm}2`,
-          title: `${query.charAt(0).toUpperCase() + query.slice(1)} - Greatest Hits`,
-          name: `${query.charAt(0).toUpperCase() + query.slice(1)} - Greatest Hits`,
-          artist: {
-            name: `${query.charAt(0).toUpperCase() + query.slice(1)} & Band`,
-            username: `${query.charAt(0).toUpperCase() + query.slice(1)} & Band`
-          },
-          coverImage: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300&h=300&fit=crop',
-          cover: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300&h=300&fit=crop',
-          releaseDate: '2023-12-01',
-          songsCount: 15,
-          tracks: []
-        }
-      ],
-      playlists: [
-        {
-          _id: `${searchTerm}1`,
-          name: `THIS IS ${query.charAt(0).toUpperCase() + query.slice(1)}`,
-          description: `Les meilleurs titres de ${query.charAt(0).toUpperCase() + query.slice(1)}`,
-          cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop',
-          songCount: 15 + Math.floor(Math.random() * 20)
-        }
-      ]
-    };
-  };
-
   const handleSearch = async (query) => {
     console.log('🔍 handleSearch called with:', query);
     if (!query.trim()) {
@@ -325,6 +55,9 @@ const Search = () => {
     console.log('🔍 Starting search process for:', query);
     setIsLoading(true);
     setSearchError(null);
+    
+    // Clear previous results immediately
+    setSearchResults({ songs: [], artists: [], albums: [], playlists: [] });
     
     try {
       console.log('🔍 Début de la recherche pour:', query);
@@ -344,7 +77,7 @@ const Search = () => {
           console.error('❌ Albums search error details:', err.response?.data);
           return { success: false, error: err.message, data: { albums: [] } };
         }),
-        playlistService.getAllPlaylists({ q: query, limit: 10 }).catch(err => {
+        playlistService.searchPlaylists({ q: query, limit: 10 }).catch(err => {
           console.error('❌ Erreur recherche playlists:', err);
           return { success: false, error: err.message, data: { playlists: [] } };
         })
@@ -359,13 +92,64 @@ const Search = () => {
         playlists: playlistsResult
       });
 
-      // Utiliser les données de test si la recherche échoue
+      // Traitement des résultats avec gestion d'erreur améliorée
       let finalResults = {
-        songs: songsResult.success ? songsResult.data.songs || [] : [],
-        artists: artistsResult.success ? artistsResult.data.artists || [] : [],
-        albums: albumsResult.success ? albumsResult.data.albums || albumsResult.data || [] : [],
-        playlists: playlistsResult.success ? playlistsResult.data.playlists || [] : []
+        songs: [],
+        artists: [],
+        albums: [],
+        playlists: []
       };
+
+      // Traitement des chansons
+      if (songsResult.success && songsResult.data) {
+        if (Array.isArray(songsResult.data)) {
+          finalResults.songs = songsResult.data;
+        } else if (songsResult.data.songs) {
+          finalResults.songs = songsResult.data.songs;
+        } else if (songsResult.data.data) {
+          finalResults.songs = songsResult.data.data;
+        }
+      }
+
+      // Traitement des artistes
+      if (artistsResult.success && artistsResult.data) {
+        if (Array.isArray(artistsResult.data)) {
+          finalResults.artists = artistsResult.data;
+        } else if (artistsResult.data.artists) {
+          finalResults.artists = artistsResult.data.artists;
+        } else if (artistsResult.data.data) {
+          finalResults.artists = artistsResult.data.data;
+        }
+      }
+
+      // Traitement des albums
+      if (albumsResult.success && albumsResult.data) {
+        if (Array.isArray(albumsResult.data)) {
+          finalResults.albums = albumsResult.data;
+        } else if (albumsResult.data.albums) {
+          finalResults.albums = albumsResult.data.albums;
+        } else if (albumsResult.data.data) {
+          finalResults.albums = albumsResult.data.data;
+        }
+      }
+
+      // Traitement des playlists
+      if (playlistsResult.success && playlistsResult.data) {
+        if (Array.isArray(playlistsResult.data)) {
+          finalResults.playlists = playlistsResult.data;
+        } else if (playlistsResult.data.playlists) {
+          finalResults.playlists = playlistsResult.data.playlists;
+        } else if (playlistsResult.data.data) {
+          finalResults.playlists = playlistsResult.data.data;
+        }
+      }
+      
+      console.log('🔍 Raw API results:', {
+        songsResult: songsResult,
+        artistsResult: artistsResult,
+        albumsResult: albumsResult,
+        playlistsResult: playlistsResult
+      });
       
       console.log('🔍 Albums result processing:', {
         albumsResult,
@@ -381,21 +165,42 @@ const Search = () => {
         query
       });
       
-      // Utiliser les données de test SEULEMENT si aucun résultat réel ET que l'utilisateur veut voir des exemples
-      if (!hasRealResults && query.toLowerCase().includes('test')) {
-        console.log('🎯 Utilisation des données de test pour démonstration:', query);
-        finalResults = generateMockData(query);
-        console.log('🎯 Données de test générées:', finalResults);
+      // Vérifier s'il y a des erreurs de connexion
+      const hasConnectionErrors = [songsResult, artistsResult, albumsResult, playlistsResult]
+        .some(result => !result.success && result.error && 
+          (result.error.includes('Network Error') || 
+           result.error.includes('ERR_NETWORK') || 
+           result.error.includes('ECONNABORTED')));
+      
+      if (hasConnectionErrors) {
+        setSearchError('Erreur de connexion. Vérifiez votre connexion internet et que le serveur fonctionne.');
+        setSearchResults({ songs: [], artists: [], albums: [], playlists: [] });
+      } else if (!hasRealResults) {
+        // Aucun résultat trouvé
+        setSearchResults({ songs: [], artists: [], albums: [], playlists: [] });
+        setSearchError(null);
+      } else {
+        // Afficher les résultats trouvés
+        console.log('✅ Setting final results:', finalResults);
+        setSearchResults(finalResults);
+        setSearchError(null);
       }
 
       console.log('🔍 Setting search results:', finalResults);
-      setSearchResults(finalResults);
-      setSearchError(null); // Pas d'erreur si on a des données de test
+      console.log('🔍 Final results details:', {
+        songsCount: finalResults.songs.length,
+        artistsCount: finalResults.artists.length,
+        albumsCount: finalResults.albums.length,
+        playlistsCount: finalResults.playlists.length,
+        songs: finalResults.songs,
+        artists: finalResults.artists,
+        albums: finalResults.albums
+      });
 
     } catch (error) {
       console.error('❌ Erreur générale lors de la recherche:', error);
       
-      // En cas d'erreur, afficher un message d'erreur au lieu de données de test
+      // En cas d'erreur, afficher un message d'erreur
       setSearchResults({ songs: [], artists: [], albums: [], playlists: [] });
       setSearchError('Erreur lors de la recherche. Veuillez réessayer.');
     } finally {
@@ -469,6 +274,13 @@ const Search = () => {
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
+  // Helper function to build image URLs
+  const buildImageUrl = (imagePath, fallbackUrl) => {
+    if (!imagePath) return fallbackUrl;
+    if (imagePath.startsWith('http')) return imagePath;
+    return `http://localhost:5000${imagePath}`;
+  };
+
   const handlePlaySong = (song) => {
     playTrack(song);
     toast.success(`Lecture de ${song.title}`);
@@ -479,9 +291,46 @@ const Search = () => {
     toast.success(`Lecture de la playlist ${playlist.name}`);
   };
 
-  const handlePlayArtist = (artist) => {
-    playArtist(artist);
-    toast.success(`Lecture des meilleurs titres de ${artist.username || artist.name}`);
+  const handlePlayArtist = async (artist) => {
+    try {
+      console.log('🎵 Loading artist songs for:', artist.username || artist.name);
+      
+      // Charger les chansons de l'artiste
+      const response = await fetch(`http://localhost:5000/api/artists/${artist._id || artist.id}/songs`);
+      
+      if (response.ok) {
+        const songsData = await response.json();
+        const songs = songsData.data || songsData || [];
+        
+        console.log('🎵 Loaded artist songs:', songs.length);
+        
+        if (songs.length > 0) {
+          // Préparer les chansons pour le lecteur
+          const formattedSongs = songs.map(song => ({
+            _id: song._id,
+            title: song.title,
+            artist: song.artist?.username || artist.username || artist.name,
+            cover: song.coverImage ? `http://localhost:5000${song.coverImage}` : null,
+            album: song.album || '',
+            duration: song.duration || 0,
+            audioUrl: song.audioUrl ? `http://localhost:5000${song.audioUrl}` : null,
+          }));
+          
+          // Utiliser playArtist avec les chansons chargées
+          const artistWithTracks = { ...artist, tracks: formattedSongs };
+          playArtist(artistWithTracks);
+          toast.success(`Lecture des meilleurs titres de ${artist.username || artist.name}`);
+        } else {
+          toast.error('Aucune chanson disponible pour cet artiste');
+        }
+      } else {
+        console.error('❌ Error loading artist songs:', response.status);
+        toast.error('Impossible de charger les chansons de cet artiste');
+      }
+    } catch (error) {
+      console.error('❌ Error in handlePlayArtist:', error);
+      toast.error('Erreur lors du chargement des chansons');
+    }
   };
 
   const handlePlayAlbum = (album) => {
@@ -573,8 +422,15 @@ const Search = () => {
   }, [searchQuery]);
 
   const renderTopResult = () => {
+    console.log('🎯 renderTopResult called with:', {
+      artistsCount: searchResults.artists.length,
+      artists: searchResults.artists,
+      searchQuery
+    });
+    
     if (searchResults.artists.length > 0) {
       const topArtist = searchResults.artists[0];
+      console.log('🎯 Top artist:', topArtist);
       return (
         <section className="mb-10">
           <h2 className="text-2xl font-bold mb-6 text-white">Meilleur résultat</h2>
@@ -582,9 +438,13 @@ const Search = () => {
             <div className="relative group cursor-pointer">
               <div className="w-32 h-32 bg-gray-800 rounded-full overflow-hidden shadow-lg">
                 <img
-                  src={topArtist.avatar || topArtist.image || `https://images.unsplash.com/photo-1494790108755-2616b612b786?w=200&h=200&fit=crop&crop=face`}
+                  src={buildImageUrl(topArtist.avatar || topArtist.image || topArtist.profilePicture, `https://images.unsplash.com/photo-1494790108755-2616b612b786?w=200&h=200&fit=crop&crop=face`)}
                   alt={topArtist.username || topArtist.name}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    console.log('❌ Image load error for top artist:', topArtist.username, 'fallback to default');
+                    e.target.src = `https://images.unsplash.com/photo-1494790108755-2616b612b786?w=200&h=200&fit=crop&crop=face`;
+                  }}
                 />
               </div>
               
@@ -613,24 +473,69 @@ const Search = () => {
     return null;
   };
 
-  const renderSongs = () => (
-    <section className="mb-10">
-      <h2 className="text-2xl font-bold mb-6 text-white">Titres</h2>
-      <div className="space-y-1">
-        {searchResults.songs.map((song, index) => (
+  const renderSongs = () => {
+    console.log('🎵 renderSongs called with:', {
+      songsCount: searchResults.songs.length,
+      songs: searchResults.songs,
+      searchQuery
+    });
+    
+    if (searchResults.songs.length === 0) {
+      return (
+        <section className="mb-10">
+          <h2 className="text-2xl font-bold mb-6 text-white">Titres</h2>
+          <p className="text-gray-400">Aucun titre trouvé</p>
+        </section>
+      );
+    }
+    
+    return (
+      <section className="mb-10">
+        <h2 className="text-2xl font-bold mb-6 text-white">Titres</h2>
+        <div className="space-y-1">
+        {searchResults.songs.map((song, index) => {
+          console.log('🎵 Rendering song:', {
+            title: song.title,
+            coverImage: song.coverImage,
+            artistAvatar: song.artist?.avatar,
+            artist: song.artist
+          });
+          return (
           <div key={song._id} className="flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-800/50 transition-colors group">
-          <div className="w-12 h-12 bg-gray-700 rounded flex-shrink-0">
-            {song.cover && (
-              <img src={song.cover} alt={song.title} className="w-full h-full object-cover rounded" />
-            )}
+          <div className="w-12 h-12 bg-gray-700 rounded flex-shrink-0 overflow-hidden">
+            <img 
+              src={buildImageUrl(song.coverImage || song.artist?.avatar, `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop`)} 
+              alt={song.title} 
+              className="w-full h-full object-cover" 
+              onError={(e) => {
+                console.log('❌ Image load error for song:', song.title, 'fallback to default');
+                e.target.src = `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop`;
+              }}
+            />
           </div>
           
           <div className="flex-1 min-w-0">
             <div className="text-sm font-medium text-white truncate">
               {song.title}
             </div>
-            <div className="text-xs text-gray-400 truncate">
-              {song.artist}
+            <div 
+              className="text-xs text-gray-400 truncate hover:text-green-400 cursor-pointer transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log('🎤 Artist click - song.artist:', song.artist);
+                console.log('🎤 Artist click - song.artist._id:', song.artist?._id);
+                console.log('🎤 Artist click - song.artist.username:', song.artist?.username);
+                
+                if (song.artist?._id) {
+                  console.log('🎤 Navigating to artist page from song:', song.artist._id, song.artist.username);
+                  navigate(`/artist/${song.artist._id}`);
+                } else {
+                  console.log('❌ No artist ID found for navigation');
+                  toast.error('Impossible de naviguer vers la page de l\'artiste');
+                }
+              }}
+            >
+              {song.artist?.username || song.artist?.name || song.artist}
             </div>
           </div>
             
@@ -667,28 +572,55 @@ const Search = () => {
               </div>
           </div>
         </div>
-      ))}
-    </div>
+        );
+        })}
+      </div>
     </section>
-  );
+    );
+  };
 
-  const renderArtists = () => (
-    <section className="mb-10">
-      <h2 className="text-2xl font-bold mb-6 text-white">Artistes</h2>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+  const renderArtists = () => {
+    if (searchResults.artists.length === 0) {
+      return (
+        <section className="mb-10">
+          <h2 className="text-2xl font-bold mb-6 text-white">Artistes</h2>
+          <p className="text-gray-400">Aucun artiste trouvé</p>
+        </section>
+      );
+    }
+    
+    return (
+      <section className="mb-10">
+        <h2 className="text-2xl font-bold mb-6 text-white">Artistes</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
       {searchResults.artists.map((artist) => (
-        <div key={artist._id || artist.id} className="text-center group cursor-pointer">
+        <div 
+          key={artist._id || artist.id} 
+          className="text-center group cursor-pointer"
+          onClick={() => {
+            console.log('🎤 Navigating to artist page:', artist._id, artist.username);
+            navigate(`/artist/${artist._id || artist.id}`);
+          }}
+        >
           <div className="relative mb-3">
               <div className="w-full aspect-square bg-gray-800 rounded-full overflow-hidden mx-auto shadow-lg">
               <img
-                src={artist.avatar || artist.image || `https://images.unsplash.com/photo-1494790108755-2616b612b786?w=200&h=200&fit=crop&crop=face`}
+                src={buildImageUrl(artist.avatar || artist.image || artist.profilePicture, `https://images.unsplash.com/photo-1494790108755-2616b612b786?w=200&h=200&fit=crop&crop=face`)}
                 alt={artist.username || artist.name}
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  console.log('❌ Image load error for artist:', artist.username, 'fallback to default');
+                  e.target.src = `https://images.unsplash.com/photo-1494790108755-2616b612b786?w=200&h=200&fit=crop&crop=face`;
+                }}
               />
             </div>
             
             <button 
-              onClick={() => handlePlayArtist(artist)}
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log('🎵 Playing artist music:', artist.username);
+                handlePlayArtist(artist);
+              }}
                 className="absolute bottom-3 right-3 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 shadow-lg"
             >
               <Play className="h-5 w-5 text-black ml-1" />
@@ -701,12 +633,21 @@ const Search = () => {
           <p className="text-xs text-gray-400">Artiste</p>
         </div>
       ))}
-    </div>
+      </div>
     </section>
-  );
+    );
+  };
 
   const renderAlbums = () => {
-    console.log('🔍 renderAlbums called with:', searchResults.albums);
+    if (searchResults.albums.length === 0) {
+      return (
+        <section className="mb-10">
+          <h2 className="text-2xl font-bold mb-6 text-white">Albums</h2>
+          <p className="text-gray-400">Aucun album trouvé</p>
+        </section>
+      );
+    }
+    
     return (
       <section className="mb-10">
         <h2 className="text-2xl font-bold mb-6 text-white">Albums</h2>
@@ -720,9 +661,13 @@ const Search = () => {
             <div className="relative mb-3">
               <div className="w-full aspect-square bg-gray-800 rounded-lg overflow-hidden shadow-lg">
                 <img
-                  src={album.coverImage || album.cover || `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop`}
+                  src={buildImageUrl(album.coverImage || album.cover, `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop`)}
                   alt={album.title || album.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                  onError={(e) => {
+                    console.log('❌ Image load error for album:', album.title, 'fallback to default');
+                    e.target.src = `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop`;
+                  }}
                 />
               </div>
               
@@ -756,7 +701,23 @@ const Search = () => {
             <h3 className="font-semibold text-sm mb-1 truncate group-hover:text-green-400 transition-colors text-white">
               {album.title || album.name}
             </h3>
-            <p className="text-xs text-gray-400 truncate">
+            <p 
+              className="text-xs text-gray-400 truncate hover:text-green-400 cursor-pointer transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log('🎤 Album artist click - album.artist:', album.artist);
+                console.log('🎤 Album artist click - album.artist._id:', album.artist?._id);
+                console.log('🎤 Album artist click - album.artist.username:', album.artist?.username);
+                
+                if (album.artist?._id) {
+                  console.log('🎤 Navigating to artist page from album:', album.artist._id, album.artist.username);
+                  navigate(`/artist/${album.artist._id}`);
+                } else {
+                  console.log('❌ No artist ID found for album navigation');
+                  toast.error('Impossible de naviguer vers la page de l\'artiste');
+                }
+              }}
+            >
               {album.artist?.name || album.artist?.username || album.artist || 'Artiste inconnu'}
             </p>
             {album.releaseDate && (
@@ -771,18 +732,32 @@ const Search = () => {
     );
   };
 
-  const renderPlaylists = () => (
-    <section className="mb-10">
-      <h2 className="text-2xl font-bold mb-6 text-white">Avec {searchResults.artists[0]?.username || 'ElGrandeToto'}</h2>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+  const renderPlaylists = () => {
+    if (searchResults.playlists.length === 0) {
+      return (
+        <section className="mb-10">
+          <h2 className="text-2xl font-bold mb-6 text-white">Playlists</h2>
+          <p className="text-gray-400">Aucune playlist trouvée</p>
+        </section>
+      );
+    }
+    
+    return (
+      <section className="mb-10">
+        <h2 className="text-2xl font-bold mb-6 text-white">Playlists</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
       {searchResults.playlists.map((playlist) => (
         <div key={playlist._id || playlist.id} className="group cursor-pointer">
           <div className="relative mb-3">
               <div className="aspect-square bg-gray-800 rounded-lg overflow-hidden shadow-lg">
               <img
-                src={playlist.coverUrl || playlist.cover || `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop`}
+                src={buildImageUrl(playlist.coverUrl || playlist.cover, `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop`)}
                 alt={playlist.name}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                onError={(e) => {
+                  console.log('❌ Image load error for playlist:', playlist.name, 'fallback to default');
+                  e.target.src = `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop`;
+                }}
               />
             </div>
             
@@ -807,9 +782,10 @@ const Search = () => {
           )}
         </div>
       ))}
-    </div>
+      </div>
     </section>
-  );
+    );
+  };
 
   return (
     <div className="min-h-screen bg-black text-white px-8 py-6">
@@ -874,15 +850,16 @@ const Search = () => {
       {searchError && (
         <div className="mb-6 p-4 bg-red-500/20 border border-red-500/30 rounded-lg">
           <p className="text-red-300">{searchError}</p>
+          {searchError.includes('connexion') && (
+            <div className="mt-2 text-sm text-red-400">
+              <p>• Vérifiez que le serveur backend fonctionne sur le port 5000</p>
+              <p>• Vérifiez votre connexion internet</p>
+              <p>• Essayez de recharger la page</p>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Debug info */}
-      <div className="mb-4 p-2 bg-gray-800 rounded text-xs text-gray-400">
-        Debug: searchQuery="{searchQuery}", isLoading={isLoading.toString()}, 
-        Results: songs={searchResults.songs.length}, artists={searchResults.artists.length}, 
-        albums={searchResults.albums.length}, playlists={searchResults.playlists.length}
-      </div>
 
       {/* Résultats de recherche - Style Spotify exact */}
       {isLoading ? (
@@ -897,29 +874,23 @@ const Search = () => {
 
           {/* Chansons */}
           {activeFilter === 'Tout' || activeFilter === 'Titres' ? (
-            searchResults.songs.length > 0 && renderSongs()
+            renderSongs()
           ) : null}
 
           {/* Artistes */}
           {activeFilter === 'Tout' || activeFilter === 'Artistes' ? (
-            searchResults.artists.length > 0 && renderArtists()
+            renderArtists()
           ) : null}
 
           {/* Albums */}
           {activeFilter === 'Tout' || activeFilter === 'Albums' ? (
-            searchResults.albums.length > 0 && renderAlbums()
+            renderAlbums()
           ) : null}
           
-          {/* Debug Albums */}
-          <div className="text-xs text-gray-500 p-2 bg-gray-900 rounded">
-            Albums Debug: activeFilter="{activeFilter}", albums.length={searchResults.albums.length}, 
-            shouldRender={activeFilter === 'Tout' || activeFilter === 'Albums'}, 
-            hasAlbums={searchResults.albums.length > 0}
-          </div>
 
           {/* Playlists */}
           {activeFilter === 'Tout' || activeFilter === 'Playlists' ? (
-            searchResults.playlists.length > 0 && renderPlaylists()
+            renderPlaylists()
           ) : null}
 
           {/* Aucun résultat */}
@@ -946,4 +917,4 @@ const Search = () => {
   );
 };
 
-export default Search; 
+export default Search;  

@@ -79,6 +79,7 @@ const getPlaylistById = async (req, res, next) => {
       id: playlist._id,
       name: playlist.name,
       isPublic: playlist.isPublic,
+      isPublicType: typeof playlist.isPublic,
       ownerId: playlist.owner._id,
       ownerUsername: playlist.owner.username,
       songsCount: playlist.songs?.length || 0
@@ -86,7 +87,11 @@ const getPlaylistById = async (req, res, next) => {
     
     // Vérifier si l'utilisateur peut accéder à la playlist
     // Si la playlist est publique, permettre l'accès à tous
-    if (!playlist.isPublic) {
+    console.log('🔍 Checking access - isPublic:', playlist.isPublic, 'type:', typeof playlist.isPublic);
+    console.log('🔍 Playlist owner ID:', playlist.owner._id.toString());
+    console.log('🔍 Current user ID:', req.user?._id?.toString() || 'No user');
+    
+    if (playlist.isPublic === false) {
       console.log('🔒 Private playlist - checking access');
       // Si la playlist est privée, vérifier que l'utilisateur est connecté et est le propriétaire
       if (!req.user) {
@@ -96,9 +101,10 @@ const getPlaylistById = async (req, res, next) => {
       if (playlist.owner._id.toString() !== req.user._id.toString()) {
         console.log('❌ Access denied - not owner:', {
           playlistOwnerId: playlist.owner._id.toString(),
-          currentUserId: req.user._id.toString()
+          currentUserId: req.user._id.toString(),
+          isOwner: playlist.owner._id.toString() === req.user._id.toString()
         });
-        return next(new AppError('Accès non autorisé à cette playlist', 403));
+        return next(new AppError('Accès non autorisé à cette playlist - vous n\'êtes pas le propriétaire', 403));
       }
       console.log('✅ Access granted - user is owner');
     } else {

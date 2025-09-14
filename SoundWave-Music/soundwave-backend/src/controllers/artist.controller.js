@@ -291,43 +291,6 @@ const followArtist = async (req, res) => {
   }
 };
 
-// @desc    Ne plus suivre un artiste
-// @route   DELETE /api/artists/:id/follow
-// @access  Private
-const unfollowArtist = async (req, res) => {
-  try {
-    const { id: artistId } = req.params;
-    const userId = req.user.id;
-    
-    console.log(`👥 Utilisateur ${userId} ne suit plus l'artiste ${artistId}`);
-    
-    // Retirer l'artiste des suivis de l'utilisateur
-    await User.findByIdAndUpdate(userId, {
-      $pull: { following: artistId }
-    });
-    
-    // Retirer l'utilisateur des followers de l'artiste
-    await User.findByIdAndUpdate(artistId, {
-      $pull: { followers: userId }
-    });
-    
-    console.log(`✅ Utilisateur ${userId} ne suit plus l'artiste ${artistId}`);
-    
-    res.json({
-      success: true,
-      message: 'Artiste non suivi avec succès'
-    });
-    
-  } catch (error) {
-    console.error('💥 Erreur lors du non-suivi de l\'artiste:', error);
-    
-    res.status(500).json({
-      success: false,
-      message: 'Erreur serveur lors du non-suivi de l\'artiste',
-      error: error.message
-    });
-  }
-};
 
 // @desc    Obtenir les chansons d'un artiste
 // @route   GET /api/artists/:id/songs
@@ -670,6 +633,63 @@ const getMyAlbums = async (req, res) => {
       message: 'Erreur serveur lors de la récupération de mes albums',
       error: error.message
     });
+  }
+};
+
+
+// @desc    Ne plus suivre un artiste
+// @route   DELETE /api/artists/:id/follow
+// @access  Private
+const unfollowArtist = async (req, res, next) => {
+  try {
+    const artistId = req.params.id;
+    const userId = req.user.id;
+
+    console.log(`🎵 Tentative d'arrêt de suivi de l'artiste ${artistId} par l'utilisateur ${userId}`);
+
+    // Vérifier si l'artiste existe
+    const artist = await User.findById(artistId);
+    if (!artist) {
+      return res.status(404).json({
+        success: false,
+        message: 'Artiste non trouvé'
+      });
+    }
+
+    // Vérifier si l'utilisateur suit l'artiste
+    const user = await User.findById(userId);
+    if (!user.following || !user.following.includes(artistId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Vous ne suivez pas cet artiste'
+      });
+    }
+
+    // Retirer l'artiste de la liste de suivi de l'utilisateur
+    user.following = user.following.filter(id => id.toString() !== artistId);
+    await user.save();
+
+    // Retirer l'utilisateur des followers de l'artiste
+    if (artist.followers) {
+      artist.followers = artist.followers.filter(id => id.toString() !== userId);
+      await artist.save();
+    }
+
+    console.log(`✅ Utilisateur ${userId} ne suit plus l'artiste ${artistId}`);
+
+    res.json({
+      success: true,
+      message: 'Arrêt du suivi de l\'artiste réussi',
+      data: {
+        artistId,
+        userId,
+        following: user.following
+      }
+    });
+
+  } catch (error) {
+    console.error('💥 Erreur lors de l\'arrêt du suivi de l\'artiste:', error);
+    next(error);
   }
 };
 

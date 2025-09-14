@@ -274,121 +274,7 @@ const getFollowing = async (req, res, next) => {
   }
 };
 
-// @desc    Obtenir les artistes suivis par l'utilisateur connecté
-// @route   GET /api/users/following
-// @access  Private
-const getMyFollowing = async (req, res, next) => {
-  try {
-    const userId = req.user._id;
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 50;
-    const skip = (page - 1) * limit;
-    
-    console.log('🎤 Getting followed artists for user:', userId);
-    
-    // Récupérer l'utilisateur avec ses suivis
-    const user = await User.findById(userId).select('following');
-    
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'Utilisateur non trouvé'
-      });
-    }
-    
-    console.log('🎤 User following array:', user.following);
-    
-    // Récupérer les artistes suivis avec pagination
-    const followedArtists = await User.find({
-      _id: { $in: user.following },
-      role: 'artist'
-    })
-    .select('username name profilePicture bio followers following')
-    .skip(skip)
-    .limit(limit)
-    .sort({ createdAt: -1 });
-    
-    // Compter le total des artistes suivis
-    const totalFollowing = await User.countDocuments({
-      _id: { $in: user.following },
-      role: 'artist'
-    });
-    
-    console.log(`🎤 Found ${followedArtists.length} followed artists out of ${totalFollowing} total`);
-    
-    res.json({
-      success: true,
-      data: followedArtists,
-      pagination: {
-        page,
-        limit,
-        total: totalFollowing,
-        pages: Math.ceil(totalFollowing / limit)
-      }
-    });
-  } catch (error) {
-    console.error('❌ Error getting followed artists:', error);
-    next(new AppError('Erreur lors de la récupération des artistes suivis', 500));
-  }
-};
 
-// @desc    Obtenir les albums suivis par l'utilisateur connecté
-// @route   GET /api/users/followed-albums
-// @access  Private
-const getMyFollowedAlbums = async (req, res, next) => {
-  try {
-    const userId = req.user._id;
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 50;
-    const skip = (page - 1) * limit;
-    
-    console.log('💿 Getting followed albums for user:', userId);
-    
-    // Récupérer l'utilisateur avec ses albums suivis
-    const user = await User.findById(userId).select('followedAlbums');
-    
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'Utilisateur non trouvé'
-      });
-    }
-    
-    console.log('💿 User followed albums array:', user.followedAlbums);
-    
-    // Récupérer les albums suivis avec pagination
-    const Album = require('../models/Album');
-    const followedAlbums = await Album.find({
-      _id: { $in: user.followedAlbums }
-    })
-    .populate('artist', 'username name profilePicture')
-    .select('title coverImage releaseDate genre songsCount followers')
-    .skip(skip)
-    .limit(limit)
-    .sort({ createdAt: -1 });
-    
-    // Compter le total des albums suivis
-    const totalFollowed = await Album.countDocuments({
-      _id: { $in: user.followedAlbums }
-    });
-    
-    console.log(`💿 Found ${followedAlbums.length} followed albums out of ${totalFollowed} total`);
-    
-    res.json({
-      success: true,
-      data: followedAlbums,
-      pagination: {
-        page,
-        limit,
-        total: totalFollowed,
-        pages: Math.ceil(totalFollowed / limit)
-      }
-    });
-  } catch (error) {
-    console.error('❌ Error getting followed albums:', error);
-    next(new AppError('Erreur lors de la récupération des albums suivis', 500));
-  }
-};
 
 // @desc    Obtenir le profil de l'utilisateur connecté
 // @route   GET /api/users/me
@@ -406,6 +292,80 @@ const getMyProfile = async (req, res, next) => {
     });
   } catch (error) {
     next(new AppError('Erreur lors de la récupération du profil', 500));
+  }
+};
+
+// @desc    Obtenir mes artistes suivis
+// @route   GET /api/users/following
+// @access  Private
+const getMyFollowing = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    
+    console.log(`🔍 Récupération des artistes suivis pour l'utilisateur ${userId}`);
+    
+    const user = await User.findById(userId).populate({
+      path: 'following',
+      select: 'username name profilePicture bio followers'
+    });
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Utilisateur non trouvé'
+      });
+    }
+    
+    console.log(`✅ ${user.following.length} artistes suivis trouvés`);
+    
+    res.json({
+      success: true,
+      message: 'Artistes suivis récupérés avec succès',
+      following: user.following || []
+    });
+    
+  } catch (error) {
+    console.error('💥 Erreur lors de la récupération des artistes suivis:', error);
+    next(error);
+  }
+};
+
+// @desc    Obtenir mes albums suivis
+// @route   GET /api/users/followed-albums
+// @access  Private
+const getMyFollowedAlbums = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    
+    console.log(`🔍 Récupération des albums suivis pour l'utilisateur ${userId}`);
+    
+    const user = await User.findById(userId).populate({
+      path: 'followedAlbums',
+      select: 'title coverImage artist releaseYear genre',
+      populate: {
+        path: 'artist',
+        select: 'username name'
+      }
+    });
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Utilisateur non trouvé'
+      });
+    }
+    
+    console.log(`✅ ${user.followedAlbums.length} albums suivis trouvés`);
+    
+    res.json({
+      success: true,
+      message: 'Albums suivis récupérés avec succès',
+      followedAlbums: user.followedAlbums || []
+    });
+    
+  } catch (error) {
+    console.error('💥 Erreur lors de la récupération des albums suivis:', error);
+    next(error);
   }
 };
 

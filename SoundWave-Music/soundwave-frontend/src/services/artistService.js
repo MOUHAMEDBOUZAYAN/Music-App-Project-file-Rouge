@@ -4,12 +4,15 @@ export const artistService = {
   // Rechercher des artistes
   searchArtists: async (params = {}) => {
     try {
-      const response = await apiClient.get('/artists/search', { params });
+      console.log('🔍 Searching artists with params:', params);
+      const response = await apiClient.get('/search/artists', { params });
+      console.log('🔍 Artists search response:', response.data);
       return {
         success: true,
         data: response.data
       };
     } catch (error) {
+      console.error('❌ Error searching artists:', error);
       return {
         success: false,
         error: error.response?.data?.message || 'Erreur lors de la recherche d\'artistes'
@@ -49,24 +52,6 @@ export const artistService = {
     }
   },
 
-  // Rechercher des artistes
-  searchArtists: async (params = {}) => {
-    try {
-      console.log('🔍 Searching artists with params:', params);
-      const response = await apiClient.get('/artists/search', { params });
-      console.log('🔍 Artists search response:', response.data);
-      return {
-        success: true,
-        data: response.data
-      };
-    } catch (error) {
-      console.error('❌ Error searching artists:', error);
-      return {
-        success: false,
-        error: error.response?.data?.message || 'Erreur lors de la recherche d\'artistes'
-      };
-    }
-  },
 
   // Obtenir les chansons d'un artiste
   getArtistSongs: async (artistId, params = {}) => {
@@ -141,9 +126,22 @@ export const artistService = {
         data: response.data
       };
     } catch (error) {
+      console.error('❌ Error in followArtist:', error);
+      const errorMessage = error.response?.data?.message || 'Erreur lors du suivi de l\'artiste';
+      
+      // Si l'erreur indique que l'utilisateur suit déjà l'artiste, on considère ça comme un succès
+      if (errorMessage.includes('déjà')) {
+        console.log('✅ User already follows artist, treating as success');
+        return {
+          success: true,
+          data: { message: errorMessage },
+          alreadyFollowing: true
+        };
+      }
+      
       return {
         success: false,
-        error: error.response?.data?.message || 'Erreur lors du suivi de l\'artiste'
+        error: errorMessage
       };
     }
   },
@@ -152,14 +150,17 @@ export const artistService = {
   getFollowedArtists: async (params = {}) => {
     try {
       const response = await apiClient.get('/users/following', { params });
+      console.log('🔍 getFollowedArtists response:', response.data);
       return {
         success: true,
-        data: response.data
+        data: response.data.following || [] // Utiliser 'following' au lieu de 'data'
       };
     } catch (error) {
+      console.error('❌ Error in getFollowedArtists:', error);
       return {
         success: false,
-        error: error.response?.data?.message || 'Erreur lors de la récupération des artistes suivis'
+        error: error.response?.data?.message || 'Erreur lors de la récupération des artistes suivis',
+        data: []
       };
     }
   },

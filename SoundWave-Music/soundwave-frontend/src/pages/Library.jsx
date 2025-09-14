@@ -19,11 +19,12 @@ import { useAuth } from '../hooks/useAuth';
 import { songService } from '../services/songService';
 import { artistService } from '../services/artistService';
 import { albumService } from '../services/albumService';
+import { playlistService } from '../services/playlistService';
 import toast from 'react-hot-toast';
 
 const Library = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { 
     likedTracks, 
     playHistory, 
@@ -66,25 +67,84 @@ const Library = () => {
     navigate(`/playlist/${playlistId}`);
   };
 
+  // Charger les playlists publiques
+  const loadPublicPlaylists = async () => {
+    try {
+      console.log('📚 Library - Loading public playlists...');
+      const response = await playlistService.getPublicPlaylists();
+      
+      if (response.success) {
+        console.log('📚 Library - Public playlists loaded:', response.data);
+        setPlaylists(response.data || []);
+      } else {
+        console.error('❌ Erreur lors du chargement des playlists publiques:', response.error);
+        setPlaylists([]);
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors du chargement des playlists publiques:', error);
+      setPlaylists([]);
+    }
+  };
+
+  // Nettoyer les playlists obsolètes du localStorage
+  const cleanOldPlaylists = () => {
+    try {
+      const storedPlaylists = JSON.parse(localStorage.getItem('userPlaylists') || '[]');
+      if (storedPlaylists.length > 0) {
+        console.log('🧹 Cleaning old playlists from localStorage:', storedPlaylists.length);
+        localStorage.removeItem('userPlaylists');
+        console.log('✅ Old playlists cleaned from localStorage');
+      }
+    } catch (error) {
+      console.error('❌ Error cleaning old playlists:', error);
+    }
+  };
+
   // Charger les playlists depuis localStorage
   useEffect(() => {
-    const loadPlaylists = () => {
+    const loadPlaylists = async () => {
       try {
-        const storedPlaylists = JSON.parse(localStorage.getItem('userPlaylists') || '[]');
-        console.log('📚 Library - Loading playlists from localStorage:', storedPlaylists);
-        setPlaylists(storedPlaylists);
-        console.log('📚 Playlists chargées dans Library:', storedPlaylists.length);
+        console.log('📚 Library - Loading playlists from server...');
+        
+        // Charger les playlists depuis le serveur
+        const response = await playlistService.getAllPlaylists();
+        
+        if (response.success) {
+          console.log('📚 Library - Playlists loaded from server:', response.data);
+          setPlaylists(response.data || []);
+          console.log('📚 Playlists chargées dans Library:', response.data?.length || 0);
+        } else {
+          console.error('❌ Erreur lors du chargement des playlists:', response.error);
+          // Fallback vers localStorage en cas d'erreur
+          const storedPlaylists = JSON.parse(localStorage.getItem('userPlaylists') || '[]');
+          setPlaylists(storedPlaylists);
+        }
       } catch (error) {
         console.error('❌ Erreur lors du chargement des playlists:', error);
+        // Fallback vers localStorage en cas d'erreur
+        const storedPlaylists = JSON.parse(localStorage.getItem('userPlaylists') || '[]');
+        setPlaylists(storedPlaylists);
       }
     };
 
-    loadPlaylists();
+    // Nettoyer les anciennes playlists du localStorage
+    cleanOldPlaylists();
+
+    if (isAuthenticated && user) {
+      loadPlaylists();
+    } else {
+      // Si pas connecté, charger les playlists publiques
+      loadPublicPlaylists();
+    }
     
     // Écouter les changements dans localStorage
     const handleStorageChange = () => {
       console.log('📚 Library - localStorageChange event received');
-      loadPlaylists();
+      if (isAuthenticated && user) {
+        loadPlaylists();
+      } else {
+        loadPublicPlaylists();
+      }
     };
 
     window.addEventListener('storage', handleStorageChange);
@@ -94,7 +154,7 @@ const Library = () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('localStorageChange', handleStorageChange);
     };
-  }, []);
+  }, [isAuthenticated, user]);
 
   // Charger les chansons aimées
   useEffect(() => {
@@ -148,7 +208,7 @@ const Library = () => {
               return {
                 _id: artist._id,
                 id: artist._id,
-                name: artist.name || artist.username || 'Artiste inconnu',
+                name: artist.username || 'Artiste inconnu', // Utiliser seulement username car c'est le champ disponible
                 avatar: artist.profilePicture ? 
                   (artist.profilePicture.startsWith('http') ? 
                     artist.profilePicture : 
@@ -175,6 +235,147 @@ const Library = () => {
     };
 
     loadFollowedArtists();
+  }, [activeTab]);
+
+  // Écouter les événements de follow/unfollow d'artistes
+  useEffect(() => {
+    const handleArtistFollowed = (event) => {
+      console.log('🎤 Artist followed event received:', event.detail);
+      
+      // Recharger les artistes suivis - toujours, pas seulement si on est sur le tab artists
+      const loadFollowedArtists = async () => {
+        setLoadingArtists(true);
+        try {
+          console.log('🎤 Reloading followed artists after follow event...');
+          const response = await artistService.getFollowedArtists();
+          if (response.success) {
+            const artistsData = response.data.map(artist => ({
+              _id: artist._id,
+              name: artist.name || artist.username,
+              username: artist.username,
+              profilePicture: artist.profilePicture,
+              followersCount: artist.followers ? artist.followers.length : 0
+            }));
+            setArtists(artistsData);
+            console.log('✅ Followed artists reloaded after follow event:', artistsData.length, 'artists');
+          } else {
+            console.log('❌ Failed to reload followed artists:', response.error);
+          }
+        } catch (error) {
+          console.error('❌ Error reloading followed artists:', error);
+        } finally {
+          setLoadingArtists(false);
+        }
+      };
+      
+      loadFollowedArtists();
+      
+      if (activeTab !== 'artists') {
+        console.log('🎤 Not on artists tab, but artists list updated for when user switches to artists tab');
+      }
+    };
+
+    const handleArtistUnfollowed = (event) => {
+      console.log('🎤 Artist unfollowed event received:', event.detail);
+      // Recharger les artistes suivis - toujours, pas seulement si on est sur le tab artists
+      const loadFollowedArtists = async () => {
+        setLoadingArtists(true);
+        try {
+          console.log('🎤 Reloading followed artists after unfollow event...');
+          const response = await artistService.getFollowedArtists();
+          if (response.success) {
+            const artistsData = response.data.map(artist => ({
+              _id: artist._id,
+              name: artist.name || artist.username,
+              username: artist.username,
+              profilePicture: artist.profilePicture,
+              followersCount: artist.followers ? artist.followers.length : 0
+            }));
+            setArtists(artistsData);
+            console.log('✅ Followed artists reloaded after unfollow event:', artistsData.length, 'artists');
+          } else {
+            console.log('❌ Failed to reload followed artists:', response.error);
+          }
+        } catch (error) {
+          console.error('❌ Error reloading followed artists:', error);
+        } finally {
+          setLoadingArtists(false);
+        }
+      };
+      
+      loadFollowedArtists();
+      
+      if (activeTab !== 'artists') {
+        console.log('🎤 Not on artists tab, but artists list updated for when user switches to artists tab');
+      }
+    };
+
+    // Écouter les événements même si on n'est pas sur le bon tab
+    window.addEventListener('artistFollowed', handleArtistFollowed);
+    window.addEventListener('artistUnfollowed', handleArtistUnfollowed);
+    
+    // Écouter aussi les changements de tab pour recharger si nécessaire
+    const handleTabChange = () => {
+      if (activeTab === 'artists') {
+        console.log('🎤 Tab changed to artists, reloading followed artists...');
+        const loadFollowedArtists = async () => {
+          setLoadingArtists(true);
+          try {
+            const response = await artistService.getFollowedArtists();
+            if (response.success) {
+              const artistsData = response.data.map(artist => ({
+                _id: artist._id,
+                name: artist.name || artist.username,
+                username: artist.username,
+                profilePicture: artist.profilePicture,
+                followersCount: artist.followers ? artist.followers.length : 0
+              }));
+              setArtists(artistsData);
+              console.log('✅ Followed artists reloaded on tab change:', artistsData.length, 'artists');
+            }
+          } catch (error) {
+            console.error('❌ Error reloading followed artists on tab change:', error);
+          } finally {
+            setLoadingArtists(false);
+          }
+        };
+        loadFollowedArtists();
+      }
+    };
+
+    return () => {
+      window.removeEventListener('artistFollowed', handleArtistFollowed);
+      window.removeEventListener('artistUnfollowed', handleArtistUnfollowed);
+    };
+  }, [activeTab]);
+
+  // Recharger les artistes suivis quand on change de tab
+  useEffect(() => {
+    if (activeTab === 'artists') {
+      console.log('🎤 Active tab changed to artists, reloading followed artists...');
+      const loadFollowedArtists = async () => {
+        setLoadingArtists(true);
+        try {
+          const response = await artistService.getFollowedArtists();
+          if (response.success) {
+            const artistsData = response.data.map(artist => ({
+              _id: artist._id,
+              name: artist.name || artist.username,
+              username: artist.username,
+              profilePicture: artist.profilePicture,
+              followersCount: artist.followers ? artist.followers.length : 0
+            }));
+            setArtists(artistsData);
+            console.log('✅ Followed artists reloaded on tab change:', artistsData.length, 'artists');
+          }
+        } catch (error) {
+          console.error('❌ Error reloading followed artists on tab change:', error);
+        } finally {
+          setLoadingArtists(false);
+        }
+      };
+      loadFollowedArtists();
+    }
   }, [activeTab]);
 
   // Charger les albums likés
@@ -572,7 +773,15 @@ const Library = () => {
           <div 
             key={artist.id} 
             className="text-center group cursor-pointer hover:bg-gray-800/50 rounded-lg p-2 transition-colors duration-200"
-            onClick={() => navigate(`/artist/${artist._id}`)}
+            onClick={() => {
+              console.log('🎤 Navigating to artist:', artist._id, 'name:', artist.name);
+              if (artist._id) {
+                navigate(`/artist/${artist._id}`);
+              } else {
+                console.error('❌ No artist ID available for navigation');
+                toast.error('ID de l\'artiste non disponible');
+              }
+            }}
           >
             <div className="relative mb-3">
               <div className={`${viewMode === 'grid' ? 'w-full aspect-square' : 'w-32 h-32'} bg-gray-800 rounded-full overflow-hidden mx-auto`}>

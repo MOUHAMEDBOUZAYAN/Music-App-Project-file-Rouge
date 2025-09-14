@@ -80,8 +80,15 @@ const PlaylistView = () => {
           }
         } else {
           console.error('❌ Playlist service error:', response.error);
-          toast.error(response.error || 'Playlist non trouvée');
-          navigate('/library');
+          
+          // Vérifier si c'est une erreur d'authentification
+          if (response.error && response.error.includes('Accès non autorisé')) {
+            toast.error('Cette playlist est privée. Veuillez vous connecter pour y accéder.');
+            navigate('/login');
+          } else {
+            toast.error(response.error || 'Playlist non trouvée');
+            navigate('/library');
+          }
         }
       } catch (error) {
         console.error('❌ Error loading playlist:', error);
@@ -92,7 +99,8 @@ const PlaylistView = () => {
         });
         
         if (error.response?.status === 403) {
-          toast.error('Accès refusé: Vous n\'avez pas les droits pour accéder à cette playlist');
+          toast.error('Cette playlist est privée. Veuillez vous connecter pour y accéder.');
+          navigate('/login');
         } else if (error.response?.status === 404) {
           toast.error('Playlist non trouvée');
         } else {
@@ -104,9 +112,9 @@ const PlaylistView = () => {
       }
     };
 
-    if (isAuthenticated && user) {
-      loadPlaylist();
-    }
+    // Charger la playlist même si l'utilisateur n'est pas connecté
+    // Le serveur gérera les permissions
+    loadPlaylist();
   }, [id, navigate, isAuthenticated, user]);
 
   // Search function
