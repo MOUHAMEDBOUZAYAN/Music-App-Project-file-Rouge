@@ -8,6 +8,14 @@
     "dev": "nodemon src/app.js",
     "test": "jest",
     "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:models": "jest tests/models/",
+    "test:integration": "jest tests/integration/",
+    "test:all": "node scripts/test.js",
+    "test:watch-all": "node scripts/test.js --watch",
+    "test:coverage-all": "node scripts/test.js --coverage",
+    "test:models-only": "node scripts/test.js --models",
+    "test:integration-only": "node scripts/test.js --integration",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix"
   },
@@ -52,6 +60,7 @@
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.28.1",
     "jest": "^29.6.2",
+    "mongodb-memory-server": "^9.0.0",
     "nodemon": "^3.0.1",
     "supertest": "^6.3.3"
   },

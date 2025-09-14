@@ -1,9 +1,11 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Search, Library, User, Music, Crown } from 'lucide-react';
+import { Home, Search, Library, User, Music, Crown, LayoutDashboard } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
 
 const MobileNav = () => {
   const location = useLocation();
+  const { user, isArtist, isAdmin } = useAuth();
   const isActive = (path) => location.pathname === path;
 
   return (
@@ -21,6 +23,12 @@ const MobileNav = () => {
           <Library className="h-5 w-5" />
           <span className="text-xs font-medium">Bibliothèque</span>
         </Link>
+        {(isArtist() || isAdmin()) && (
+          <Link to="/artist-dashboard" className={`flex flex-col items-center space-y-1 py-2 px-3 rounded-lg transition-colors min-w-0 flex-shrink-0 ${isActive('/artist-dashboard') ? 'text-white bg-gray-800/50' : 'text-gray-400 hover:text-white'}`}>
+            <LayoutDashboard className="h-5 w-5" />
+            <span className="text-xs font-medium">Dashboard</span>
+          </Link>
+        )}
         <Link to="/new-releases" className={`flex flex-col items-center space-y-1 py-2 px-3 rounded-lg transition-colors min-w-0 flex-shrink-0 ${isActive('/new-releases') ? 'text-white bg-gray-800/50' : 'text-gray-400 hover:text-white'}`}>
           <Music className="h-5 w-5" />
           <span className="text-xs font-medium">Nouveautés</span>

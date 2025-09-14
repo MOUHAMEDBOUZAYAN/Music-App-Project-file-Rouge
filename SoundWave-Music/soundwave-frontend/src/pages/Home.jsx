@@ -11,7 +11,8 @@ import {
   Music2,
   Radio,
   Mic,
-  Headphones
+  Headphones,
+  LayoutDashboard
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useMusic } from '../store/MusicContext';
@@ -22,7 +23,7 @@ import { albumService } from '../services/albumService';
 import toast from 'react-hot-toast';
 
 const Home = () => {
-  const { user } = useAuth();
+  const { user, isArtist, isAdmin } = useAuth();
   const { playTrack, playAlbum, playPlaylist, addToQueue, toggleLike, likedTracks } = useMusic();
   const { isSidebarOpen } = useSidebar();
   const navigate = useNavigate();
@@ -406,6 +407,15 @@ const Home = () => {
               >
                 <Music2 className="h-5 w-5 text-gray-300 group-hover:text-white" />
               </button>
+              {(isArtist() || isAdmin()) && (
+                <button 
+                  onClick={() => navigate('/artist-dashboard')}
+                  className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 transition-colors group"
+                  title="Dashboard Artiste"
+                >
+                  <LayoutDashboard className="h-5 w-5 text-gray-300 group-hover:text-white" />
+                </button>
+              )}
               <button 
                 onClick={() => navigate('/profile')}
                 className="w-8 h-8 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center hover:scale-105 transition-transform cursor-pointer"

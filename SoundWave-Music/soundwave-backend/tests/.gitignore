@@ -1,0 +1,45 @@
+# ملفات الاختبار المؤقتة
+*.tmp
+*.temp
+
+# تقارير التغطية
+coverage/
+*.lcov
+
+# ملفات Jest المؤقتة
+.jest-cache/
+.jest/
+
+# ملفات قاعدة البيانات المؤقتة
+*.db
+*.sqlite
+
+# ملفات الذاكرة
+*.mem
+
+# ملفات السجلات
+*.log
+logs/
+
+# ملفات النظام
+.DS_Store
+Thumbs.db
+
+# ملفات IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ملفات Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ملفات البيئة
+.env.test
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
