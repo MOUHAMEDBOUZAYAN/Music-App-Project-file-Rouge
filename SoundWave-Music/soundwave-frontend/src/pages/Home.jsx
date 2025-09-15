@@ -453,7 +453,7 @@ const Home = () => {
             <h1 className="text-4xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
               Bonjour, {user?.username || 'Utilisateur'} 🎵
             </h1>
-            <p className="text-gray-400 text-xl">Découvrez la musique qui vous correspond sur SoundWave</p>
+            <p className="text-gray-400 text-xl">Découvrez la musique que vous prefèrer sur SoundWave</p>
           </div>
         </section>
 
