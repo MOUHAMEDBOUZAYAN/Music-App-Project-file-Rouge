@@ -186,8 +186,12 @@ const createAlbum = async (req, res, next) => {
 const updateAlbum = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { title, artist, genre, releaseDate, description, songs } = req.body;
+    const { title, genre, releaseDate, description, songs } = req.body;
     const userId = req.user._id;
+    
+    console.log('🔄 Update Album - ID:', id, 'User:', userId);
+    console.log('🔄 Update Album - Body:', req.body);
+    console.log('🔄 Update Album - Files:', req.files);
     
     const album = await Album.findById(id);
     
@@ -200,26 +204,69 @@ const updateAlbum = async (req, res, next) => {
       return next(new AppError('Vous n\'êtes pas autorisé à modifier cet album', 403));
     }
     
+    // Préparer les données de mise à jour
+    const updateData = {
+      title: title || album.title,
+      genre: genre || album.genre,
+      releaseDate: releaseDate || album.releaseDate,
+      description: description || album.description
+    };
+    
+    // Gérer les chansons si fournies
+    if (songs) {
+      let songIds = [];
+      try {
+        songIds = JSON.parse(songs);
+      } catch (e) {
+        songIds = songs;
+      }
+      
+      // Vérifier si les chansons existent et appartiennent à l'artiste
+      if (songIds.length > 0) {
+        const existingSongs = await Song.find({ 
+          _id: { $in: songIds },
+          artist: userId
+        });
+        if (existingSongs.length !== songIds.length) {
+          return next(new AppError('Certaines chansons n\'existent pas ou ne vous appartiennent pas', 400));
+        }
+      }
+      
+      updateData.songs = songIds;
+      updateData.songsCount = songIds.length;
+    }
+    
+    // Gérer l'image de couverture si fournie
+    if (req.file && req.file.filename) {
+      // Supprimer l'ancienne image si elle existe
+      if (album.coverImage) {
+        const fs = require('fs');
+        const path = require('path');
+        const oldCoverPath = path.join(__dirname, '../../', album.coverImage);
+        if (fs.existsSync(oldCoverPath)) {
+          fs.unlinkSync(oldCoverPath);
+        }
+      }
+      
+      updateData.coverImage = `/uploads/images/${req.file.filename}`;
+    }
+    
     const updatedAlbum = await Album.findByIdAndUpdate(
       id,
-      {
-        title: title || album.title,
-        artist: artist || album.artist,
-        genre: genre || album.genre,
-        releaseDate: releaseDate || album.releaseDate,
-        description: description || album.description,
-        songs: songs || album.songs
-      },
+      updateData,
       { new: true, runValidators: true }
     )
       .populate('artist', 'username avatar')
       .populate('songs', 'title duration');
+    
+    console.log('✅ Album mis à jour avec succès:', updatedAlbum._id);
     
     res.json({
       success: true,
       data: updatedAlbum
     });
   } catch (error) {
+    console.error('❌ Erreur lors de la mise à jour de l\'album:', error);
     next(new AppError('Erreur lors de la mise à jour de l\'album', 500));
   }
 };

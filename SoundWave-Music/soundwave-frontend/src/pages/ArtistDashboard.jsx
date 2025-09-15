@@ -84,6 +84,15 @@ const ArtistDashboard = () => {
     setShowCreateAlbum(false);
   };
 
+  const handleAlbumUpdated = (updatedAlbum) => {
+    console.log('🔄 ArtistDashboard - Album updated:', updatedAlbum);
+    setAlbums(prev => prev.map(album => 
+      album._id === updatedAlbum._id ? updatedAlbum : album
+    ));
+    setShowCreateAlbum(false);
+    setEditingAlbum(null);
+  };
+
   // دوال التعديل
   const handleEditSong = (song) => {
     console.log('🔄 ArtistDashboard - Editing song:', song);
@@ -551,8 +560,11 @@ const ArtistDashboard = () => {
 
       {showCreateAlbum && (
         <CreateAlbum
-          onClose={() => setShowCreateAlbum(false)}
-          onSuccess={handleAlbumCreated}
+          onClose={() => {
+            setShowCreateAlbum(false);
+            setEditingAlbum(null);
+          }}
+          onSuccess={editingAlbum ? handleAlbumUpdated : handleAlbumCreated}
           editingAlbum={editingAlbum}
         />
       )}

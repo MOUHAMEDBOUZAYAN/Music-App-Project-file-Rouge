@@ -59,6 +59,8 @@ router.post('/',
 router.put('/:id', 
   protect, 
   owner, 
+  uploadLimiter,
+  uploadImage.single('cover'),
   activityLogger('update_album'), 
   albumController.updateAlbum
 );

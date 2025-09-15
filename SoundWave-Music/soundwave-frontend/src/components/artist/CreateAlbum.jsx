@@ -5,7 +5,7 @@ import { albumService } from '../../services/albumService';
 import { songService } from '../../services/songService';
 import toast from 'react-hot-toast';
 
-const CreateAlbum = ({ onClose, onSuccess }) => {
+const CreateAlbum = ({ onClose, onSuccess, editingAlbum }) => {
   const { user } = useAuth();
   const [formData, setFormData] = useState({
     title: '',
@@ -22,6 +22,19 @@ const CreateAlbum = ({ onClose, onSuccess }) => {
   useEffect(() => {
     loadUserSongs();
   }, []);
+
+  // Pré-remplir le formulaire si on modifie un album existant
+  useEffect(() => {
+    if (editingAlbum) {
+      setFormData({
+        title: editingAlbum.title || '',
+        genre: editingAlbum.genre || '',
+        releaseDate: editingAlbum.releaseDate ? new Date(editingAlbum.releaseDate).toISOString().split('T')[0] : '',
+        description: editingAlbum.description || ''
+      });
+      setSelectedSongs(editingAlbum.songs ? editingAlbum.songs.map(song => song._id || song) : []);
+    }
+  }, [editingAlbum]);
 
   const loadUserSongs = async () => {
     setLoadingSongs(true);
@@ -81,7 +94,7 @@ const CreateAlbum = ({ onClose, onSuccess }) => {
       return;
     }
 
-    if (!coverFile) {
+    if (!editingAlbum && !coverFile) {
       toast.error('Veuillez sélectionner une image de couverture');
       return;
     }
@@ -94,20 +107,44 @@ const CreateAlbum = ({ onClose, onSuccess }) => {
     setIsCreating(true);
 
     try {
-      const albumData = new FormData();
-      albumData.append('title', formData.title);
-      albumData.append('genre', formData.genre);
-      albumData.append('releaseDate', formData.releaseDate);
-      albumData.append('description', formData.description);
-      albumData.append('songs', JSON.stringify(selectedSongs));
-      albumData.append('cover', coverFile);
+      if (editingAlbum) {
+        // Modification d'un album existant
+        const albumData = new FormData();
+        albumData.append('title', formData.title);
+        albumData.append('genre', formData.genre);
+        albumData.append('releaseDate', formData.releaseDate);
+        albumData.append('description', formData.description);
+        albumData.append('songs', JSON.stringify(selectedSongs));
+        
+        // Ajouter l'image de couverture seulement si une nouvelle image est sélectionnée
+        if (coverFile) {
+          albumData.append('cover', coverFile);
+        }
 
-      const response = await albumService.createAlbum(albumData);
-      
-      toast.success('Album créé avec succès !');
-      
-      if (onSuccess) {
-        onSuccess(response.data);
+        const response = await albumService.updateAlbum(editingAlbum._id, albumData);
+        
+        toast.success('Album modifié avec succès !');
+        
+        if (onSuccess) {
+          onSuccess(response.data);
+        }
+      } else {
+        // Création d'un nouvel album
+        const albumData = new FormData();
+        albumData.append('title', formData.title);
+        albumData.append('genre', formData.genre);
+        albumData.append('releaseDate', formData.releaseDate);
+        albumData.append('description', formData.description);
+        albumData.append('songs', JSON.stringify(selectedSongs));
+        albumData.append('cover', coverFile);
+
+        const response = await albumService.createAlbum(albumData);
+        
+        toast.success('Album créé avec succès !');
+        
+        if (onSuccess) {
+          onSuccess(response.data);
+        }
       }
       
       // Réinitialiser le formulaire
@@ -125,8 +162,8 @@ const CreateAlbum = ({ onClose, onSuccess }) => {
       }, 1000);
       
     } catch (error) {
-      console.error('Erreur lors de la création de l\'album:', error);
-      toast.error(error.response?.data?.message || 'Erreur lors de la création de l\'album');
+      console.error(`Erreur lors de la ${editingAlbum ? 'modification' : 'création'} de l'album:`, error);
+      toast.error(error.response?.data?.message || `Erreur lors de la ${editingAlbum ? 'modification' : 'création'} de l'album`);
     } finally {
       setIsCreating(false);
     }
@@ -141,7 +178,9 @@ const CreateAlbum = ({ onClose, onSuccess }) => {
             <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
               <Music className="h-5 w-5 text-white" />
             </div>
-            <h2 className="text-2xl font-bold text-white">Créer un album</h2>
+            <h2 className="text-2xl font-bold text-white">
+              {editingAlbum ? 'Modifier l\'album' : 'Créer un album'}
+            </h2>
           </div>
           <button
             onClick={onClose}
@@ -240,7 +279,7 @@ const CreateAlbum = ({ onClose, onSuccess }) => {
               {/* Image de couverture */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Image de couverture *
+                  Image de couverture {!editingAlbum && '*'}
                 </label>
                 <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center hover:border-blue-500 transition-colors">
                   <input
@@ -258,14 +297,25 @@ const CreateAlbum = ({ onClose, onSuccess }) => {
                     <ImageIcon className="h-12 w-12 text-gray-400" />
                     <div>
                       <p className="text-white font-medium">
-                        {coverFile ? coverFile.name : 'Cliquez pour sélectionner une image'}
+                        {coverFile ? coverFile.name : (editingAlbum ? 'Cliquez pour changer l\'image' : 'Cliquez pour sélectionner une image')}
                       </p>
                       <p className="text-sm text-gray-400">
                         JPG, PNG, GIF (max 10MB)
+                        {editingAlbum && ' - Laissez vide pour garder l\'image actuelle'}
                       </p>
                     </div>
                   </label>
                 </div>
+                {editingAlbum && editingAlbum.coverImage && !coverFile && (
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-400 mb-2">Image actuelle :</p>
+                    <img 
+                      src={`http://localhost:5000${editingAlbum.coverImage}`} 
+                      alt="Couverture actuelle"
+                      className="w-20 h-20 object-cover rounded-lg"
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -343,17 +393,17 @@ const CreateAlbum = ({ onClose, onSuccess }) => {
             <button
               type="submit"
               className="flex-1 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-400 transition-colors font-medium flex items-center justify-center space-x-2"
-              disabled={isCreating || !formData.title.trim() || !coverFile || selectedSongs.length === 0}
+              disabled={isCreating || !formData.title.trim() || (!editingAlbum && !coverFile) || selectedSongs.length === 0}
             >
               {isCreating ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Création...</span>
+                  <span>{editingAlbum ? 'Modification...' : 'Création...'}</span>
                 </>
               ) : (
                 <>
                   <Plus className="h-4 w-4" />
-                  <span>Créer l'album</span>
+                  <span>{editingAlbum ? 'Modifier l\'album' : 'Créer l\'album'}</span>
                 </>
               )}
             </button>

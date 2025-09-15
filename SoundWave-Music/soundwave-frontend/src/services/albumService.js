@@ -65,8 +65,14 @@ const albumService = {
   },
 
   // Mettre à jour un album
-  updateAlbum: async (id, data) => {
-    const response = await api.put(`/albums/${id}`, data);
+  updateAlbum: async (id, formData) => {
+    console.log('🎵 Updating album with ID:', id, 'and formData:', formData);
+    const response = await api.put(`/albums/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    console.log('✅ Album updated successfully:', response.data);
     return response.data;
   },
 
