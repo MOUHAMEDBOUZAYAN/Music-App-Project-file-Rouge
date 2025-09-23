@@ -1069,7 +1069,18 @@ const Library = () => {
                 <button onClick={(e) => { e.stopPropagation(); handleAddToQueue(song); }} className="p-1.5 lg:p-2 rounded-full bg-gray-700 hover:bg-gray-600 transition-colors">
                   <Plus className="h-3 w-3 lg:h-4 lg:w-4 text-white" />
                 </button>
-                <button onClick={(e) => { e.stopPropagation(); toggleLike(song._id); }} className="p-1.5 lg:p-2 rounded-full bg-red-500 hover:bg-red-400 transition-colors">
+                <button 
+                  onClick={async (e) => { 
+                    e.stopPropagation(); 
+                    try {
+                      await toggleLike(song._id);
+                    } catch (error) {
+                      console.error('❌ Error toggling like:', error);
+                      toast.error('Erreur lors de la mise à jour des favoris');
+                    }
+                  }} 
+                  className="p-1.5 lg:p-2 rounded-full bg-red-500 hover:bg-red-400 transition-colors"
+                >
                   <Heart className="h-3 w-3 lg:h-4 lg:w-4 text-white fill-white" />
                 </button>
               </div>

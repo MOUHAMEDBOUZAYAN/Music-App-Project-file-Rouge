@@ -97,34 +97,60 @@ const musicReducer = (state, action) => {
       };
 
     case ACTIONS.NEXT_TRACK:
+      console.log('🎵 NEXT_TRACK reducer - currentIndex:', state.currentQueueIndex, 'queueLength:', state.queue.length);
+      
+      if (state.queue.length === 0) {
+        console.log('❌ NEXT_TRACK - No tracks in queue');
+        return state;
+      }
+      
       let nextIndex = state.currentQueueIndex + 1;
       if (nextIndex >= state.queue.length) {
         if (state.repeat === 'all') {
           nextIndex = 0;
+          console.log('🔄 NEXT_TRACK - Repeating from beginning');
         } else {
+          console.log('❌ NEXT_TRACK - End of queue reached');
           return state; // Fin de la file d'attente
         }
       }
+      
+      const nextTrack = state.queue[nextIndex];
+      console.log('✅ NEXT_TRACK - Moving to track:', nextTrack?.title, 'at index:', nextIndex);
+      
       return {
         ...state,
         currentQueueIndex: nextIndex,
-        currentTrack: state.queue[nextIndex] || null,
+        currentTrack: nextTrack || null,
         currentTime: 0
       };
 
     case ACTIONS.PREVIOUS_TRACK:
+      console.log('🎵 PREVIOUS_TRACK reducer - currentIndex:', state.currentQueueIndex, 'queueLength:', state.queue.length);
+      
+      if (state.queue.length === 0) {
+        console.log('❌ PREVIOUS_TRACK - No tracks in queue');
+        return state;
+      }
+      
       let prevIndex = state.currentQueueIndex - 1;
       if (prevIndex < 0) {
         if (state.repeat === 'all') {
           prevIndex = state.queue.length - 1;
+          console.log('🔄 PREVIOUS_TRACK - Repeating from end');
         } else {
+          console.log('❌ PREVIOUS_TRACK - Beginning of queue reached');
           return state; // Début de la file d'attente
         }
       }
+      
+      const prevTrack = state.queue[prevIndex];
+      console.log('✅ PREVIOUS_TRACK - Moving to track:', prevTrack?.title, 'at index:', prevIndex);
+      
       return {
         ...state,
         currentQueueIndex: prevIndex,
-        currentTrack: state.queue[prevIndex] || null,
+        currentTrack: prevTrack || null,
         currentTime: 0
       };
 
@@ -293,13 +319,24 @@ export const MusicProvider = ({ children }) => {
       }
     },
 
-    playArtist: (artist) => {
+    playArtist: (artist, startIndex = 0) => {
+      console.log('🎵 MusicContext - playArtist called with:', artist);
+      console.log('🎵 MusicContext - artist.tracks:', artist.tracks);
+      console.log('🎵 MusicContext - startIndex:', startIndex);
+      
       if (artist.tracks && artist.tracks.length > 0) {
+        const currentTrackToSet = artist.tracks[startIndex];
+        console.log('🎵 MusicContext - Setting currentTrack to:', currentTrackToSet);
+        console.log('🎵 MusicContext - currentTrack audioUrl:', currentTrackToSet?.audioUrl);
+        
         dispatch({ type: ACTIONS.SET_QUEUE, payload: artist.tracks });
-        dispatch({ type: ACTIONS.SET_CURRENT_TRACK, payload: artist.tracks[0] });
-        dispatch({ type: 'SET_CURRENT_QUEUE_INDEX', payload: 0 });
+        dispatch({ type: ACTIONS.SET_CURRENT_TRACK, payload: currentTrackToSet });
+        dispatch({ type: 'SET_CURRENT_QUEUE_INDEX', payload: startIndex });
         dispatch({ type: ACTIONS.SET_IS_PLAYING, payload: true });
         dispatch({ type: ACTIONS.SET_ARTIST, payload: artist });
+        console.log('✅ Artist set for playback:', artist.username || artist.name, 'with', artist.tracks.length, 'tracks');
+      } else {
+        console.log('❌ MusicContext - No tracks found in artist:', artist);
       }
     },
 
@@ -314,10 +351,53 @@ export const MusicProvider = ({ children }) => {
     },
 
     nextTrack: () => {
+      console.log('🎵 nextTrack called - queue length:', state.queue.length, 'currentIndex:', state.currentQueueIndex);
+      
+      if (state.queue.length === 0) {
+        console.log('❌ No tracks in queue');
+        toast.error('لا توجد أغاني في قائمة التشغيل');
+        return;
+      }
+      
+      if (state.currentQueueIndex >= state.queue.length - 1) {
+        if (state.repeat === 'all') {
+          console.log('🔄 Repeating playlist from beginning');
+          dispatch({ type: 'SET_CURRENT_QUEUE_INDEX', payload: 0 });
+          dispatch({ type: ACTIONS.SET_CURRENT_TRACK, payload: state.queue[0] });
+          dispatch({ type: ACTIONS.SET_IS_PLAYING, payload: true });
+        } else {
+          console.log('❌ End of queue reached');
+          toast.error('انتهت قائمة التشغيل');
+        }
+        return;
+      }
+      
       dispatch({ type: ACTIONS.NEXT_TRACK });
     },
 
     previousTrack: () => {
+      console.log('🎵 previousTrack called - queue length:', state.queue.length, 'currentIndex:', state.currentQueueIndex);
+      
+      if (state.queue.length === 0) {
+        console.log('❌ No tracks in queue');
+        toast.error('لا توجد أغاني في قائمة التشغيل');
+        return;
+      }
+      
+      if (state.currentQueueIndex <= 0) {
+        if (state.repeat === 'all') {
+          console.log('🔄 Repeating playlist from end');
+          const lastIndex = state.queue.length - 1;
+          dispatch({ type: 'SET_CURRENT_QUEUE_INDEX', payload: lastIndex });
+          dispatch({ type: ACTIONS.SET_CURRENT_TRACK, payload: state.queue[lastIndex] });
+          dispatch({ type: ACTIONS.SET_IS_PLAYING, payload: true });
+        } else {
+          console.log('❌ Beginning of queue reached');
+          toast.error('بداية قائمة التشغيل');
+        }
+        return;
+      }
+      
       dispatch({ type: ACTIONS.PREVIOUS_TRACK });
     },
 
@@ -351,23 +431,47 @@ export const MusicProvider = ({ children }) => {
       try {
         if (isMongoId) {
           console.log('📡 Sending like request to API for:', idStr);
-          await songService.likeSong(idStr);
-          console.log('✅ Like request successful');
+          const response = await songService.likeSong(idStr);
+          console.log('✅ Like request successful:', response);
           
-          // Recharger les chansons likées après succès
-          const res = await songService.getLikedSongs();
-          const likedIds = Array.isArray(res?.data)
-            ? res.data.map(s => s._id)
-            : [];
-          console.log('🔄 Refreshing liked tracks:', likedIds);
-          dispatch({ type: ACTIONS.SET_LIKED_TRACKS, payload: likedIds });
+          // Mettre à jour l'état local immédiatement
+          const isCurrentlyLiked = state.likedTracks.includes(idStr);
+          const newLikedTracks = isCurrentlyLiked
+            ? state.likedTracks.filter(id => id !== idStr)
+            : [...state.likedTracks, idStr];
+          
+          console.log('🔄 Updating local state:', { 
+            isCurrentlyLiked, 
+            oldLikedTracks: state.likedTracks, 
+            newLikedTracks 
+          });
+          
+          dispatch({ type: ACTIONS.SET_LIKED_TRACKS, payload: newLikedTracks });
+          
+          // Recharger les chansons likées depuis l'API pour synchroniser
+          try {
+            const res = await songService.getLikedSongs();
+            let likedIds = [];
+            if (res?.data) {
+              if (Array.isArray(res.data)) {
+                likedIds = res.data.map(s => s._id);
+              } else if (res.data.data && Array.isArray(res.data.data)) {
+                likedIds = res.data.data.map(s => s._id);
+              }
+            }
+            console.log('🔄 Refreshing liked tracks from API:', likedIds);
+            dispatch({ type: ACTIONS.SET_LIKED_TRACKS, payload: likedIds });
+          } catch (refreshError) {
+            console.warn('⚠️ Failed to refresh liked tracks from API:', refreshError);
+            // Garder l'état local même si le refresh échoue
+          }
         } else {
           // Ancien support des favoris externes supprimé
           throw new Error('Unsupported track id');
         }
       } catch (e) {
         console.error('❌ Like request failed:', e);
-        // لا rollback - فقط إظهار الخطأ
+        // Afficher un message d'erreur à l'utilisateur
         throw e;
       }
     },
@@ -401,13 +505,19 @@ export const MusicProvider = ({ children }) => {
         const res = await songService.getLikedSongs();
         console.log('📡 getLikedSongs response:', res);
         
-        const likedIds = Array.isArray(res?.data)
-          ? res.data.map(s => s._id)
-          : [];
+        // Gérer différentes structures de réponse
+        let likedIds = [];
+        if (res?.data) {
+          if (Array.isArray(res.data)) {
+            likedIds = res.data.map(s => s._id);
+          } else if (res.data.data && Array.isArray(res.data.data)) {
+            likedIds = res.data.data.map(s => s._id);
+          }
+        }
         
         console.log('🎵 Extracted liked IDs:', likedIds);
         dispatch({ type: ACTIONS.SET_LIKED_TRACKS, payload: likedIds });
-        return res.data || [];
+        return likedIds;
       } catch (e) {
         console.error('❌ Erreur lors du rechargement des chansons likées:', e);
         console.error('❌ Error details:', {
@@ -460,9 +570,14 @@ export const MusicProvider = ({ children }) => {
           }
         }
         const res = await songService.getLikedSongs();
-        const likedIds = Array.isArray(res?.data?.data)
-          ? res.data.data.map(s => s._id)
-          : [];
+        let likedIds = [];
+        if (res?.data) {
+          if (Array.isArray(res.data)) {
+            likedIds = res.data.map(s => s._id);
+          } else if (res.data.data && Array.isArray(res.data.data)) {
+            likedIds = res.data.data.map(s => s._id);
+          }
+        }
         dispatch({ type: ACTIONS.SET_LIKED_TRACKS, payload: likedIds });
       } catch (e) {
         dispatch({ type: ACTIONS.SET_LIKED_TRACKS, payload: [] });

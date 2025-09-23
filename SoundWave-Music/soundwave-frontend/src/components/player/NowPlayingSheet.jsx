@@ -28,17 +28,37 @@ const NowPlayingSheet = ({ track, isOpen, onClose, onPlayPause, isPlaying, onNex
           </div>
 
           <div className="flex items-center space-x-6 mt-3">
-            <button onClick={onPrevious} className="p-3 text-gray-300">
+            <button 
+              onClick={() => {
+                console.log('🎵 NowPlayingSheet Previous button clicked');
+                onPrevious();
+              }} 
+              className="p-3 text-gray-300 hover:text-white transition-colors"
+              title="الأغنية السابقة"
+            >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path d="M10 12l10 7V5l-10 7zM4 5h2v14H4z"/></svg>
             </button>
-            <button onClick={onPlayPause} className="w-14 h-14 rounded-full bg-white text-black flex items-center justify-center">
+            <button 
+              onClick={() => {
+                console.log('🎵 NowPlayingSheet Play/Pause button clicked');
+                onPlayPause();
+              }} 
+              className="w-14 h-14 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 transition-transform"
+            >
               {isPlaying ? (
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
               ) : (
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
               )}
             </button>
-            <button onClick={onNext} className="p-3 text-gray-300">
+            <button 
+              onClick={() => {
+                console.log('🎵 NowPlayingSheet Next button clicked');
+                onNext();
+              }} 
+              className="p-3 text-gray-300 hover:text-white transition-colors"
+              title="الأغنية التالية"
+            >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path d="M14 12L4 5v14l10-7zM18 5h2v14h-2z"/></svg>
             </button>
           </div>

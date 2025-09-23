@@ -329,8 +329,12 @@ const AudioPlayer = () => {
                   <Shuffle className="h-5 w-5" />
                 </button>
                 <button 
-                  onClick={previousTrack}
+                  onClick={() => {
+                    console.log('🎵 Previous button clicked');
+                    previousTrack();
+                  }}
                   className="text-gray-400 hover:text-white transition-colors"
+                  title="الأغنية السابقة"
                 >
                   <SkipBack className="h-6 w-6" />
                 </button>
@@ -345,8 +349,12 @@ const AudioPlayer = () => {
                   )}
                 </button>
                 <button 
-                  onClick={nextTrack}
+                  onClick={() => {
+                    console.log('🎵 Next button clicked');
+                    nextTrack();
+                  }}
                   className="text-gray-400 hover:text-white transition-colors"
+                  title="الأغنية التالية"
                 >
                   <SkipForward className="h-6 w-6" />
                 </button>
@@ -484,7 +492,16 @@ const AudioPlayer = () => {
                   </button>
                   
                   {/* Previous button */}
-                  <button type="button" onClick={(e) => { e.stopPropagation(); previousTrack(); }} className="p-2 text-gray-300 hover:text-white transition-colors">
+                  <button 
+                    type="button" 
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      console.log('🎵 Mobile Previous button clicked');
+                      previousTrack(); 
+                    }} 
+                    className="p-2 text-gray-300 hover:text-white transition-colors"
+                    title="الأغنية السابقة"
+                  >
                     <SkipBack className="h-5 w-5" />
                   </button>
                   
@@ -494,7 +511,16 @@ const AudioPlayer = () => {
                   </button>
                   
                   {/* Next button */}
-                  <button type="button" onClick={(e) => { e.stopPropagation(); nextTrack(); }} className="p-2 text-gray-300 hover:text-white transition-colors">
+                  <button 
+                    type="button" 
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      console.log('🎵 Mobile Next button clicked');
+                      nextTrack(); 
+                    }} 
+                    className="p-2 text-gray-300 hover:text-white transition-colors"
+                    title="الأغنية التالية"
+                  >
                     <SkipForward className="h-5 w-5" />
                   </button>
                 </div>

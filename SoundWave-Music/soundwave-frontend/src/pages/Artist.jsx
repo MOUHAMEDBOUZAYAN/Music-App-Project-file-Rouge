@@ -28,7 +28,7 @@ const Artist = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { playTrack, addToQueue, toggleLike, likedTracks } = useMusic();
+  const { playTrack, addToQueue, toggleLike, likedTracks, playArtist } = useMusic();
   
   console.log('🎵 Artist component mounted with ID:', id);
   console.log('🎵 Artist ID type:', typeof id);
@@ -600,22 +600,39 @@ const Artist = () => {
   }, [artist, isFollowing]);
 
   const handlePlaySong = (track) => {
+    console.log('🎵 handlePlaySong called with track:', track.title);
+    
     if (!track?.audioUrl) {
       toast.error("Fichier audio non disponible pour cette piste");
       return;
     }
-    const song = {
-      _id: track._id,
-      title: track.title,
-      artist: track.artist?.username || artist?.username || 'Artiste inconnu',
-      cover: track.coverImage ? `http://localhost:5000${track.coverImage}` : null,
-      album: track.album || '',
-      duration: track.duration || 0,
-      audioUrl: `http://localhost:5000${track.audioUrl}`,
+    
+    // تحضير جميع أغاني الفنان للقائمة
+    const formattedTracks = topTracks.map(t => ({
+      _id: t._id,
+      title: t.title,
+      artist: t.artist?.username || artist?.username || 'Artiste inconnu',
+      cover: t.coverImage ? `http://localhost:5000${t.coverImage}` : null,
+      album: t.album || '',
+      duration: t.duration || 0,
+      audioUrl: t.audioUrl ? `http://localhost:5000${t.audioUrl}` : null,
+    }));
+    
+    // العثور على فهرس الأغنية المحددة
+    const trackIndex = formattedTracks.findIndex(t => t._id === track._id);
+    
+    console.log('🎵 Track index in playlist:', trackIndex);
+    
+    // إنشاء كائن الفنان مع الأغاني
+    const artistWithTracks = {
+      ...artist,
+      tracks: formattedTracks
     };
-    playTrack(song);
+    
+    // استخدام playArtist مع فهرس الأغنية المحددة
+    playArtist(artistWithTracks, trackIndex);
     setIsPlaying(true);
-    toast.success(`Lecture de ${track.title}`);
+    toast.success(`تشغيل ${track.title}`);
   };
 
   const handleAddToQueue = (track) => {
@@ -830,9 +847,36 @@ const Artist = () => {
   };
 
   const handlePlayArtist = () => {
-    if (topTracks.length > 0) {
-      handlePlaySong(topTracks[0]);
+    console.log('🎵 handlePlayArtist called with topTracks:', topTracks.length);
+    
+    if (topTracks.length === 0) {
+      toast.error('لا توجد أغاني متاحة لهذا الفنان');
+      return;
     }
+    
+    // تحضير جميع أغاني الفنان للقائمة
+    const formattedTracks = topTracks.map(track => ({
+      _id: track._id,
+      title: track.title,
+      artist: track.artist?.username || artist?.username || 'Artiste inconnu',
+      cover: track.coverImage ? `http://localhost:5000${track.coverImage}` : null,
+      album: track.album || '',
+      duration: track.duration || 0,
+      audioUrl: track.audioUrl ? `http://localhost:5000${track.audioUrl}` : null,
+    }));
+    
+    console.log('🎵 Formatted tracks for playArtist:', formattedTracks.length);
+    
+    // إنشاء كائن الفنان مع الأغاني
+    const artistWithTracks = {
+      ...artist,
+      tracks: formattedTracks
+    };
+    
+    // استخدام playArtist لإنشاء قائمة تشغيل كاملة
+    playArtist(artistWithTracks);
+    setIsPlaying(true);
+    toast.success(`تشغيل جميع أغاني ${artist?.username || artist?.name || 'الفنان'}`);
   };
 
   const handleShowMore = () => {
