@@ -33,34 +33,55 @@ const LikedSongs = () => {
         setIsLoading(true);
         const apiSongs = await refreshLikedSongs();
         console.log('🔄 Refreshed liked songs:', apiSongs);
+        console.log('🔄 API Songs type:', typeof apiSongs);
+        console.log('🔄 API Songs length:', Array.isArray(apiSongs) ? apiSongs.length : 'Not an array');
+        console.log('🔄 API Songs structure:', apiSongs);
         
         const results = apiSongs.map(s => {
+          console.log('🔄 Processing song:', s);
+          console.log('🔄 Song keys:', Object.keys(s || {}));
+          console.log('🔄 Song _id:', s._id);
+          console.log('🔄 Song title:', s.title);
+          console.log('🔄 Song artist:', s.artist);
+          console.log('🔄 Song audioUrl:', s.audioUrl);
+          console.log('🔄 Song cover:', s.cover);
+          
           if (s.type === 'external') {
             return {
-              id: s.externalId,
-              title: s.title || `Titre ${s.externalId}`,
+              id: s.externalId || s._id,
+              _id: s.externalId || s._id,
+              title: s.title || `Titre ${s.externalId || s._id}`,
               artist: s.artist?.name || s.artist?.username || (typeof s.artist === 'string' ? s.artist : 'Artiste inconnu'),
               album: s.album?.title || s.album?.name || s.album || '—',
               duration: s.duration || 180,
-              cover: s.cover || s.coverImage || s.album?.cover || `https://via.placeholder.com/40/1DB954/FFFFFF?text=${encodeURIComponent(s.title?.charAt(0) || '🎵')}`,
+              cover: s.cover || s.coverImage || s.album?.cover || `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=50&h=50&fit=crop`,
+              audioUrl: s.audioUrl || (s.externalId ? `http://localhost:5000/uploads/audio/${s.externalId}.mp3` : null),
               dateAdded: s.createdAt ? new Date(s.createdAt).toISOString() : new Date().toISOString(),
               isLiked: true
             };
           }
+          
+          // For internal songs
+          const songId = s._id || s.id;
+          console.log('🔄 Song ID:', songId, 'Original song:', s);
+          
           return {
-            id: s._id,
-            _id: s._id,
-            title: s.title,
+            id: songId,
+            _id: songId,
+            title: s.title || 'Titre inconnu',
             artist: s.artist?.name || s.artist?.username || (typeof s.artist === 'string' ? s.artist : 'Artiste inconnu'),
             album: s.album?.title || s.album?.name || s.album || '—',
             duration: s.duration || 180,
-            cover: s.cover || s.coverImage || s.album?.cover || 'https://via.placeholder.com/40/1DB954/FFFFFF?text=🎵',
-            audioUrl: s.audioUrl || `http://localhost:5000/uploads/audio/${s._id}.mp3`,
-            dateAdded: (s.createdAt ? new Date(s.createdAt) : new Date()).toISOString().split('T')[0],
+            cover: s.cover || s.coverImage || s.album?.cover || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=50&h=50&fit=crop',
+            audioUrl: s.audioUrl || (songId ? `http://localhost:5000/uploads/audio/${songId}.mp3` : null),
+            dateAdded: s.createdAt ? new Date(s.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
             isLiked: true
           };
         });
 
+        console.log('🔄 Final processed results:', results);
+        console.log('🔄 Results length:', results.length);
+        console.log('🔄 First result:', results[0]);
         setLikedSongs(results);
         setIsLoading(false);
       } catch (error) {
@@ -95,34 +116,55 @@ const LikedSongs = () => {
           setIsLoading(true);
           const apiSongs = await refreshLikedSongs();
           console.log('🔄 Updated liked songs:', apiSongs);
+          console.log('🔄 Updated API Songs type:', typeof apiSongs);
+          console.log('🔄 Updated API Songs length:', Array.isArray(apiSongs) ? apiSongs.length : 'Not an array');
+          console.log('🔄 Updated API Songs structure:', apiSongs);
           
           const results = apiSongs.map(s => {
+            console.log('🔄 Processing song (update):', s);
+            console.log('🔄 Song keys (update):', Object.keys(s || {}));
+            console.log('🔄 Song _id (update):', s._id);
+            console.log('🔄 Song title (update):', s.title);
+            console.log('🔄 Song artist (update):', s.artist);
+            console.log('🔄 Song audioUrl (update):', s.audioUrl);
+            console.log('🔄 Song cover (update):', s.cover);
+            
             if (s.type === 'external') {
               return {
-                id: s.externalId,
-                title: s.title || `Titre ${s.externalId}`,
+                id: s.externalId || s._id,
+                _id: s.externalId || s._id,
+                title: s.title || `Titre ${s.externalId || s._id}`,
                 artist: s.artist?.name || s.artist?.username || (typeof s.artist === 'string' ? s.artist : 'Artiste inconnu'),
                 album: s.album?.title || s.album?.name || s.album || '—',
                 duration: s.duration || 180,
-                cover: s.cover || s.coverImage || s.album?.cover || `https://via.placeholder.com/40/1DB954/FFFFFF?text=${encodeURIComponent(s.title?.charAt(0) || '🎵')}`,
+                cover: s.cover || s.coverImage || s.album?.cover || `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=50&h=50&fit=crop`,
+                audioUrl: s.audioUrl || (s.externalId ? `http://localhost:5000/uploads/audio/${s.externalId}.mp3` : null),
                 dateAdded: s.createdAt ? new Date(s.createdAt).toISOString() : new Date().toISOString(),
                 isLiked: true
               };
             }
+            
+            // For internal songs
+            const songId = s._id || s.id;
+            console.log('🔄 Song ID (update):', songId, 'Original song:', s);
+            
             return {
-              id: s._id,
-              _id: s._id,
-              title: s.title,
+              id: songId,
+              _id: songId,
+              title: s.title || 'Titre inconnu',
               artist: s.artist?.name || s.artist?.username || (typeof s.artist === 'string' ? s.artist : 'Artiste inconnu'),
               album: s.album?.title || s.album?.name || s.album || '—',
               duration: s.duration || 180,
-              cover: s.cover || s.coverImage || s.album?.cover || 'https://via.placeholder.com/40/1DB954/FFFFFF?text=🎵',
-              audioUrl: s.audioUrl || `http://localhost:5000/uploads/audio/${s._id}.mp3`,
-              dateAdded: s.createdAt ? new Date(s.createdAt).toISOString() : new Date().toISOString(),
+              cover: s.cover || s.coverImage || s.album?.cover || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=50&h=50&fit=crop',
+              audioUrl: s.audioUrl || (songId ? `http://localhost:5000/uploads/audio/${songId}.mp3` : null),
+              dateAdded: s.createdAt ? new Date(s.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
               isLiked: true
             };
           });
 
+          console.log('🔄 Final processed results (update):', results);
+          console.log('🔄 Results length (update):', results.length);
+          console.log('🔄 First result (update):', results[0]);
           setLikedSongs(results);
           setIsLoading(false);
         } catch (error) {
@@ -162,7 +204,10 @@ const LikedSongs = () => {
   }, [sortedSongs, sortBy]);
 
   const handlePlayAll = () => {
+    console.log('🎵 handlePlayAll called with likedSongs:', likedSongs);
+    console.log('🎵 likedSongs length:', likedSongs.length);
     if (likedSongs.length > 0) {
+      console.log('🎵 First song for playback:', likedSongs[0]);
       // Jouer la première chanson et ajouter le reste à la queue
       playTrack(likedSongs[0]);
       likedSongs.slice(1).forEach(song => addToQueue(song));
@@ -171,9 +216,12 @@ const LikedSongs = () => {
   };
 
   const handleShuffle = () => {
+    console.log('🎵 handleShuffle called with likedSongs:', likedSongs);
+    console.log('🎵 likedSongs length:', likedSongs.length);
     if (likedSongs.length > 0) {
       // Mélanger les chansons et jouer la première
       const shuffledSongs = [...likedSongs].sort(() => Math.random() - 0.5);
+      console.log('🎵 First shuffled song for playback:', shuffledSongs[0]);
       playTrack(shuffledSongs[0]);
       shuffledSongs.slice(1).forEach(song => addToQueue(song));
       toast.success(`Lecture aléatoire de ${likedSongs.length} chansons`);
@@ -181,8 +229,17 @@ const LikedSongs = () => {
   };
 
   const handlePlaySong = (song) => {
+    console.log('🎵 handlePlaySong called with:', song);
+    console.log('🎵 Song details:', {
+      id: song.id,
+      _id: song._id,
+      title: song.title,
+      artist: song.artist,
+      audioUrl: song.audioUrl,
+      cover: song.cover
+    });
     playTrack(song);
-    toast.success(`Lecture de "${song.title}"`);
+    toast.success(`Lecture de "${song.title || 'cette chanson'}"`);
   };
 
   const handleAddToQueue = (song) => {
@@ -392,11 +449,11 @@ const LikedSongs = () => {
                     <span className="w-6 text-gray-400 mr-3 text-sm font-medium">{index + 1}</span>
                     <div className="w-12 h-12 rounded bg-gray-800 overflow-hidden mr-3 flex-shrink-0">
                       <img 
-                        src={song.cover} 
-                        alt={song.title} 
+                        src={song.cover || song.coverImage || `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=50&h=50&fit=crop`} 
+                        alt={song.title || 'Song cover'} 
                         className="w-full h-full object-cover" 
                         onError={(e) => {
-                          e.target.src = `https://via.placeholder.com/40/1DB954/FFFFFF?text=${encodeURIComponent(song.title?.charAt(0) || '🎵')}`;
+                          e.target.src = `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=50&h=50&fit=crop`;
                         }}
                       />
                     </div>
@@ -428,11 +485,11 @@ const LikedSongs = () => {
                     </div>
                     <div className="w-12 h-12 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden flex-shrink-0 mr-12">
                       <img 
-                        src={song.cover} 
-                        alt={song.title} 
+                        src={song.cover || song.coverImage || `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=50&h=50&fit=crop`} 
+                        alt={song.title || 'Song cover'} 
                         className="w-full h-full object-cover" 
                         onError={(e) => {
-                          e.target.src = `https://via.placeholder.com/40/1DB954/FFFFFF?text=${encodeURIComponent(song.title?.charAt(0) || '🎵')}`;
+                          e.target.src = `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=50&h=50&fit=crop`;
                         }}
                       />
                     </div>

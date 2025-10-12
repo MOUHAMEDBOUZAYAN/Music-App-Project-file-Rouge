@@ -58,7 +58,16 @@ const songService = {
 
   // Obtenir les chansons likées
   getLikedSongs: async () => {
+    console.log('🔍 getLikedSongs API call starting...');
     const response = await api.get('/songs/liked');
+    console.log('🔍 getLikedSongs API response:', response);
+    console.log('🔍 getLikedSongs response.data:', response.data);
+    console.log('🔍 getLikedSongs response.data.success:', response.data?.success);
+    console.log('🔍 getLikedSongs response.data.data:', response.data?.data);
+    console.log('🔍 getLikedSongs response.data.data length:', Array.isArray(response.data?.data) ? response.data.data.length : 'Not an array');
+    if (Array.isArray(response.data?.data) && response.data.data.length > 0) {
+      console.log('🔍 First liked song from API:', response.data.data[0]);
+    }
     return response.data;
   },
 

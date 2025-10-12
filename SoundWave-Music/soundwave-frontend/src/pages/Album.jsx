@@ -40,11 +40,17 @@ const Album = () => {
       
       try {
         console.log('🎵 Chargement de l\'album avec ID:', id);
+        console.log('🎵 Album ID type:', typeof id);
+        console.log('🎵 Album ID length:', id?.length);
+        
         const response = await albumService.getAlbumById(id);
-        console.log('✅ Album chargé:', response);
+        console.log('✅ Album response:', response);
+        console.log('✅ Album response success:', response?.success);
+        console.log('✅ Album response data:', response?.data);
         
         if (response.success && response.data) {
           const albumData = response.data;
+          console.log('✅ Album data loaded:', albumData);
           
           // Transformer les données pour correspondre au format attendu
           const formattedAlbum = {
@@ -72,14 +78,25 @@ const Album = () => {
         }
       } catch (error) {
         console.error('❌ Erreur lors du chargement de l\'album:', error);
+        console.error('❌ Error details:', {
+          status: error.response?.status,
+          message: error.message,
+          response: error.response?.data
+        });
         
+        // Handle different types of errors
         if (error.response?.status === 404) {
+          console.log('❌ Album not found (404)');
+          console.log('❌ Album ID that was not found:', id);
           setError('Album non trouvé');
         } else if (error.message?.includes('timeout') || error.message?.includes('ECONNABORTED')) {
+          console.log('❌ Timeout error');
           setError('Le serveur backend ne répond pas. Veuillez démarrer le backend.');
         } else if (error.message?.includes('ERR_NETWORK') || error.message?.includes('ECONNREFUSED')) {
+          console.log('❌ Network error');
           setError('Impossible de se connecter au serveur. Vérifiez que le backend est démarré.');
         } else {
+          console.log('❌ Unknown error');
           setError('Erreur lors du chargement de l\'album');
         }
       } finally {
@@ -266,21 +283,26 @@ const Album = () => {
           <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
             <Music2 className="h-8 w-8 text-white" />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-4">Erreur</h2>
-          <p className="text-gray-300 mb-6">{error}</p>
+          <h2 className="text-2xl font-bold text-white mb-4">خطأ في تحميل الألبوم</h2>
+          <p className="text-gray-300 mb-2">{error}</p>
+          <p className="text-gray-400 text-sm mb-6">
+            {error.includes('non trouvé') 
+              ? `الألبوم بالمعرف ${id} غير موجود أو تم حذفه من قاعدة البيانات` 
+              : 'حدث خطأ أثناء تحميل الألبوم'}
+          </p>
           <div className="space-y-3">
             <button 
               onClick={() => window.history.back()}
               className="bg-gray-600 hover:bg-gray-500 text-white px-6 py-3 rounded-lg font-medium transition-colors mr-3"
             >
               <ArrowLeft className="h-4 w-4 inline mr-2" />
-              Retour
+              رجوع
             </button>
             <button 
               onClick={() => window.location.reload()}
               className="bg-green-500 hover:bg-green-400 text-black px-6 py-3 rounded-lg font-medium transition-colors"
             >
-              Réessayer
+              إعادة المحاولة
             </button>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { songService } from '../services/songService';
+import toast from 'react-hot-toast';
 
 // Actions
 const ACTIONS = {
@@ -273,19 +274,34 @@ export const MusicProvider = ({ children }) => {
       
       if (!track) {
         console.error('❌ No track provided to playTrack');
+        toast.error('Aucune piste sélectionnée');
         return;
       }
       
-      if (!track.audioUrl) {
-        console.error('❌ Track missing audioUrl:', track);
+      // Ensure we have all required fields
+      const processedTrack = {
+        ...track,
+        id: track.id || track._id,
+        _id: track._id || track.id,
+        title: track.title || 'Titre inconnu',
+        artist: track.artist?.name || track.artist?.username || track.artist || 'Artiste inconnu',
+        audioUrl: track.audioUrl || (track._id ? `http://localhost:5000/uploads/audio/${track._id}.mp3` : null),
+        cover: track.cover || track.coverImage || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=50&h=50&fit=crop'
+      };
+      
+      if (!processedTrack.audioUrl) {
+        console.error('❌ Track missing audioUrl:', processedTrack);
+        toast.error('URL audio manquante pour cette piste');
         return;
       }
       
-      dispatch({ type: ACTIONS.SET_CURRENT_TRACK, payload: track });
+      console.log('✅ Processed track for playback:', processedTrack);
+      
+      dispatch({ type: ACTIONS.SET_CURRENT_TRACK, payload: processedTrack });
       dispatch({ type: ACTIONS.SET_IS_PLAYING, payload: true });
-      dispatch({ type: ACTIONS.ADD_TO_HISTORY, payload: track });
+      dispatch({ type: ACTIONS.ADD_TO_HISTORY, payload: processedTrack });
       
-      console.log('✅ Track set for playback:', track.title);
+      console.log('✅ Track set for playback:', processedTrack.title);
     },
 
     playPlaylist: (playlist, startIndex = 0) => {
@@ -503,21 +519,38 @@ export const MusicProvider = ({ children }) => {
         console.log('🔄 refreshLikedSongs called');
         console.log('🔑 Auth token in context:', localStorage.getItem('authToken'));
         const res = await songService.getLikedSongs();
-        console.log('📡 getLikedSongs response:', res);
+        console.log('📡 getLikedSongs response in context:', res);
+        console.log('📡 getLikedSongs response type:', typeof res);
+        console.log('📡 getLikedSongs response keys:', Object.keys(res || {}));
+        console.log('📡 getLikedSongs response structure:', {
+          success: res?.success,
+          data: res?.data,
+          dataType: typeof res?.data,
+          isArray: Array.isArray(res?.data),
+          dataLength: Array.isArray(res?.data) ? res.data.length : 'N/A'
+        });
         
         // Gérer différentes structures de réponse
-        let likedIds = [];
+        let likedSongs = [];
         if (res?.data) {
           if (Array.isArray(res.data)) {
-            likedIds = res.data.map(s => s._id);
+            likedSongs = res.data;
+            console.log('📡 Found array of songs:', likedSongs.length, 'songs');
+            console.log('📡 First song structure:', likedSongs[0]);
           } else if (res.data.data && Array.isArray(res.data.data)) {
-            likedIds = res.data.data.map(s => s._id);
+            likedSongs = res.data.data;
+            console.log('📡 Found nested array of songs:', likedSongs.length, 'songs');
+            console.log('📡 First song structure:', likedSongs[0]);
           }
         }
         
+        // Extract IDs for state management
+        let likedIds = likedSongs.map(s => s._id || s.id).filter(Boolean);
         console.log('🎵 Extracted liked IDs:', likedIds);
+        console.log('🎵 Full liked songs data:', likedSongs);
+        
         dispatch({ type: ACTIONS.SET_LIKED_TRACKS, payload: likedIds });
-        return likedIds;
+        return likedSongs; // Return full songs data instead of just IDs
       } catch (e) {
         console.error('❌ Erreur lors du rechargement des chansons likées:', e);
         console.error('❌ Error details:', {

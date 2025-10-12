@@ -109,7 +109,7 @@ const AudioPlayer = ({
         {/* Track Info */}
         <div className="flex items-center space-x-4 flex-1 min-w-0">
           <img
-            src={currentTrack.cover || 'https://via.placeholder.com/56/1DB954/FFFFFF?text=🎵'}
+            src={currentTrack.cover || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=56&h=56&fit=crop'}
             alt={currentTrack.title}
             className="w-14 h-14 rounded object-cover"
           />
@@ -250,7 +250,7 @@ const AudioPlayer = ({
                   className="flex items-center space-x-3 p-2 rounded hover:bg-gray-700 transition-colors"
                 >
                   <img
-                    src={track.cover || 'https://via.placeholder.com/40/1DB954/FFFFFF?text=🎵'}
+                    src={track.cover || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=40&h=40&fit=crop'}
                     alt={track.title}
                     className="w-10 h-10 rounded object-cover"
                   />
@@ -274,11 +274,20 @@ const AudioPlayer = ({
             ? (currentTrack.audioUrl.startsWith('http') ? currentTrack.audioUrl : `http://localhost:5000${currentTrack.audioUrl}`)
             : null
         }
-        onLoadedMetadata={() => setDuration(audioRef.current?.duration || 0)}
-        onEnded={onNext}
+        onLoadedMetadata={() => {
+          console.log('✅ Audio metadata loaded');
+          setDuration(audioRef.current?.duration || 0);
+        }}
+        onCanPlay={() => {
+          console.log('✅ Audio can play');
+        }}
         onError={(e) => {
           console.error('❌ Audio playback error:', e);
           console.error('❌ Audio URL:', currentTrack.audioUrl);
+          console.error('❌ Current track:', currentTrack);
+        }}
+        onLoadStart={() => {
+          console.log('🔄 Audio loading started:', currentTrack.audioUrl);
         }}
         style={{ display: 'none' }}
       />

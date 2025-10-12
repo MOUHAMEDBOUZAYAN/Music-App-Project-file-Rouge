@@ -59,9 +59,28 @@ const albumService = {
   // Obtenir un album par ID
   getAlbumById: async (id) => {
     console.log('💿 Fetching album by ID:', id);
-    const response = await api.get(`/albums/${id}`);
-    console.log('💿 Album API response:', response.data);
-    return response.data;
+    console.log('💿 Album ID type:', typeof id);
+    console.log('💿 Album ID length:', id?.length);
+    
+    try {
+      const response = await api.get(`/albums/${id}`);
+      console.log('💿 Album API response:', response.data);
+      console.log('💿 Album API response success:', response.data?.success);
+      console.log('💿 Album API response data:', response.data?.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error fetching album by ID:', error);
+      console.error('❌ Error response:', error.response);
+      console.error('❌ Error status:', error.response?.status);
+      console.error('❌ Error data:', error.response?.data);
+      
+      // Return error in the same format as success
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Album non trouvé',
+        status: error.response?.status
+      };
+    }
   },
 
   // Mettre à jour un album
