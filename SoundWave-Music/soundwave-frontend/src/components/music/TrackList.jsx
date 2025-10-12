@@ -41,14 +41,14 @@ const TrackList = ({ tracks = [], onPlay, onLike, currentTrack = null, isPlaying
       {/* Header */}
       <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
         <div className="flex items-center space-x-4">
-          <h3 className="text-white font-semibold">الأغاني</h3>
-          <span className="text-gray-400 text-sm">{displayTracks.length} أغنية</span>
+          <h3 className="text-white font-semibold">Chansons</h3>
+          <span className="text-gray-400 text-sm">{displayTracks.length} chanson{displayTracks.length > 1 ? 's' : ''}</span>
         </div>
         
         <div className="flex items-center space-x-2">
           <button className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
             <Play className="h-4 w-4" />
-            <span>تشغيل الكل</span>
+            <span>Tout jouer</span>
           </button>
         </div>
       </div>
@@ -134,8 +134,8 @@ const TrackList = ({ tracks = [], onPlay, onLike, currentTrack = null, isPlaying
       {displayTracks.length === 0 && (
         <div className="text-center py-12">
           <Music className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-          <p className="text-gray-400 text-lg">لا توجد أغاني متاحة</p>
-          <p className="text-gray-500">أضف بعض الموسيقى للبدء</p>
+          <p className="text-gray-400 text-lg">Aucune chanson disponible</p>
+          <p className="text-gray-500">Ajoutez de la musique pour commencer</p>
         </div>
       )}
     </div>

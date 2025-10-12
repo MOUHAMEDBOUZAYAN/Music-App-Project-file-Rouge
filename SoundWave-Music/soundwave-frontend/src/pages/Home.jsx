@@ -78,10 +78,22 @@ const Home = () => {
         songService.getTrendingSongs({ limit: 10 })
       ]);
 
+      console.log('🏠 Home data loaded:');
+      console.log('🎵 Songs response:', songsResponse);
+      console.log('💿 Albums response:', albumsResponse);
+      console.log('🔥 Trending response:', trendingResponse);
+
       // Organiser les données pour l'affichage
       const songs = songsResponse.data || [];
       const albums = albumsResponse.data || [];
       const trendingSongs = trendingResponse.data || [];
+
+      console.log('🏠 Processed data:');
+      console.log('🎵 Songs count:', songs.length);
+      console.log('💿 Albums count:', albums.length);
+      console.log('🔥 Trending songs count:', trendingSongs.length);
+      console.log('🎵 First song:', songs[0]);
+      console.log('💿 First album:', albums[0]);
 
       // Extraire les artistes uniques des chansons avec leurs tracks
       const artistsMap = new Map();
@@ -128,7 +140,7 @@ const Home = () => {
         },
         tracks: album.songs || [] // Ajouter les tracks de l'album
       })));
-      setNewReleases(songs.slice(0, 10).map(song => ({
+      const newReleasesData = songs.slice(0, 10).map(song => ({
         id: song._id,
         _id: song._id,
         title: song.title,
@@ -140,7 +152,9 @@ const Home = () => {
         },
         audioUrl: song.audioUrl ? `http://localhost:5000${song.audioUrl}` : null,
         duration: song.duration || 180
-      })));
+      }));
+      console.log('🎵 New releases data:', newReleasesData);
+      setNewReleases(newReleasesData);
       setFeaturedPlaylists(trendingSongs.map(song => ({
         id: song._id,
         _id: song._id,
@@ -253,6 +267,40 @@ const Home = () => {
     const albumId = album._id || album.id;
     console.log('💿 Album clicked:', { album, albumId });
     navigate(`/album/${albumId}`);
+  };
+
+  const handleSongClick = (song) => {
+    const songId = song._id || song.id;
+    console.log('🎵 Song clicked:', { song, songId });
+    console.log('🎵 Song details:', {
+      id: song.id,
+      _id: song._id,
+      title: song.title,
+      artist: song.artist,
+      audioUrl: song.audioUrl
+    });
+    
+    if (!songId) {
+      console.error('❌ No song ID found');
+      toast.error('ID de la chanson non trouvé');
+      return;
+    }
+    
+    // Vérifier si c'est un ID d'album au lieu d'une chanson
+    if (song.tracks && song.tracks.length > 0) {
+      console.log('⚠️ This appears to be an album, not a song. Redirecting to album page.');
+      navigate(`/album/${songId}`);
+      return;
+    }
+    
+    // Vérifier si c'est une chanson avec audioUrl
+    if (!song.audioUrl) {
+      console.log('⚠️ This song has no audioUrl, might be an album. Redirecting to album page.');
+      navigate(`/album/${songId}`);
+      return;
+    }
+    
+    navigate(`/song/${songId}`);
   };
 
   const handleAddToQueue = (song) => {
@@ -749,7 +797,7 @@ const Home = () => {
                   <div 
                     key={release.id} 
                     className="group cursor-pointer flex-shrink-0 w-40 hover:bg-gray-800 p-4 transition-all duration-300 overflow-hidden"
-                    onClick={() => handleAlbumClick(release)}
+                    onClick={() => handleSongClick(release)}
                   >
                     <div className="relative mb-4 flex justify-center">
                       <div className="w-40 h-40 bg-gradient-to-br from-gray-800 to-gray-900 overflow-hidden border-2 border-gray-700 group-hover:border-green-500 transition-all duration-300 shadow-xl group-hover:shadow-green-500/25 flex items-center justify-center">
@@ -842,7 +890,11 @@ const Home = () => {
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
                 {featuredPlaylists.map((playlist) => (
-                  <div key={playlist.id} className="group cursor-pointer flex-shrink-0 w-40 hover:bg-gray-800 p-4 transition-all duration-300 overflow-hidden">
+                  <div 
+                    key={playlist.id} 
+                    className="group cursor-pointer flex-shrink-0 w-40 hover:bg-gray-800 p-4 transition-all duration-300 overflow-hidden"
+                    onClick={() => handleSongClick(playlist)}
+                  >
                     <div className="relative mb-4 flex justify-center">
                       <div className="w-40 h-40 bg-gradient-to-br from-gray-800 to-gray-900 overflow-hidden border-2 border-gray-700 group-hover:border-green-500 transition-all duration-300 shadow-xl group-hover:shadow-green-500/25 flex items-center justify-center">
                         <img

@@ -19,6 +19,7 @@ import Search from './pages/Search';
 import Library from './pages/Library';
 import LikedSongs from './pages/LikedSongs';
 import Album from './pages/Album';
+import Song from './pages/Song';
 import Playlist from './pages/Playlist';
 import PlaylistView from './pages/PlaylistView';
 import CreatePlaylist from './pages/CreatePlaylist';
@@ -144,6 +145,14 @@ function App() {
                 <ProtectedRoute>
                   <Layout>
                     <Album />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/song/:id" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Song />
                   </Layout>
                 </ProtectedRoute>
               } />

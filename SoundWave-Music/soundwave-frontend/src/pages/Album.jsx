@@ -283,12 +283,12 @@ const Album = () => {
           <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
             <Music2 className="h-8 w-8 text-white" />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-4">خطأ في تحميل الألبوم</h2>
+          <h2 className="text-2xl font-bold text-white mb-4">Erreur lors du chargement de l'album</h2>
           <p className="text-gray-300 mb-2">{error}</p>
           <p className="text-gray-400 text-sm mb-6">
             {error.includes('non trouvé') 
-              ? `الألبوم بالمعرف ${id} غير موجود أو تم حذفه من قاعدة البيانات` 
-              : 'حدث خطأ أثناء تحميل الألبوم'}
+              ? `L'album avec l'ID ${id} n'existe pas ou a été supprimé de la base de données` 
+              : 'Une erreur est survenue lors du chargement de l\'album'}
           </p>
           <div className="space-y-3">
             <button 
@@ -296,13 +296,13 @@ const Album = () => {
               className="bg-gray-600 hover:bg-gray-500 text-white px-6 py-3 rounded-lg font-medium transition-colors mr-3"
             >
               <ArrowLeft className="h-4 w-4 inline mr-2" />
-              رجوع
+              Retour
             </button>
             <button 
               onClick={() => window.location.reload()}
               className="bg-green-500 hover:bg-green-400 text-black px-6 py-3 rounded-lg font-medium transition-colors"
             >
-              إعادة المحاولة
+              Réessayer
             </button>
           </div>
         </div>
@@ -452,7 +452,7 @@ const Album = () => {
                 <span className="text-sm text-gray-400 group-hover:hidden font-medium">{index + 1}</span>
                 <button 
                   onClick={() => handlePlayTrack(track)}
-                  className="hidden group-hover:block w-8 h-8 bg-green-500 hover:bg-green-400 rounded-full flex items-center justify-center transition-colors"
+                  className="hidden group-hover:flex w-8 h-8 bg-green-500 hover:bg-green-400 rounded-full items-center justify-center transition-colors"
                   title="Lire cette piste"
                 >
                   <div className="flex items-center justify-center w-full h-full">

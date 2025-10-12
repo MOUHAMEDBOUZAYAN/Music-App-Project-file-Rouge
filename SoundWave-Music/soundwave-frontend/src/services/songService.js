@@ -83,8 +83,29 @@ const songService = {
 
   // Obtenir une chanson par ID
   getSongById: async (id) => {
-    const response = await api.get(`/songs/${id}`);
-    return response.data;
+    console.log('🎵 Fetching song by ID:', id);
+    console.log('🎵 Song ID type:', typeof id);
+    console.log('🎵 Song ID length:', id?.length);
+    
+    try {
+      const response = await api.get(`/songs/${id}`);
+      console.log('🎵 Song API response:', response.data);
+      console.log('🎵 Song API response success:', response.data?.success);
+      console.log('🎵 Song API response data:', response.data?.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error fetching song by ID:', error);
+      console.error('❌ Error response:', error.response);
+      console.error('❌ Error status:', error.response?.status);
+      console.error('❌ Error data:', error.response?.data);
+      
+      // Return error in the same format as success
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Chanson non trouvée',
+        status: error.response?.status
+      };
+    }
   },
 
   // Mettre à jour une chanson

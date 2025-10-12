@@ -104,7 +104,7 @@ const AudioPlayer = ({
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-700 z-50">
+    <div className="fixed bottom-16 left-0 right-0 bg-gray-900 border-t border-gray-700 z-60 lg:bottom-0">
       <div className="flex items-center justify-between px-4 py-3">
         {/* Track Info */}
         <div className="flex items-center space-x-4 flex-1 min-w-0">
