@@ -12,7 +12,17 @@ import {
   Search,
   Filter,
   X,
-  AlertTriangle
+  AlertTriangle,
+  Heart,
+  Clock,
+  Calendar,
+  TrendingUp,
+  Eye,
+  Users,
+  BarChart3,
+  Download,
+  Share2,
+  ExternalLink
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useMusic } from '../store/MusicContext';
@@ -209,40 +219,48 @@ const ArtistDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      {/* Header - تصميم بسيط ومهني */}
-      <div className="bg-gradient-to-r from-gray-800 to-gray-700 border-b border-gray-600">
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+    <div className="min-h-screen bg-black text-white">
+      {/* Header Spotify-style */}
+      <div className="bg-gradient-to-b from-purple-600 via-black to-black">
+        <div className="px-6 pt-16 pb-8">
+          <div className="flex flex-col lg:flex-row items-start lg:items-end justify-between gap-6">
+            {/* Profile Section */}
+            <div className="flex items-end gap-6">
+              <div className="w-32 h-32 lg:w-48 lg:h-48 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg shadow-2xl flex items-center justify-center">
+                <Music className="h-16 w-16 lg:h-24 lg:w-24 text-white" />
+              </div>
             <div className="flex-1">
-              <h1 className="text-4xl font-bold text-white mb-2">Tableau de bord</h1>
-              <p className="text-gray-300 text-lg">Gérez vos créations musicales</p>
-              
-              {/* إحصائيات سريعة */}
-              <div className="flex flex-wrap items-center gap-6 mt-4">
-                <div className="flex items-center space-x-2 bg-blue-500/10 px-4 py-2 rounded-full border border-blue-500/20">
-                  <Music className="h-4 w-4 text-blue-400" />
-                  <span className="text-blue-300 font-medium">{songs.length} chanson{songs.length > 1 ? 's' : ''}</span>
-                </div>
-                <div className="flex items-center space-x-2 bg-purple-500/10 px-4 py-2 rounded-full border border-purple-500/20">
-                  <Disc className="h-4 w-4 text-purple-400" />
-                  <span className="text-purple-300 font-medium">{albums.length} album{albums.length > 1 ? 's' : ''}</span>
+                <p className="text-sm font-medium text-white/70 uppercase tracking-wider mb-2">Artiste</p>
+                <h1 className="text-4xl lg:text-6xl font-bold text-white mb-4 leading-tight">
+                  {user?.firstName} {user?.lastName}
+                </h1>
+                <p className="text-gray-300 text-lg mb-4">
+                  Gérez vos créations musicales et connectez-vous avec vos fans
+                </p>
+                
+                {/* Quick Stats */}
+                <div className="flex items-center gap-6 text-sm">
+                  <span className="text-gray-300">{songs.length} chanson{songs.length > 1 ? 's' : ''}</span>
+                  <span className="text-gray-300">•</span>
+                  <span className="text-gray-300">{albums.length} album{albums.length > 1 ? 's' : ''}</span>
+                  <span className="text-gray-300">•</span>
+                  <span className="text-gray-300">Créé le {new Date(user?.createdAt || Date.now()).toLocaleDateString('fr-FR')}</span>
                 </div>
               </div>
             </div>
             
-            {/* أزرار الإجراءات */}
-            <div className="flex flex-col sm:flex-row gap-3">
+            {/* Action Buttons */}
+            <div className="flex items-center gap-4">
               <button
                 onClick={() => setShowUploadSong(true)}
-                className="bg-green-500 hover:bg-green-400 text-black px-6 py-3 rounded-full font-semibold flex items-center space-x-2 transition-all duration-200 hover:scale-105 shadow-lg"
+                className="bg-white text-black hover:bg-gray-200 px-6 py-3 rounded-full font-semibold flex items-center gap-2 transition-all duration-200 hover:scale-105 shadow-lg"
               >
                 <Upload className="h-5 w-5" />
                 <span>Nouvelle chanson</span>
               </button>
               <button
                 onClick={() => setShowCreateAlbum(true)}
-                className="bg-blue-500 hover:bg-blue-400 text-white px-6 py-3 rounded-full font-semibold flex items-center space-x-2 transition-all duration-200 hover:scale-105 shadow-lg"
+                className="bg-transparent border border-white/30 text-white hover:border-white px-6 py-3 rounded-full font-semibold flex items-center gap-2 transition-all duration-200 hover:scale-105"
               >
                 <Plus className="h-5 w-5" />
                 <span>Nouvel album</span>
@@ -252,45 +270,41 @@ const ArtistDashboard = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Tabs - تصميم محسن */}
-        <div className="flex space-x-2 mb-8">
+      <div className="px-6 py-8">
+        {/* Navigation Tabs - Spotify Style */}
+        <div className="flex items-center gap-8 mb-8">
           <button
             onClick={() => setActiveTab('songs')}
-            className={`px-8 py-4 rounded-xl font-semibold transition-all duration-200 flex items-center space-x-3 ${
+            className={`relative font-semibold transition-all duration-200 flex items-center gap-2 pb-2 ${
               activeTab === 'songs'
-                ? 'bg-green-500 text-black shadow-lg transform scale-105'
-                : 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white'
+                ? 'text-white'
+                : 'text-gray-400 hover:text-white'
             }`}
           >
             <Music className="h-5 w-5" />
             <span>Mes chansons</span>
-            <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-              activeTab === 'songs' ? 'bg-black/20' : 'bg-gray-600'
-            }`}>
-              {songs.length}
-            </span>
+            {activeTab === 'songs' && (
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-white rounded-full" />
+            )}
           </button>
           <button
             onClick={() => setActiveTab('albums')}
-            className={`px-8 py-4 rounded-xl font-semibold transition-all duration-200 flex items-center space-x-3 ${
+            className={`relative font-semibold transition-all duration-200 flex items-center gap-2 pb-2 ${
               activeTab === 'albums'
-                ? 'bg-blue-500 text-white shadow-lg transform scale-105'
-                : 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white'
+                ? 'text-white'
+                : 'text-gray-400 hover:text-white'
             }`}
           >
             <Disc className="h-5 w-5" />
             <span>Mes albums</span>
-            <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-              activeTab === 'albums' ? 'bg-white/20' : 'bg-gray-600'
-            }`}>
-              {albums.length}
-            </span>
+            {activeTab === 'albums' && (
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-white rounded-full" />
+            )}
           </button>
         </div>
 
-        {/* Search and Filter - تصميم محسن */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-8">
+        {/* Search and Filter Bar */}
+        <div className="flex items-center gap-4 mb-8">
           <div className="flex-1 relative">
             <Search className="h-5 w-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
@@ -298,15 +312,14 @@ const ArtistDashboard = () => {
               placeholder="Rechercher dans vos créations..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 bg-gray-800 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200"
+              className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-full text-white placeholder-gray-400 focus:outline-none focus:border-white focus:bg-white/20 transition-all duration-200"
             />
           </div>
           <div className="relative">
-            <Filter className="h-5 w-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <select
               value={filterGenre}
               onChange={(e) => setFilterGenre(e.target.value)}
-              className="pl-12 pr-8 py-4 bg-gray-800 border border-gray-600 rounded-xl text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 appearance-none cursor-pointer min-w-[200px]"
+              className="px-4 py-3 bg-white/10 border border-white/20 rounded-full text-white focus:outline-none focus:border-white focus:bg-white/20 transition-all duration-200 appearance-none cursor-pointer min-w-[160px]"
             >
               <option value="">Tous les genres</option>
               <option value="Pop">Pop</option>
@@ -331,7 +344,7 @@ const ArtistDashboard = () => {
         {/* Content */}
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
+            <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin" />
           </div>
         ) : (
           <>
@@ -340,13 +353,13 @@ const ArtistDashboard = () => {
               <div className="space-y-4">
                 {filteredSongs.length === 0 ? (
                   <div className="text-center py-20">
-                    <div className="bg-gray-800 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6">
-                      <Music className="h-12 w-12 text-gray-400" />
+                    <div className="bg-white/10 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6">
+                      <Music className="h-12 w-12 text-white/60" />
                     </div>
                     <h3 className="text-2xl font-bold text-white mb-3">
                       {searchQuery || filterGenre ? 'Aucune chanson trouvée' : 'Aucune chanson'}
                     </h3>
-                    <p className="text-gray-400 mb-8 max-w-md mx-auto">
+                    <p className="text-white/60 mb-8 max-w-md mx-auto">
                       {searchQuery || filterGenre 
                         ? 'Essayez de modifier vos critères de recherche pour trouver vos créations'
                         : 'Commencez votre parcours musical en uploadant votre première chanson'
@@ -355,7 +368,7 @@ const ArtistDashboard = () => {
                     {!searchQuery && !filterGenre && (
                       <button
                         onClick={() => setShowUploadSong(true)}
-                        className="bg-green-500 hover:bg-green-400 text-black px-8 py-4 rounded-full font-semibold transition-all duration-200 hover:scale-105 shadow-lg"
+                        className="bg-white text-black hover:bg-gray-200 px-8 py-4 rounded-full font-semibold transition-all duration-200 hover:scale-105 shadow-lg"
                       >
                         <Upload className="h-5 w-5 inline mr-2" />
                         Uploader ma première chanson
@@ -363,83 +376,89 @@ const ArtistDashboard = () => {
                     )}
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {filteredSongs.map((song) => (
-                      <div key={song._id} className="bg-gray-800 rounded-xl p-6 hover:bg-gray-700 transition-all duration-200 hover:shadow-xl hover:scale-105 border border-gray-700">
-                        {/* صورة الأغنية */}
-                        <div className="relative mb-4">
-                          <div className="w-full h-32 bg-gradient-to-br from-green-500/20 to-blue-500/20 rounded-lg flex items-center justify-center">
+                  <div className="space-y-2">
+                    {/* Table Header */}
+                    <div className="grid grid-cols-[16px_1fr_200px_120px_60px] gap-4 px-4 py-2 text-white/60 text-sm font-medium border-b border-white/10">
+                      <div>#</div>
+                      <div>Titre</div>
+                      <div>Album</div>
+                      <div>Date ajoutée</div>
+                      <div className="text-center">Durée</div>
+                    </div>
+                    
+                    {/* Songs List */}
+                    {filteredSongs.map((song, index) => (
+                      <div key={song._id} className="group grid grid-cols-[16px_1fr_200px_120px_60px] gap-4 px-4 py-2 rounded-md hover:bg-white/10 transition-colors">
+                        <div className="flex items-center justify-center">
+                          <span className="text-white/60 group-hover:hidden">{index + 1}</span>
+                          <button 
+                            onClick={() => handlePlaySong(song)}
+                            className="hidden group-hover:flex items-center justify-center w-4 h-4 text-white hover:scale-110 transition-transform"
+                          >
+                            <Play className="h-4 w-4 fill-white" />
+                          </button>
+                        </div>
+                        
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded flex items-center justify-center flex-shrink-0">
                             {song.coverImage ? (
                               <img 
                                 src={`http://localhost:5000${song.coverImage}`} 
                                 alt={song.title}
-                                className="w-full h-full object-cover rounded-lg"
+                                className="w-full h-full object-cover rounded"
                               />
                             ) : (
-                              <Music className="h-12 w-12 text-gray-400" />
+                              <Music className="h-5 w-5 text-white" />
                             )}
                           </div>
-                          <button 
-                            onClick={() => handlePlaySong(song)}
-                            className="absolute bottom-2 right-2 bg-green-500 hover:bg-green-400 text-black p-2 rounded-full shadow-lg transition-colors"
-                            title="Lire la chanson"
-                          >
-                            <Play className="h-4 w-4" />
-                          </button>
+                          <div className="min-w-0 flex-1">
+                            <h3 className="text-white font-medium truncate">{song.title}</h3>
+                            <p className="text-white/60 text-sm truncate">{song.genre}</p>
+                          </div>
                         </div>
                         
-                        {/* معلومات الأغنية */}
-                        <div className="space-y-2">
-                          <h3 className="text-white font-semibold text-lg truncate">{song.title}</h3>
-                          <div className="flex items-center justify-between">
-                            <span className="text-gray-400 text-sm">{song.genre}</span>
-                            {song.duration && (
-                              <span className="text-gray-500 text-xs">
-                                {Math.floor(song.duration / 60)}:{(song.duration % 60).toString().padStart(2, '0')}
-                              </span>
-                            )}
+                        <div className="flex items-center text-white/60 truncate">
+                          {song.album?.title || 'Single'}
                           </div>
-                          <p className="text-gray-500 text-xs">
+                        
+                        <div className="flex items-center text-white/60 text-sm">
                             {new Date(song.createdAt).toLocaleDateString('fr-FR')}
-                          </p>
                         </div>
                         
-                        {/* أزرار الإجراءات */}
-                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-700">
-                          <div className="flex space-x-2">
-                            <button 
-                              onClick={() => handleAddToQueue(song)}
-                              className="p-2 hover:bg-green-600 rounded-lg transition-colors" 
-                              title="Ajouter à la file d'attente"
-                            >
-                              <Plus className="h-4 w-4 text-green-400" />
-                            </button>
+                        <div className="flex items-center justify-center text-white/60 text-sm">
+                          {song.duration ? (
+                            <span>{Math.floor(song.duration / 60)}:{(song.duration % 60).toString().padStart(2, '0')}</span>
+                          ) : (
+                            <span>-</span>
+                          )}
+                        </div>
+                        
+                        {/* Action buttons - shown on hover */}
+                        <div className="absolute right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button 
                               onClick={() => handleToggleLike(song)}
-                              className={`p-2 hover:bg-red-600 rounded-lg transition-colors ${
-                                likedTracks.includes(song._id) ? 'bg-red-600' : ''
+                            className={`p-1 rounded-full transition-colors ${
+                              likedTracks.includes(song._id) 
+                                ? 'text-green-400 hover:text-green-300' 
+                                : 'text-white/60 hover:text-white'
                               }`}
                               title={likedTracks.includes(song._id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
                             >
-                              <Music className={`h-4 w-4 ${likedTracks.includes(song._id) ? 'text-red-400' : 'text-gray-400'}`} />
+                            <Heart className={`h-4 w-4 ${likedTracks.includes(song._id) ? 'fill-current' : ''}`} />
                             </button>
                             <button 
                               onClick={() => handleEditSong(song)}
-                              className="p-2 hover:bg-blue-600 rounded-lg transition-colors" 
+                            className="p-1 text-white/60 hover:text-white rounded-full transition-colors" 
                               title="Modifier"
                             >
-                              <Edit className="h-4 w-4 text-blue-400" />
+                            <Edit className="h-4 w-4" />
                             </button>
-                            <button className="p-2 hover:bg-gray-600 rounded-lg transition-colors" title="Plus d'options">
-                              <MoreVertical className="h-4 w-4 text-gray-400" />
-                            </button>
-                          </div>
                           <button 
                             onClick={() => handleDeleteSong(song)}
-                            className="p-2 hover:bg-red-600 rounded-lg transition-colors" 
+                            className="p-1 text-white/60 hover:text-red-400 rounded-full transition-colors" 
                             title="Supprimer"
                           >
-                            <Trash2 className="h-4 w-4 text-red-400" />
+                            <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
                       </div>
@@ -454,13 +473,13 @@ const ArtistDashboard = () => {
               <div className="space-y-4">
                 {filteredAlbums.length === 0 ? (
                   <div className="text-center py-20">
-                    <div className="bg-gray-800 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6">
-                      <Disc className="h-12 w-12 text-gray-400" />
+                    <div className="bg-white/10 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6">
+                      <Disc className="h-12 w-12 text-white/60" />
                     </div>
                     <h3 className="text-2xl font-bold text-white mb-3">
                       {searchQuery || filterGenre ? 'Aucun album trouvé' : 'Aucun album'}
                     </h3>
-                    <p className="text-gray-400 mb-8 max-w-md mx-auto">
+                    <p className="text-white/60 mb-8 max-w-md mx-auto">
                       {searchQuery || filterGenre 
                         ? 'Essayez de modifier vos critères de recherche pour trouver vos albums'
                         : 'Organisez vos créations en créant votre premier album'
@@ -469,7 +488,7 @@ const ArtistDashboard = () => {
                     {!searchQuery && !filterGenre && (
                       <button
                         onClick={() => setShowCreateAlbum(true)}
-                        className="bg-blue-500 hover:bg-blue-400 text-white px-8 py-4 rounded-full font-semibold transition-all duration-200 hover:scale-105 shadow-lg"
+                        className="bg-white text-black hover:bg-gray-200 px-8 py-4 rounded-full font-semibold transition-all duration-200 hover:scale-105 shadow-lg"
                       >
                         <Plus className="h-5 w-5 inline mr-2" />
                         Créer mon premier album
@@ -477,12 +496,12 @@ const ArtistDashboard = () => {
                     )}
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                     {filteredAlbums.map((album) => (
-                      <div key={album._id} className="bg-gray-800 rounded-xl p-6 hover:bg-gray-700 transition-all duration-200 hover:shadow-xl hover:scale-105 border border-gray-700">
-                        {/* صورة الألبوم */}
+                      <div key={album._id} className="group bg-white/5 rounded-lg p-4 hover:bg-white/10 transition-all duration-200">
+                        {/* Album Cover */}
                         <div className="relative mb-4">
-                          <div className="w-full h-32 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg flex items-center justify-center">
+                          <div className="w-full aspect-square bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg">
                             {album.coverImage ? (
                               <img 
                                 src={`http://localhost:5000${album.coverImage}`} 
@@ -490,52 +509,50 @@ const ArtistDashboard = () => {
                                 className="w-full h-full object-cover rounded-lg"
                               />
                             ) : (
-                              <Disc className="h-12 w-12 text-gray-400" />
+                              <Disc className="h-12 w-12 text-white" />
                             )}
                           </div>
                           <button 
                             onClick={() => handlePlayAlbum(album)}
-                            className="absolute bottom-2 right-2 bg-blue-500 hover:bg-blue-400 text-white p-2 rounded-full shadow-lg transition-colors"
+                            className="absolute bottom-2 right-2 bg-green-500 hover:bg-green-400 text-black p-2 rounded-full shadow-lg transition-all duration-200 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0"
                             title="Lire l'album"
                           >
-                            <Play className="h-4 w-4" />
+                            <Play className="h-4 w-4 fill-current" />
                           </button>
                         </div>
                         
-                        {/* معلومات الألبوم */}
-                        <div className="space-y-2">
-                          <h3 className="text-white font-semibold text-lg truncate">{album.title}</h3>
-                          <div className="flex items-center justify-between">
-                            <span className="text-gray-400 text-sm">{album.genre}</span>
-                            <span className="text-gray-500 text-xs">
-                              {album.songs?.length || 0} chanson{(album.songs?.length || 0) > 1 ? 's' : ''}
-                            </span>
-                          </div>
-                          <p className="text-gray-500 text-xs">
-                            {new Date(album.createdAt).toLocaleDateString('fr-FR')}
+                        {/* Album Info */}
+                        <div className="min-h-[60px]">
+                          <h3 className="text-white font-semibold text-sm truncate mb-1">{album.title}</h3>
+                          <p className="text-white/60 text-xs mb-2">{album.genre}</p>
+                          <p className="text-white/40 text-xs">
+                            {album.songs?.length || 0} chanson{(album.songs?.length || 0) > 1 ? 's' : ''} • {new Date(album.createdAt).toLocaleDateString('fr-FR')}
                           </p>
                         </div>
                         
-                        {/* أزرار الإجراءات */}
-                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-700">
-                          <div className="flex space-x-2">
+                        {/* Action buttons - shown on hover */}
+                        <div className="flex items-center justify-between mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex items-center gap-2">
                             <button 
                               onClick={() => handleEditAlbum(album)}
-                              className="p-2 hover:bg-blue-600 rounded-lg transition-colors" 
+                              className="p-2 text-white/60 hover:text-white rounded-full transition-colors" 
                               title="Modifier"
                             >
-                              <Edit className="h-4 w-4 text-blue-400" />
+                              <Edit className="h-4 w-4" />
                             </button>
-                            <button className="p-2 hover:bg-gray-600 rounded-lg transition-colors" title="Plus d'options">
-                              <MoreVertical className="h-4 w-4 text-gray-400" />
+                            <button 
+                              onClick={() => handleDeleteAlbum(album)}
+                              className="p-2 text-white/60 hover:text-red-400 rounded-full transition-colors" 
+                              title="Supprimer"
+                            >
+                              <Trash2 className="h-4 w-4" />
                             </button>
                           </div>
                           <button 
-                            onClick={() => handleDeleteAlbum(album)}
-                            className="p-2 hover:bg-red-600 rounded-lg transition-colors" 
-                            title="Supprimer"
+                            className="p-2 text-white/60 hover:text-white rounded-full transition-colors" 
+                            title="Plus d'options"
                           >
-                            <Trash2 className="h-4 w-4 text-red-400" />
+                            <MoreVertical className="h-4 w-4" />
                           </button>
                         </div>
                       </div>
@@ -569,11 +586,11 @@ const ArtistDashboard = () => {
         />
       )}
 
-      {/* بطاقة تأكيد الحذف */}
+      {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4 border border-gray-700">
-            <div className="flex items-center mb-4">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-black border border-white/20 rounded-xl p-6 max-w-md w-full mx-4">
+            <div className="flex items-center mb-6">
               <div className="bg-red-500/20 p-3 rounded-full mr-4">
                 <AlertTriangle className="h-6 w-6 text-red-400" />
               </div>
@@ -581,20 +598,20 @@ const ArtistDashboard = () => {
                 <h3 className="text-xl font-bold text-white">
                   Confirmer la suppression
                 </h3>
-                <p className="text-gray-400 text-sm">
+                <p className="text-white/60 text-sm">
                   Cette action est irréversible
                 </p>
               </div>
             </div>
             
             <div className="mb-6">
-              <p className="text-gray-300 mb-2">
+              <p className="text-white/80 mb-2">
                 Êtes-vous sûr de vouloir supprimer{' '}
                 <span className="font-semibold text-white">
                   "{itemToDelete?.title}"
                 </span> ?
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-white/60">
                 {deleteType === 'song' 
                   ? 'Cette chanson sera définitivement supprimée de votre bibliothèque.'
                   : 'Cet album et toutes ses chansons seront définitivement supprimés.'
@@ -602,16 +619,16 @@ const ArtistDashboard = () => {
               </p>
             </div>
             
-            <div className="flex space-x-3">
+            <div className="flex gap-3">
               <button
                 onClick={cancelDelete}
-                className="flex-1 px-4 py-3 bg-gray-600 hover:bg-gray-500 text-white rounded-lg font-medium transition-colors"
+                className="flex-1 px-4 py-3 bg-white/10 hover:bg-white/20 text-white rounded-full font-medium transition-colors"
               >
                 Annuler
               </button>
               <button
                 onClick={confirmDelete}
-                className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-400 text-white rounded-lg font-medium transition-colors"
+                className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-400 text-white rounded-full font-medium transition-colors"
               >
                 Supprimer
               </button>

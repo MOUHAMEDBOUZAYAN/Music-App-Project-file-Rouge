@@ -42,14 +42,12 @@ router.get('/search',
   songController.searchSongs
 );
 
-// @route   GET api/search/songs
-// @desc    Rechercher des chansons (endpoint alternatif)
+// @route   GET api/songs/all
+// @desc    Obtenir toutes les chansons
 // @access  Public
-router.get('/songs', 
-  searchLimiter, 
-  validateSearch, 
+router.get('/all', 
   validatePagination, 
-  songController.searchSongs
+  songController.getAllSongs
 );
 
 

@@ -263,7 +263,7 @@ const RegisterForm = ({ onRegister }) => {
             <p className="text-bemusic-secondary text-xs mb-2">Déjà un compte ?</p>
             <AnimatedButton
               onClick={handleSwitchToLogin}
-              className="bg-gradient-to-r from-blue-600 to-blue-700 text-bemusic-primary px-4 py-2 rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg text-sm"
+              className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg text-sm"
             >
               Se connecter
             </AnimatedButton>
@@ -284,7 +284,7 @@ const RegisterForm = ({ onRegister }) => {
         <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-8">
           <StaggerContainer className="mb-8">
             <StaggerItem>
-              <h1 className="text-4xl font-bold text-bemusic-primary mb-2">
+              <h1 className="text-4xl font-bold text-white mb-2">
                 SoundWave
               </h1>
             </StaggerItem>
@@ -293,7 +293,7 @@ const RegisterForm = ({ onRegister }) => {
             </StaggerItem>
           </StaggerContainer>
           <StaggerItem delay={1}>
-            <p className="text-bemusic-secondary text-lg max-w-sm leading-relaxed">
+            <p className="text-gray-300 text-lg max-w-sm leading-relaxed">
               Découvrez, créez et partagez votre passion pour la musique
             </p>
           </StaggerItem>
@@ -326,10 +326,10 @@ const RegisterForm = ({ onRegister }) => {
           {/* Form Header */}
           <StaggerItem>
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-bemusic-primary mb-2">
+              <h2 className="text-3xl font-bold text-white mb-2">
                 Inscription
               </h2>
-              <p className="text-bemusic-secondary">
+              <p className="text-gray-400">
                 Créez votre compte et commencez votre voyage musical
               </p>
             </div>
@@ -348,7 +348,7 @@ const RegisterForm = ({ onRegister }) => {
             <StaggerItem>
               <div>
                 <AnimatedLabel 
-                  className="block text-sm font-medium text-bemusic-secondary mb-4"
+                  className="block text-sm font-medium text-gray-300 mb-4"
                   isActive={false}
                 >
                   Je veux rejoindre en tant que :
@@ -380,7 +380,7 @@ const RegisterForm = ({ onRegister }) => {
                          }`} />
                        </div>
                        <span className={`font-semibold text-sm transition-all duration-300 ${
-                         formData.userType === 'listener' ? 'text-accent-bemusic' : 'text-bemusic-primary'
+                         formData.userType === 'listener' ? 'text-green-400' : 'text-white'
                        }`}>
                          Auditeur
                        </span>
@@ -413,7 +413,7 @@ const RegisterForm = ({ onRegister }) => {
                          }`} />
                        </div>
                        <span className={`font-semibold text-sm transition-all duration-300 ${
-                         formData.userType === 'artist' ? 'text-purple-400' : 'text-bemusic-primary'
+                         formData.userType === 'artist' ? 'text-purple-400' : 'text-white'
                        }`}>
                          Artiste
                        </span>
@@ -443,10 +443,11 @@ const RegisterForm = ({ onRegister }) => {
                       value={formData.firstName}
                       onChange={handleChange}
                       placeholder="Votre prénom"
-                      className={`w-full pl-10 pr-4 py-4 bg-transparent border-b-2 rounded-none text-bemusic-primary placeholder-bemusic-tertiary transition-all duration-300 focus:outline-none ${
+                      style={{ color: 'white' }}
+                      className={`w-full pl-10 pr-4 py-4 bg-transparent border-b-2 rounded-none !text-white placeholder-gray-500 transition-all duration-300 focus:outline-none ${
                         formData.firstName 
-                          ? 'border-accent-bemusic' 
-                          : 'border-bemusic-tertiary/30 hover:border-bemusic-secondary/50 focus:border-accent-bemusic'
+                          ? 'border-green-500' 
+                          : 'border-gray-600 hover:border-gray-500 focus:border-green-500'
                       }`}
                     />
                     <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-accent-bemusic transition-all duration-300 group-focus-within:w-full"></div>
@@ -476,10 +477,11 @@ const RegisterForm = ({ onRegister }) => {
                       value={formData.lastName}
                       onChange={handleChange}
                       placeholder="Votre nom"
-                      className={`w-full pl-10 pr-4 py-4 bg-transparent border-b-2 rounded-none text-bemusic-primary placeholder-bemusic-tertiary transition-all duration-300 focus:outline-none ${
+                      style={{ color: 'white' }}
+                      className={`w-full pl-10 pr-4 py-4 bg-transparent border-b-2 rounded-none !text-white placeholder-gray-500 transition-all duration-300 focus:outline-none ${
                         formData.lastName 
-                          ? 'border-accent-bemusic' 
-                          : 'border-bemusic-tertiary/30 hover:border-bemusic-secondary/50 focus:border-accent-bemusic'
+                          ? 'border-green-500' 
+                          : 'border-gray-600 hover:border-gray-500 focus:border-green-500'
                       }`}
                     />
                     <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-accent-bemusic transition-all duration-300 group-focus-within:w-full"></div>
@@ -513,10 +515,11 @@ const RegisterForm = ({ onRegister }) => {
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="votre@email.com"
-                    className={`w-full pl-10 pr-4 py-4 bg-transparent border-b-2 rounded-none text-bemusic-primary placeholder-bemusic-tertiary transition-all duration-300 focus:outline-none ${
+                    style={{ color: 'white' }}
+                    className={`w-full pl-10 pr-4 py-4 bg-transparent border-b-2 rounded-none !text-white placeholder-gray-500 transition-all duration-300 focus:outline-none ${
                       formData.email 
-                        ? 'border-accent-bemusic' 
-                        : 'border-bemusic-tertiary/30 hover:border-bemusic-secondary/50 focus:border-accent-bemusic'
+                        ? 'border-green-500' 
+                        : 'border-gray-600 hover:border-gray-500 focus:border-green-500'
                     }`}
                   />
                   <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-accent-bemusic transition-all duration-300 group-focus-within:w-full"></div>
@@ -534,7 +537,7 @@ const RegisterForm = ({ onRegister }) => {
             <StaggerItem>
               <div>
                 <AnimatedLabel 
-                  className="block text-sm font-medium text-bemusic-secondary mb-2"
+                  className="block text-sm font-medium text-gray-300 mb-2"
                   isActive={false}
                 >
                   Mot de passe
@@ -549,7 +552,8 @@ const RegisterForm = ({ onRegister }) => {
                     value={formData.password}
                     onChange={handleChange}
                     placeholder="Créez un mot de passe"
-                    className="w-full pl-10 pr-12 py-4 bg-transparent border-b-2 border-bemusic-tertiary/30 rounded-none text-bemusic-primary placeholder-bemusic-tertiary transition-all duration-300 hover:border-bemusic-secondary/50 focus:border-accent-bemusic focus:outline-none"
+                    style={{ color: 'white' }}
+                    className="w-full pl-10 pr-12 py-4 bg-transparent border-b-2 border-gray-600 rounded-none !text-white placeholder-gray-500 transition-all duration-300 hover:border-gray-500 focus:border-green-500 focus:outline-none"
                   />
                   <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-accent-bemusic transition-all duration-300 group-focus-within:w-full"></div>
                   <button
@@ -601,7 +605,7 @@ const RegisterForm = ({ onRegister }) => {
             <StaggerItem>
               <div>
                 <AnimatedLabel 
-                  className="block text-sm font-medium text-bemusic-secondary mb-2"
+                  className="block text-sm font-medium text-gray-300 mb-2"
                   isActive={false}
                 >
                   Confirmer le mot de passe
@@ -616,7 +620,8 @@ const RegisterForm = ({ onRegister }) => {
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     placeholder="Confirmez votre mot de passe"
-                    className="w-full pl-10 pr-12 py-4 bg-transparent border-b-2 border-bemusic-tertiary/30 rounded-none text-bemusic-primary placeholder-bemusic-tertiary transition-all duration-300 hover:border-bemusic-secondary/50 focus:border-accent-bemusic focus:outline-none"
+                    style={{ color: 'white' }}
+                    className="w-full pl-10 pr-12 py-4 bg-transparent border-b-2 border-gray-600 rounded-none !text-white placeholder-gray-500 transition-all duration-300 hover:border-gray-500 focus:border-green-500 focus:outline-none"
                   />
                   <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-accent-bemusic transition-all duration-300 group-focus-within:w-full"></div>
                   <button
@@ -653,13 +658,13 @@ const RegisterForm = ({ onRegister }) => {
                   </button>
                 </AnimatedIcon>
                 <div className="flex-1">
-                  <p className="text-sm text-bemusic-secondary leading-relaxed">
+                  <p className="text-sm text-gray-400 leading-relaxed">
                     J'accepte les{' '}
-                    <a href="#" className="text-accent-bemusic hover:text-accent-bemusic/80 font-medium transition-bemusic">
+                    <a href="#" className="text-green-400 hover:text-green-300 font-medium transition-colors">
                       Conditions d'utilisation
                     </a>
                     {' '}et la{' '}
-                    <a href="#" className="text-accent-bemusic hover:text-accent-bemusic/80 font-medium transition-bemusic">
+                    <a href="#" className="text-green-400 hover:text-green-300 font-medium transition-colors">
                       Politique de confidentialité
                     </a>
                   </p>
@@ -675,7 +680,7 @@ const RegisterForm = ({ onRegister }) => {
               <AnimatedButton
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-bemusic-primary py-4 rounded-xl font-semibold hover:from-purple-700 hover:to-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-bemusic-primary disabled:opacity-50 disabled:cursor-not-allowed transition-bemusic shadow-lg hover:shadow-2xl hover:shadow-purple-500/25"
+                className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-4 rounded-xl font-semibold hover:from-purple-700 hover:to-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-black disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-2xl hover:shadow-purple-500/25"
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center space-x-2">
@@ -691,29 +696,29 @@ const RegisterForm = ({ onRegister }) => {
             {/* Social Login Section */}
             <StaggerItem>
               <div className="text-center">
-                <p className="text-bemusic-tertiary text-sm mb-4">
+                <p className="text-gray-400 text-sm mb-4">
                   Inscription rapide avec vos réseaux sociaux
                 </p>
                 <div className="flex justify-center space-x-4">
                   <AnimatedButton
-                    className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-bemusic-primary hover:bg-blue-600 transition-bemusic shadow-lg hover:shadow-blue-500/50"
+                    className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white hover:bg-blue-600 transition-all shadow-lg hover:shadow-blue-500/50"
                   >
                     <span className="font-bold text-sm">f</span>
                   </AnimatedButton>
                   <AnimatedButton
-                    className="w-12 h-12 bg-blue-400 rounded-full flex items-center justify-center text-bemusic-primary hover:bg-blue-500 transition-bemusic shadow-lg hover:shadow-blue-400/50"
+                    className="w-12 h-12 bg-blue-400 rounded-full flex items-center justify-center text-white hover:bg-blue-500 transition-all shadow-lg hover:shadow-blue-400/50"
                   >
                     <span className="font-bold text-sm">t</span>
                   </AnimatedButton>
                   <AnimatedButton
-                    className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center text-bemusic-primary hover:bg-red-600 transition-bemusic shadow-lg hover:shadow-red-500/50"
+                    className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center text-white hover:bg-red-600 transition-all shadow-lg hover:shadow-red-500/50"
                   >
                     <span className="font-bold text-sm">g+</span>
                   </AnimatedButton>
                   <AnimatedButton
                     onClick={spotifyLogin}
                     disabled={spotifyLoading}
-                    className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-bemusic-primary hover:bg-green-600 transition-bemusic shadow-lg hover:shadow-green-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white hover:bg-green-600 transition-all shadow-lg hover:shadow-green-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {spotifyLoading ? (
                       <div className="w-5 h-5 border-2 border-bemusic-primary/30 border-t-bemusic-primary rounded-full animate-spin" />
@@ -728,12 +733,12 @@ const RegisterForm = ({ onRegister }) => {
             {/* Sign In Link */}
             <StaggerItem>
               <div className="text-center">
-                <p className="text-bemusic-tertiary text-sm">
+                <p className="text-gray-400 text-sm">
                   Si vous avez déjà un compte,{' '}
                   <button
                     type="button"
                     onClick={handleSwitchToLogin}
-                    className="text-accent-bemusic hover:text-accent-bemusic/80 font-semibold transition-bemusic hover:underline hover:scale-105 inline-block"
+                    className="text-green-400 hover:text-green-300 font-semibold transition-colors hover:underline hover:scale-105 inline-block"
                   >
                     connectez-vous
                   </button>

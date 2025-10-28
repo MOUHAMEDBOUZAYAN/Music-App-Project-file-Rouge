@@ -371,7 +371,7 @@ export const MusicProvider = ({ children }) => {
       
       if (state.queue.length === 0) {
         console.log('❌ No tracks in queue');
-        toast.error('لا توجد أغاني في قائمة التشغيل');
+        toast.error('Aucune chanson dans la file d\'attente');
         return;
       }
       
@@ -383,7 +383,7 @@ export const MusicProvider = ({ children }) => {
           dispatch({ type: ACTIONS.SET_IS_PLAYING, payload: true });
         } else {
           console.log('❌ End of queue reached');
-          toast.error('انتهت قائمة التشغيل');
+          toast.error('Fin de la file d\'attente atteinte');
         }
         return;
       }
@@ -396,7 +396,7 @@ export const MusicProvider = ({ children }) => {
       
       if (state.queue.length === 0) {
         console.log('❌ No tracks in queue');
-        toast.error('لا توجد أغاني في قائمة التشغيل');
+        toast.error('Aucune chanson dans la file d\'attente');
         return;
       }
       
@@ -409,7 +409,7 @@ export const MusicProvider = ({ children }) => {
           dispatch({ type: ACTIONS.SET_IS_PLAYING, payload: true });
         } else {
           console.log('❌ Beginning of queue reached');
-          toast.error('بداية قائمة التشغيل');
+          toast.error('Début de la file d\'attente atteint');
         }
         return;
       }

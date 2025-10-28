@@ -632,7 +632,7 @@ const Artist = () => {
     // استخدام playArtist مع فهرس الأغنية المحددة
     playArtist(artistWithTracks, trackIndex);
     setIsPlaying(true);
-    toast.success(`تشغيل ${track.title}`);
+    toast.success(`Lecture de "${track.title}"`);
   };
 
   const handleAddToQueue = (track) => {
@@ -850,7 +850,7 @@ const Artist = () => {
     console.log('🎵 handlePlayArtist called with topTracks:', topTracks.length);
     
     if (topTracks.length === 0) {
-      toast.error('لا توجد أغاني متاحة لهذا الفنان');
+      toast.error('Aucune chanson disponible pour cet artiste');
       return;
     }
     
@@ -876,7 +876,7 @@ const Artist = () => {
     // استخدام playArtist لإنشاء قائمة تشغيل كاملة
     playArtist(artistWithTracks);
     setIsPlaying(true);
-    toast.success(`تشغيل جميع أغاني ${artist?.username || artist?.name || 'الفنان'}`);
+    toast.success(`Lecture de toutes les chansons de ${artist?.username || artist?.name || 'cet artiste'}`);
   };
 
   const handleShowMore = () => {
