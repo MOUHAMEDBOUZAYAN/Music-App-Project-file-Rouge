@@ -226,12 +226,12 @@ const ArtistDashboard = () => {
           <div className="flex flex-col lg:flex-row items-start lg:items-end justify-between gap-6">
             {/* Profile Section */}
             <div className="flex items-end gap-6">
-              <div className="w-32 h-32 lg:w-48 lg:h-48 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg shadow-2xl flex items-center justify-center">
-                <Music className="h-16 w-16 lg:h-24 lg:w-24 text-white" />
+              <div className="w-20 h-20 lg:w-28 lg:h-28 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg shadow-2xl flex items-center justify-center">
+                <Music className="h-10 w-10 lg:h-14 lg:w-14 text-white" />
               </div>
             <div className="flex-1">
                 <p className="text-sm font-medium text-white/70 uppercase tracking-wider mb-2">Artiste</p>
-                <h1 className="text-4xl lg:text-6xl font-bold text-white mb-4 leading-tight">
+                <h1 className="text-3xl lg:text-4xl font-bold text-white mb-4 leading-tight">
                   {user?.firstName} {user?.lastName}
                 </h1>
                 <p className="text-gray-300 text-lg mb-4">
@@ -253,14 +253,14 @@ const ArtistDashboard = () => {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setShowUploadSong(true)}
-                className="bg-white text-black hover:bg-gray-200 px-6 py-3 rounded-full font-semibold flex items-center gap-2 transition-all duration-200 hover:scale-105 shadow-lg"
+                className="bg-white text-black hover:bg-gray-200 px-4 py-2 rounded-full font-semibold flex items-center gap-2 transition-all duration-200 hover:scale-105 shadow-lg text-sm"
               >
                 <Upload className="h-5 w-5" />
                 <span>Nouvelle chanson</span>
               </button>
               <button
                 onClick={() => setShowCreateAlbum(true)}
-                className="bg-transparent border border-white/30 text-white hover:border-white px-6 py-3 rounded-full font-semibold flex items-center gap-2 transition-all duration-200 hover:scale-105"
+                className="bg-transparent border border-white/30 text-white hover:border-white px-4 py-2 rounded-full font-semibold flex items-center gap-2 transition-all duration-200 hover:scale-105 text-sm"
               >
                 <Plus className="h-5 w-5" />
                 <span>Nouvel album</span>
@@ -312,14 +312,14 @@ const ArtistDashboard = () => {
               placeholder="Rechercher dans vos créations..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-full text-white placeholder-gray-400 focus:outline-none focus:border-white focus:bg-white/20 transition-all duration-200"
+              className="w-full pl-12 pr-4 py-2 bg-white/10 border border-white/20 rounded-full text-white placeholder-gray-400 focus:outline-none focus:border-white focus:bg-white/20 transition-all duration-200 text-sm"
             />
           </div>
           <div className="relative">
             <select
               value={filterGenre}
               onChange={(e) => setFilterGenre(e.target.value)}
-              className="px-4 py-3 bg-white/10 border border-white/20 rounded-full text-white focus:outline-none focus:border-white focus:bg-white/20 transition-all duration-200 appearance-none cursor-pointer min-w-[160px]"
+              className="px-4 py-2 bg-white/10 border border-white/20 rounded-full text-white focus:outline-none focus:border-white focus:bg-white/20 transition-all duration-200 appearance-none cursor-pointer min-w-[160px] text-sm"
             >
               <option value="">Tous les genres</option>
               <option value="Pop">Pop</option>
@@ -368,9 +368,9 @@ const ArtistDashboard = () => {
                     {!searchQuery && !filterGenre && (
                       <button
                         onClick={() => setShowUploadSong(true)}
-                        className="bg-white text-black hover:bg-gray-200 px-8 py-4 rounded-full font-semibold transition-all duration-200 hover:scale-105 shadow-lg"
+                        className="bg-white text-black hover:bg-gray-200 px-5 py-2.5 rounded-full font-semibold transition-all duration-200 hover:scale-105 shadow-lg text-sm"
                       >
-                        <Upload className="h-5 w-5 inline mr-2" />
+                        <Upload className="h-4 w-4 inline mr-2" />
                         Uploader ma première chanson
                       </button>
                     )}
@@ -488,9 +488,9 @@ const ArtistDashboard = () => {
                     {!searchQuery && !filterGenre && (
                       <button
                         onClick={() => setShowCreateAlbum(true)}
-                        className="bg-white text-black hover:bg-gray-200 px-8 py-4 rounded-full font-semibold transition-all duration-200 hover:scale-105 shadow-lg"
+                        className="bg-white text-black hover:bg-gray-200 px-5 py-2.5 rounded-full font-semibold transition-all duration-200 hover:scale-105 shadow-lg text-sm"
                       >
-                        <Plus className="h-5 w-5 inline mr-2" />
+                        <Plus className="h-4 w-4 inline mr-2" />
                         Créer mon premier album
                       </button>
                     )}
@@ -592,10 +592,10 @@ const ArtistDashboard = () => {
           <div className="bg-black border border-white/20 rounded-xl p-6 max-w-md w-full mx-4">
             <div className="flex items-center mb-6">
               <div className="bg-red-500/20 p-3 rounded-full mr-4">
-                <AlertTriangle className="h-6 w-6 text-red-400" />
+                <AlertTriangle className="h-5 w-5 text-red-400" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white">
+                <h3 className="text-lg font-bold text-white">
                   Confirmer la suppression
                 </h3>
                 <p className="text-white/60 text-sm">
@@ -622,13 +622,13 @@ const ArtistDashboard = () => {
             <div className="flex gap-3">
               <button
                 onClick={cancelDelete}
-                className="flex-1 px-4 py-3 bg-white/10 hover:bg-white/20 text-white rounded-full font-medium transition-colors"
+                className="flex-1 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-full font-medium transition-colors text-sm"
               >
                 Annuler
               </button>
               <button
                 onClick={confirmDelete}
-                className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-400 text-white rounded-full font-medium transition-colors"
+                className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-400 text-white rounded-full font-medium transition-colors text-sm"
               >
                 Supprimer
               </button>

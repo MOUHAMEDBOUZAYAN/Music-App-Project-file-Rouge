@@ -31,29 +31,78 @@
 ## 🏗️ هيكل المشروع
 
 ```
-SoundWave-Music/
-├── 📁 soundwave-frontend/          # تطبيق React.js
-│   ├── 📁 src/
-│   │   ├── 📁 components/          # مكونات React
-│   │   ├── 📁 pages/              # صفحات التطبيق
-│   │   ├── 📁 services/           # خدمات API
-│   │   ├── 📁 store/              # إدارة الحالة
-│   │   └── 📁 styles/             # ملفات CSS
-│   ├── 📄 Dockerfile              # حاوية Frontend
-│   └── 📄 package.json
-├── 📁 soundwave-backend/           # خادم Node.js/Express
-│   ├── 📁 src/
-│   │   ├── 📁 controllers/        # منطق الأعمال
-│   │   ├── 📁 models/             # نماذج قاعدة البيانات
-│   │   ├── 📁 routes/             # مسارات API
-│   │   ├── 📁 middleware/         # وسائط التطبيق
-│   │   └── 📁 services/           # خدمات خارجية
-│   ├── 📁 tests/                  # اختبارات شاملة
-│   ├── 📄 Dockerfile              # حاوية Backend
-│   └── 📄 package.json
-├── 📄 docker-compose.yml          # إدارة الخدمات
-├── 📄 .dockerignore               # تجاهل ملفات Docker
-└── 📄 README.md                   # هذا الملف
+Project-Du-Fin-D'Ètude/
+└── 📁 SoundWave-Music/                    # المشروع الرئيسي
+    ├── 📁 soundwave-frontend/             # تطبيق React.js (Frontend)
+    │   ├── 📁 src/
+    │   │   ├── 📁 components/            # مكونات React (10+ components)
+    │   │   │   ├── 📁 artist/            # CreateAlbum.jsx, UploadSong.jsx
+    │   │   │   ├── 📁 auth/              # LoginForm.jsx, RegisterForm.jsx, SpotifyLogin.jsx
+    │   │   │   ├── 📁 common/            # AudioPlayer, Header, Footer, Sidebar, Layout, etc.
+    │   │   │   ├── 📁 music/             # SongCard.jsx, TrackList.jsx
+    │   │   │   └── 📁 player/            # AudioPlayer.jsx, NowPlayingSheet.jsx
+    │   │   ├── 📁 pages/                 # صفحات التطبيق (17 pages)
+    │   │   │   ├── Home.jsx, Search.jsx, Library.jsx, Profile.jsx
+    │   │   │   ├── Artist.jsx, Album.jsx, Song.jsx, Playlist.jsx
+    │   │   │   ├── ArtistDashboard.jsx, LikedSongs.jsx
+    │   │   │   └── ... (17 صفحات كاملة)
+    │   │   ├── 📁 services/              # خدمات API (6 services)
+    │   │   │   ├── authService.js, songService.js, albumService.js
+    │   │   │   ├── artistService.js, playlistService.js, api.js
+    │   │   ├── 📁 store/                 # إدارة الحالة (Context API)
+    │   │   │   ├── AuthContext.jsx, MusicContext.jsx, SidebarContext.jsx
+    │   │   ├── 📁 styles/                # ملفات CSS
+    │   │   │   ├── globals.css, components.css, theme.css
+    │   │   ├── 📁 hooks/                 # React Hooks
+    │   │   ├── 📁 config/                # ملفات التكوين
+    │   │   ├── 📁 utils/                 # وظائف مساعدة
+    │   │   ├── App.jsx, main.jsx
+    │   │   └── index.css
+    │   ├── 📁 public/                    # الملفات العامة
+    │   ├── 📄 Dockerfile
+    │   ├── 📄 package.json
+    │   ├── 📄 vite.config.js
+    │   └── 📄 tailwind.config.js
+    │
+    ├── 📁 soundwave-backend/             # خادم Node.js/Express (Backend)
+    │   ├── 📁 src/
+    │   │   ├── 📁 controllers/           # منطق الأعمال (9 controllers)
+    │   │   │   ├── auth.controller.js, song.controller.js, album.controller.js
+    │   │   │   ├── user.controller.js, artist.controller.js, playlist.controller.js
+    │   │   │   ├── search.controller.js, social.controller.js, admin.controller.js
+    │   │   ├── 📁 models/                # نماذج قاعدة البيانات (8 models)
+    │   │   │   ├── User.js, Song.js, Album.js, Playlist.js
+    │   │   │   ├── Artist.js, Comment.js, Follow.js, ExternalFavorite.js
+    │   │   ├── 📁 routes/                # مسارات API (11 routes)
+    │   │   │   ├── auth.routes.js, song.routes.js, album.routes.js
+    │   │   │   ├── user.routes.js, artist.routes.js, playlist.routes.js
+    │   │   │   ├── search.routes.js, social.routes.js, spotify.routes.js
+    │   │   │   ├── favorites.routes.js, admin.routes.js
+    │   │   ├── 📁 middleware/            # وسائط التطبيق (7 middlewares)
+    │   │   │   ├── auth.middleware.js, error.middleware.js
+    │   │   │   ├── cors.middleware.js, logger.middleware.js
+    │   │   │   ├── rateLimit.middleware.js, validation.middleware.js
+    │   │   ├── 📁 services/              # خدمات خارجية
+    │   │   │   └── cloudinary.service.js
+    │   │   ├── 📁 config/                # ملفات التكوين
+    │   │   │   ├── database.js, jwt.js, spotify.js
+    │   │   ├── 📁 utils/                 # وظائف مساعدة
+    │   │   ├── 📁 uploads/               # الملفات المرفوعة
+    │   │   │   ├── 📁 audio/            # ملفات الصوت
+    │   │   │   └── 📁 images/           # الصور
+    │   │   └── app.js                    # التطبيق الرئيسي
+    │   ├── 📁 tests/                     # اختبارات شاملة
+    │   │   ├── 📁 integration/          # اختبارات التكامل
+    │   │   ├── 📁 models/               # اختبارات النماذج
+    │   │   └── setup.js
+    │   ├── 📁 logs/                      # ملفات السجلات
+    │   ├── 📄 Dockerfile
+    │   ├── 📄 package.json
+    │   └── 📄 jest.config.js
+    │
+    ├── 📄 docker-compose.yml             # إدارة الخدمات
+    ├── 📄 start-complete.bat             # بدء التطبيق (Windows)
+    └── 📄 README.md                      # هذا الملف
 ```
 
 ## 🛠️ التقنيات المستخدمة
@@ -434,12 +483,55 @@ npm run reset-database
 
 هذا المشروع مرخص تحت رخصة **MIT** - راجع ملف [LICENSE](LICENSE) للتفاصيل.
 
-## 👥 فريق التطوير
+## 👥 فريق التطوير / Livrables du Projet
 
-- **المطور الرئيسي**: Mouhamed Bouzayan
-- **مصمم الواجهة**: Mouhamed Bouzayan
-- **مطور Backend**: Mouhamed Bouzayan
-- **مطور Frontend**: Mouhamed Bouzayan
+### 📌 معلومات المطور (Developer Information)
+
+**المطور الرئيسي والمطور الوحيد للمشروع (Sole Developer)**
+
+- **الاسم**: Mohamed Bouzayan (محمد بوزيان)
+- **البريد الإلكتروني**: mohammedbouzi177@gmail.com
+- **المدرسة**: المدرسة الرقمية أحمد Hensalie (École Numérique Ahmed Hensalie)
+- **نوع المشروع**: مشروع نهاية الدراسة (Projet de Fin d'Études)
+
+### 🎯 مسؤوليات التطوير (Development Responsibilities)
+
+تم تطوير هذا المشروع بالكامل من طرف **Mohamed Bouzayan**، ويشمل:
+
+- ✅ **تطوير Frontend الكامل** (React.js, Tailwind CSS, Vite)
+- ✅ **تطوير Backend الكامل** (Node.js, Express.js, MongoDB)
+- ✅ **تصميم قاعدة البيانات** (MongoDB Schema Design)
+- ✅ **تصميم واجهة المستخدم** (UI/UX Design)
+- ✅ **إعداد Docker و Docker Compose**
+- ✅ **إعداد CI/CD والتكامل**
+- ✅ **كتابة الاختبارات** (Unit Tests & Integration Tests)
+- ✅ **توثيق المشروع** (Documentation)
+
+### 📦 Livrables du Projet
+
+1. **itinéraire de l'application complète** (Code Source)
+   - Frontend React.js
+   - Backend Node.js/Express
+   - Configuration Docker
+
+2. **Documentation technique**
+   - README.md
+   - Documentation API
+   - Guide d'installation
+
+3. **Tests et qualité**
+   - Tests unitaires
+   - Tests d'intégration
+   - Rapports de couverture
+
+4. **Présentation et démonstration**
+   - Vidéo de démonstration
+   - Présentation PowerPoint
+   - Documentation utilisateur
+
+---
+
+**Contact**: mohammedbouzi177@gmail.com
 
 ## 🎯 خطة التطوير المستقبلية
 
