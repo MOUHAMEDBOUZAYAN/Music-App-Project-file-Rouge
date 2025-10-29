@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Search, 
   SkipBack, 
@@ -12,7 +12,8 @@ import {
   Globe,
   MessageSquare,
   Crown,
-  LayoutDashboard
+  LayoutDashboard,
+  ArrowLeft
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import Logo from './Logo';
@@ -20,8 +21,10 @@ import Logo from './Logo';
 const Header = () => {
   const { user, logout, isArtist, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const isSubscriptions = location.pathname === '/subscriptions';
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -61,6 +64,16 @@ const Header = () => {
           </div>
           {/* Boutons de navigation avec espacement augmenté */}
           <div className="flex space-x-3 ml-10">
+            {isSubscriptions && (
+              <button
+                className="p-2.5 rounded-full bg-gray-800/80 hover:bg-gray-700 transition-all duration-200 hover:scale-105"
+                onClick={() => navigate(-1)}
+                aria-label="Retour"
+                title="Retour"
+              >
+                <ArrowLeft className="h-5 w-5 text-white" />
+              </button>
+            )}
             <button className="p-2.5 rounded-full bg-gray-800/80 hover:bg-gray-700 transition-all duration-200 hover:scale-105">
               <SkipBack className="h-5 w-5 text-white" />
             </button>

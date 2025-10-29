@@ -109,7 +109,8 @@ const Subscriptions = () => {
       {/* Hero Banner - Exactement comme Spotify */}
       <section className="relative">
         <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-12">
-          <div className="max-w-4xl mx-auto text-center">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center">
             <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
               0,00 MAD pour 3 mois de Premium Personnel
             </h1>
@@ -129,6 +130,7 @@ const Subscriptions = () => {
               Offre uniquement disponible si vous n'avez jamais essayé Premium. 
               Offre soumise à conditions. Valable jusqu'au 22 septembre 2025.
             </p>
+            </div>
           </div>
         </div>
       </section>

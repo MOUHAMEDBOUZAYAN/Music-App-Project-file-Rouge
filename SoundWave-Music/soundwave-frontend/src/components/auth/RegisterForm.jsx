@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Search, MoreVertical, Mail, Lock, User, Music, CheckCircle, AlertCircle, Eye, EyeOff, ArrowLeft as ArrowLeftIcon } from 'lucide-react';
-import { FaSpotify } from 'react-icons/fa';
+import { FaSpotify, FaFacebook, FaTwitter, FaGoogle } from 'react-icons/fa';
 import { authService } from '../../services/authService';
 import { useAuth } from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
@@ -9,7 +9,6 @@ import {
   AnimatedPage, 
   StaggerContainer, 
   StaggerItem, 
-  FloatingCard, 
   AnimatedButton, 
   AnimatedBackground, 
   AnimatedMusicNote, 
@@ -253,24 +252,6 @@ const RegisterForm = ({ onRegister }) => {
         </div>
       </div>
 
-      {/* Floating Navigation Card - Moved to bottom right */}
-      <FloatingCard 
-        className="absolute bottom-6 right-6 z-20"
-        delay={0.5}
-      >
-        <div className="bg-bemusic-secondary/90 backdrop-blur-lg rounded-xl p-3 shadow-xl border border-bemusic-primary/20">
-          <div className="text-center">
-            <p className="text-bemusic-secondary text-xs mb-2">Déjà un compte ?</p>
-            <AnimatedButton
-              onClick={handleSwitchToLogin}
-              className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg text-sm"
-            >
-              Se connecter
-            </AnimatedButton>
-          </div>
-        </div>
-      </FloatingCard>
-
       {/* Left Panel - Branding and Visuals */}
       <div className="hidden lg:flex lg:w-2/5 relative">
         <div className="absolute inset-0 bg-gradient-to-br from-bemusic-secondary to-bemusic-tertiary">
@@ -365,7 +346,7 @@ const RegisterForm = ({ onRegister }) => {
                        onChange={handleChange}
                        className="sr-only"
                      />
-                     <div className={`h-24 rounded-xl border-2 transition-all duration-300 flex flex-col items-center justify-center ${
+                     <div className={`h-24 rounded-none border-2 transition-all duration-300 flex flex-col items-center justify-center ${
                        formData.userType === 'listener'
                          ? 'border-accent-bemusic bg-accent-bemusic/20 shadow-lg'
                          : 'border-bemusic-tertiary/30 bg-bemusic-tertiary/10 hover:border-bemusic-secondary/50 hover:bg-bemusic-secondary/20'
@@ -398,7 +379,7 @@ const RegisterForm = ({ onRegister }) => {
                        onChange={handleChange}
                        className="sr-only"
                      />
-                     <div className={`h-24 rounded-xl border-2 transition-all duration-300 flex flex-col items-center justify-center ${
+                     <div className={`h-24 rounded-none border-2 transition-all duration-300 flex flex-col items-center justify-center ${
                        formData.userType === 'artist'
                          ? 'border-purple-500 bg-purple-500/20 shadow-lg'
                          : 'border-bemusic-tertiary/30 bg-bemusic-tertiary/10 hover:border-bemusic-secondary/50 hover:bg-bemusic-secondary/20'
@@ -428,7 +409,7 @@ const RegisterForm = ({ onRegister }) => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <AnimatedLabel 
-                    className="block text-sm font-medium mb-2 transition-bemusic"
+                    className="block text-sm font-medium text-bemusic-secondary mb-2 transition-bemusic"
                     isActive={formData.firstName}
                   >
                     Prénom
@@ -462,7 +443,7 @@ const RegisterForm = ({ onRegister }) => {
 
                 <div>
                   <AnimatedLabel 
-                    className="block text-sm font-medium mb-2 transition-bemusic"
+                    className="block text-sm font-medium text-bemusic-secondary mb-2 transition-bemusic"
                     isActive={formData.lastName}
                   >
                     Nom
@@ -500,7 +481,7 @@ const RegisterForm = ({ onRegister }) => {
             <StaggerItem>
               <div>
                 <AnimatedLabel 
-                  className="block text-sm font-medium mb-2 transition-bemusic"
+                  className="block text-sm font-medium text-bemusic-secondary mb-2 transition-bemusic"
                   isActive={formData.email}
                 >
                   Email
@@ -695,35 +676,37 @@ const RegisterForm = ({ onRegister }) => {
 
             {/* Social Login Section */}
             <StaggerItem>
-              <div className="text-center">
-                <p className="text-gray-400 text-sm mb-4">
-                  Inscription rapide avec vos réseaux sociaux
+              <div>
+                <p className="text-gray-400 text-sm mb-4 text-center">
+                  Or continue with
                 </p>
-                <div className="flex justify-center space-x-4">
+                <div className="flex justify-center space-x-3">
                   <AnimatedButton
-                    className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white hover:bg-blue-600 transition-all shadow-lg hover:shadow-blue-500/50"
+                    className="bg-white border border-gray-300 rounded-none px-4 py-3 flex items-center justify-center space-x-3 hover:bg-gray-50 transition-all duration-200 shadow-sm hover:shadow-md"
                   >
-                    <span className="font-bold text-sm">f</span>
+                    <FaGoogle className="h-5 w-5 text-gray-700" />
+                    <span className="text-gray-700 font-medium">Google</span>
                   </AnimatedButton>
                   <AnimatedButton
-                    className="w-12 h-12 bg-blue-400 rounded-full flex items-center justify-center text-white hover:bg-blue-500 transition-all shadow-lg hover:shadow-blue-400/50"
+                    className="bg-white border border-gray-300 rounded-none px-4 py-3 flex items-center justify-center space-x-3 hover:bg-gray-50 transition-all duration-200 shadow-sm hover:shadow-md"
                   >
-                    <span className="font-bold text-sm">t</span>
-                  </AnimatedButton>
-                  <AnimatedButton
-                    className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center text-white hover:bg-red-600 transition-all shadow-lg hover:shadow-red-500/50"
-                  >
-                    <span className="font-bold text-sm">g+</span>
+                    <div className="w-5 h-5 bg-gray-700 rounded-none flex items-center justify-center">
+                      <FaFacebook className="h-3 w-3 text-white" />
+                    </div>
+                    <span className="text-gray-700 font-medium">Facebook</span>
                   </AnimatedButton>
                   <AnimatedButton
                     onClick={spotifyLogin}
                     disabled={spotifyLoading}
-                    className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white hover:bg-green-600 transition-all shadow-lg hover:shadow-green-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-white border border-gray-300 rounded-none px-4 py-3 flex items-center justify-center space-x-3 hover:bg-gray-50 transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {spotifyLoading ? (
-                      <div className="w-5 h-5 border-2 border-bemusic-primary/30 border-t-bemusic-primary rounded-full animate-spin" />
+                      <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-700 rounded-full animate-spin" />
                     ) : (
-                      <FaSpotify className="h-5 w-5" />
+                      <>
+                        <FaSpotify className="h-5 w-5 text-green-500" />
+                        <span className="text-gray-700 font-medium">Spotify</span>
+                      </>
                     )}
                   </AnimatedButton>
                 </div>
@@ -732,7 +715,7 @@ const RegisterForm = ({ onRegister }) => {
 
             {/* Sign In Link */}
             <StaggerItem>
-              <div className="text-center">
+              <div>
                 <p className="text-gray-400 text-sm">
                   Si vous avez déjà un compte,{' '}
                   <button
